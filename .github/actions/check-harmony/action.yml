@@ -1,0 +1,61 @@
+name: Check Harmony Client
+description: Verify the HarmonyOS client keeps the expected native project layout.
+
+inputs:
+  working-directory:
+    description: Directory containing the HarmonyOS project.
+    required: false
+    default: apps/harmony
+
+runs:
+  using: composite
+  steps:
+    - name: Check project files
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+        required_files=(
+          "oh-package.json5"
+          "build-profile.json5"
+          "hvigorfile.ts"
+          "hvigor/hvigor-config.json5"
+          "AppScope/app.json5"
+          "entry/oh-package.json5"
+          "entry/build-profile.json5"
+          "entry/hvigorfile.ts"
+          "entry/src/main/module.json5"
+          "entry/src/main/ets/entryability/EntryAbility.ets"
+          "entry/src/main/ets/pages/HomePage.ets"
+          "entry/src/main/resources/base/profile/main_pages.json"
+        )
+
+        for file in "${required_files[@]}"; do
+          if [[ ! -s "$file" ]]; then
+            echo "Missing or empty HarmonyOS project file: $file"
+            exit 1
+          fi
+        done
+
+    - name: Check expected source layers
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+        required_dirs=(
+          "entry/src/main/ets/common"
+          "entry/src/main/ets/components"
+          "entry/src/main/ets/entryability"
+          "entry/src/main/ets/models"
+          "entry/src/main/ets/pages"
+          "entry/src/main/ets/services"
+          "entry/src/main/ets/viewmodels"
+        )
+
+        for dir in "${required_dirs[@]}"; do
+          if [[ ! -d "$dir" ]]; then
+            echo "Missing HarmonyOS source layer: $dir"
+            exit 1
+          fi
+        done
+

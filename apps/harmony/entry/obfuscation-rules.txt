@@ -1,0 +1,2 @@
+# Obfuscation rules will be enabled before release packaging.
+

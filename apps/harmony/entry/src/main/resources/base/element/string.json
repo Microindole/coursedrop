@@ -1,0 +1,17 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "CourseDrop entry module"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "CourseDrop main ability"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "课递"
+    }
+  ]
+}
+

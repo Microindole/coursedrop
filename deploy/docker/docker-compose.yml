@@ -1,0 +1,12 @@
+services:
+  coursedrop-server:
+    build:
+      context: ../../apps/server
+    ports:
+      - "8080:8080"
+    volumes:
+      - coursedrop-data:/data
+
+volumes:
+  coursedrop-data:
+

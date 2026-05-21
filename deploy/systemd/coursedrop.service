@@ -1,0 +1,13 @@
+[Unit]
+Description=CourseDrop Server
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/coursedrop
+ExecStart=/usr/bin/java -Xms128m -Xmx512m -jar coursedrop-server.jar
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

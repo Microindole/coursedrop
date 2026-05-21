@@ -1,0 +1,11 @@
+{
+  "modelVersion": "6.1.0",
+  "name": "coursedrop_harmony",
+  "version": "0.1.0",
+  "description": "Native HarmonyOS client for CourseDrop",
+  "main": "",
+  "author": "",
+  "license": "",
+  "dependencies": {}
+}
+

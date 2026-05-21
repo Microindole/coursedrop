@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: coursedrop-server
+  datasource:
+    url: jdbc:sqlite:coursedrop.db
+    driver-class-name: org.sqlite.JDBC
+
+coursedrop:
+  storage:
+    upload-dir: uploads
+    room-ttl-hours: 24
+    file-ttl-hours: 168
+    max-file-size-mb: 100

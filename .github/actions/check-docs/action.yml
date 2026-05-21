@@ -1,0 +1,41 @@
+name: Check Docs
+description: Verify important documentation entry points exist.
+
+runs:
+  using: composite
+  steps:
+    - name: Check required docs
+      shell: bash
+      run: |
+        set -euo pipefail
+        required_files=(
+          "README.md"
+          "docs/product/overview.md"
+          "docs/product/roadmap.md"
+          "docs/architecture/system-design.md"
+          "docs/architecture/data-model.md"
+          "docs/api/rest-api.md"
+          "docs/api/websocket-events.md"
+          "docs/agent/handbook.md"
+          "docs/agent/status.md"
+          "docs/agent/ci.md"
+          "apps/harmony/README.md"
+          "apps/server/README.md"
+        )
+
+        for file in "${required_files[@]}"; do
+          if [[ ! -s "$file" ]]; then
+            echo "Missing or empty required document: $file"
+            exit 1
+          fi
+        done
+
+    - name: Check root README links
+      shell: bash
+      run: |
+        set -euo pipefail
+        grep -q "docs/agent/handbook.md" README.md
+        grep -q "docs/agent/ci.md" README.md
+        grep -q "apps/harmony/README.md" README.md
+        grep -q "apps/server/README.md" README.md
+

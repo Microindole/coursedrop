@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: Docs and repository checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check repository docs
+        uses: ./.github/actions/check-docs
+
+  server:
+    name: Java server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and test server
+        uses: ./.github/actions/build-server
+        with:
+          working-directory: apps/server
+
+  harmony:
+    name: Harmony client structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check HarmonyOS client structure
+        uses: ./.github/actions/check-harmony
+        with:
+          working-directory: apps/harmony
+
