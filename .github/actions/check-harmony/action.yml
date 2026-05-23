@@ -26,6 +26,11 @@ runs:
           "entry/hvigorfile.ts"
           "entry/src/main/module.json5"
           "entry/src/main/ets/entryability/EntryAbility.ets"
+          "entry/src/main/ets/components/README.md"
+          "entry/src/main/ets/components/index.ets"
+          "entry/src/main/ets/components/actions/CdButton.ets"
+          "entry/src/main/ets/components/inputs/CdTextField.ets"
+          "entry/src/main/ets/components/feedback/CdStatusPill.ets"
           "entry/src/main/ets/pages/HomePage.ets"
           "entry/src/main/resources/base/profile/main_pages.json"
         )
@@ -45,6 +50,12 @@ runs:
         required_dirs=(
           "entry/src/main/ets/common"
           "entry/src/main/ets/components"
+          "entry/src/main/ets/components/actions"
+          "entry/src/main/ets/components/display"
+          "entry/src/main/ets/components/feedback"
+          "entry/src/main/ets/components/inputs"
+          "entry/src/main/ets/components/layout"
+          "entry/src/main/ets/components/navigation"
           "entry/src/main/ets/entryability"
           "entry/src/main/ets/models"
           "entry/src/main/ets/pages"
@@ -58,4 +69,3 @@ runs:
             exit 1
           fi
         done
-

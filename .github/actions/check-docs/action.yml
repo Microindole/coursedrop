@@ -14,10 +14,13 @@ runs:
           "docs/product/roadmap.md"
           "docs/architecture/system-design.md"
           "docs/architecture/data-model.md"
+          "docs/architecture/module-boundaries.md"
+          "docs/architecture/client-ui.md"
           "docs/api/rest-api.md"
           "docs/api/websocket-events.md"
           "docs/agent/handbook.md"
           "docs/agent/status.md"
+          "docs/agent/next-steps.md"
           "docs/agent/ci.md"
           "apps/harmony/README.md"
           "apps/server/README.md"
@@ -38,4 +41,3 @@ runs:
         grep -q "docs/agent/ci.md" README.md
         grep -q "apps/harmony/README.md" README.md
         grep -q "apps/server/README.md" README.md
-

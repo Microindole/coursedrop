@@ -50,6 +50,8 @@ scripts/         本地脚本
 
 服务端按业务域组织，而不是把所有 controller、service、repository 分散到顶层。
 
+更细的职责边界见 `docs/architecture/module-boundaries.md`。
+
 ```text
 common/     通用异常和返回处理
 config/     配置、数据库初始化
@@ -78,4 +80,3 @@ pages/         页面
 services/      API 和设备能力封装
 viewmodels/    页面状态与展示逻辑
 ```
-

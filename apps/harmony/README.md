@@ -25,6 +25,19 @@ entry/             Entry HAP 模块
 - 首页：`entry/src/main/ets/pages/HomePage.ets`
 - 模型：`Room`、`TransferItem`
 - 服务占位：`ApiClient`、`RoomService`、`TransferService`
+- UI 基础组件：`CdButton`、`CdTextField`、`CdStatusPill`
+
+## UI 约定
+
+客户端参考 MUI 的层级和密度，但使用 ArkUI 原生实现。详细规范见 `docs/architecture/client-ui.md`。
+
+组件封装位置：
+
+```text
+entry/src/main/ets/components/
+```
+
+组件目录说明见 `entry/src/main/ets/components/README.md`。
 
 ## 下一步
 
@@ -33,4 +46,3 @@ entry/             Entry HAP 模块
 - 加入房间后进入房间页
 - 实现房间传输项列表
 - 实现文件选择和上传
-

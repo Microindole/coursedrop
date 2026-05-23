@@ -66,11 +66,15 @@ mvn test
 
 ## 下一步建议
 
+详细任务见 `docs/agent/next-steps.md`。
+
+建议顺序：
+
 1. 先用 HTTP 客户端或 curl 手动验证服务端 API。
-2. 在鸿蒙客户端实现 `ApiClient` 的 GET、POST、multipart 上传能力。
+2. 在鸿蒙客户端实现 `ApiClient` 的 GET、POST 能力。
 3. 创建 `RoomPage`，展示房间码和传输项列表。
 4. 首页创建/加入成功后跳转到 `RoomPage`。
-5. 再做文件选择和上传。
+5. 再做文件选择、上传和下载。
 
 ## 开发约定
 
@@ -79,5 +83,7 @@ mvn test
 - 业务文档放在 `docs/product`、`docs/api`、`docs/architecture`。
 - 接手说明、当前状态、下一步计划放在 `docs/agent`。
 - CI 说明放在 `docs/agent/ci.md`。
+- 模块职责和边界放在 `docs/architecture/module-boundaries.md`。
+- 客户端 UI 规范放在 `docs/architecture/client-ui.md`。
 - 服务端按业务域组织代码，不把所有 controller/service/repository 分散到顶层。
 - 客户端按 `common`、`models`、`services`、`viewmodels`、`components`、`pages` 分层。
