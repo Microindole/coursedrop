@@ -4,13 +4,18 @@ import { AppColors, AppSize, AppSpacing, AppTypography } from '../../common/Them
 export struct CdEmptyState {
   title: string = '';
   description: string = '';
-  symbol: Resource = $r('sys.symbol.house_fill');
+  mark: string = 'EMPTY';
 
   build() {
     Column({ space: AppSpacing.SM }) {
-      SymbolGlyph(this.symbol)
-        .fontSize(AppSize.ICON_LG)
-        .fontColor([AppColors.TEXT_SECONDARY])
+      Text(this.mark)
+        .fontSize(AppTypography.CAPTION)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.TEXT_SECONDARY)
+        .width(AppSize.ICON_LG + 24)
+        .height(AppSize.ICON_LG)
+        .textAlign(TextAlign.Center)
+        .backgroundColor(AppColors.SURFACE_MUTED)
 
       Text(this.title)
         .fontSize(AppTypography.SUBTITLE)

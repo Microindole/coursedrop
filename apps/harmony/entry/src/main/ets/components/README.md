@@ -8,11 +8,11 @@
 components/
   index.ets       统一导出入口
   actions/        按钮、图标按钮、链接、操作宫格
-  inputs/         输入框、开关等表单控件
-  layout/         页面、滚动容器、面板、标题分区
+  inputs/         输入框、搜索、选择、分段、开关、复选
+  layout/         页面、滚动容器、面板、顶部条、标题分区
   navigation/     抽屉、底部标签栏等导航外壳
-  display/        文本、列表、文件项、信息行、轮播
-  feedback/       状态标签、空状态、后续弹窗/进度
+  display/        文本、列表、文件项、消息、分页、信息行、轮播
+  feedback/       状态标签、横幅提示、确认面板、进度、空状态
 ```
 
 页面侧优先从 `../components` 导入，不直接引用子目录：
@@ -42,13 +42,18 @@ import { CdButton, CdPanel, CdTextField } from '../components';
 ### inputs
 
 - `CdTextField`：下划线输入框，支持 label、placeholder 和字符串双向绑定。
+- `CdSearchField`：搜索输入框，适合分享管理、文件列表筛选。
+- `CdSelectField`：自绘下拉选择，适合传输方式、排序、过期时间选择。
+- `CdSegmentedControl`：分段控制，适合“全部 / 局域网 / 公网”等模式切换。
 - `CdSwitchRow`：设置项开关行，支持标题、说明和布尔双向绑定。
+- `CdCheckboxRow`：复选行，适合批量选择、确认选项。
 
 ### layout
 
 - `CdPage`：非滚动整页容器。
 - `CdScrollContainer`：滚动页面容器，统一页面背景、边距和滚动条策略。
 - `CdPanel`：白色圆角功能面板。
+- `CdTopBar`：页面顶部条，支持左右文本操作和居中标题。
 - `CdPageTitle`：页面主标题和副标题。
 - `CdSectionHeader`：分区标题，支持右侧文字操作。
 
@@ -63,20 +68,24 @@ import { CdButton, CdPanel, CdTextField } from '../components';
 - `CdList`：统一列表容器。
 - `CdListItem`：通用列表项，支持图标、标题、说明和箭头。
 - `CdFileItem`：文件/图片/文本/链接传输项。
+- `CdMessageItem`：消息/通知列表项，适合传输完成、失败、过期提醒。
+- `CdPagination`：分页控制，适合历史记录、分享管理列表。
 - `CdInfoRow`：带图标的信息行。
 - `CdCarousel`：轮播图容器，后续可用于引导页、分享状态说明或教程卡片。
 
 ### feedback
 
 - `CdStatusPill`：状态标签，支持 info、success、warning。
+- `CdBanner`：页面内横幅提示，支持 info、success、warning、danger。
+- `CdProgressRow`：上传/下载进度行。
+- `CdConfirmPanel`：确认面板，适合删除、撤回、清理临时副本。
 - `CdEmptyState`：空状态，用于暂无文件、暂无分享记录、未发现局域网设备等场景。
 
 ## 扩展计划
 
 ```text
-feedback/CdProgressRow.ets   上传/下载进度行
-feedback/CdToastBanner.ets   页面内提示条
 display/CdShareCode.ets      二维码和分享码展示
 display/CdDeviceItem.ets     局域网设备列表项
-layout/CdTopBar.ets          页面顶部栏
+display/CdTransferStats.ets  传输统计摘要
+navigation/CdBottomSheet.ets 底部弹层
 ```
