@@ -37,6 +37,11 @@ runs:
           "entry/src/main/ets/models/TransferTask.ets"
           "entry/src/main/ets/models/LocalFileEntry.ets"
           "entry/src/main/ets/models/index.ets"
+          "entry/src/main/ets/viewmodels/ShareViewModel.ets"
+          "entry/src/main/ets/viewmodels/LocalLibraryViewModel.ets"
+          "entry/src/main/ets/viewmodels/DeviceViewModel.ets"
+          "entry/src/main/ets/viewmodels/SettingsViewModel.ets"
+          "entry/src/main/ets/viewmodels/index.ets"
           "entry/src/main/ets/pages/HomePage.ets"
           "entry/src/main/resources/base/profile/main_pages.json"
         )

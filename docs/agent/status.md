@@ -12,6 +12,8 @@
 - 客户端完成首页壳和基础分层
 - 客户端建立 `components/` 通用 UI 组件层
 - 客户端建立 `components/business/` CourseDrop 业务组件层
+- 客户端建立分享领域模型层
+- 客户端开始建立 mock 数据和 viewmodel 层
 - 文档改为中文，并新增 agent 接手目录
 - 新增模块化 GitHub Actions：文档检查、服务端测试、鸿蒙工程结构检查
 - 新增下一步任务拆解和模块边界文档
@@ -26,7 +28,7 @@
 - 鸿蒙客户端页面跳转
 - 鸿蒙客户端文件选择和上传
 - 客户端 SharePage、LocalLibraryPage、DevicePage、SettingsPage
-- 客户端 mock viewmodel
+- 客户端页面骨架
 - 部署到 2 核 2G 服务器
 - 鸿蒙 HAP 在 CI 中完整构建
 
@@ -36,8 +38,7 @@
 
 当前顺序：
 
-1. 稳定客户端模型层。
-2. 用 mock viewmodel 驱动页面。
-3. 搭建首页、分享页、本地库、设备页、设置页骨架。
-4. 页面结构稳定后接入 services。
-5. 再接真实传输、局域网发现和端到端加密。
+1. 完成 mock viewmodel 覆盖。
+2. 搭建首页、分享页、本地库、设备页、设置页骨架。
+3. 页面结构稳定后接入 services。
+4. 再接真实传输、局域网发现和端到端加密。
