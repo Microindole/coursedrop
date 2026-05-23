@@ -4,14 +4,20 @@ import { AppColors, AppRadius, AppSize, AppSpacing, AppTypography } from '../../
 export struct CdActionTile {
   title: string = '';
   subtitle: string = '';
-  symbol: Resource = $r('sys.symbol.folder_fill');
+  mark: string = '';
   onTap: () => void = () => {};
 
   build() {
     Column({ space: AppSpacing.XS }) {
-      SymbolGlyph(this.symbol)
-        .fontSize(AppSize.ICON_LG)
-        .fontColor([AppColors.PRIMARY_SELECTED])
+      Text(this.mark)
+        .fontSize(AppTypography.SUBTITLE)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.PRIMARY_SELECTED)
+        .width(AppSize.ICON_LG)
+        .height(AppSize.ICON_LG)
+        .textAlign(TextAlign.Center)
+        .backgroundColor(AppColors.PRIMARY_SOFT)
+        .borderRadius(AppRadius.MD)
 
       Text(this.title)
         .fontSize(AppTypography.BODY_SMALL)

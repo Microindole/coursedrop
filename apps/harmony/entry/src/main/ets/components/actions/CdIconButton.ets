@@ -4,9 +4,9 @@ export type CdIconButtonVariant = 'plain' | 'tonal' | 'danger';
 
 @Component
 export struct CdIconButton {
-  symbol: Resource = $r('sys.symbol.ellipsis');
+  mark: string = '...';
   variant: CdIconButtonVariant = 'plain';
-  enabled: boolean = true;
+  interactive: boolean = true;
   onTap: () => void = () => {};
 
   private resolveBackgroundColor(): ResourceColor {
@@ -31,18 +31,19 @@ export struct CdIconButton {
 
   build() {
     Button({ type: ButtonType.Circle }) {
-      SymbolGlyph(this.symbol)
+      Text(this.mark)
         .fontSize(AppSize.ICON_MD)
-        .fontColor([this.resolveIconColor()])
+        .fontWeight(FontWeight.Bold)
+        .fontColor(this.resolveIconColor())
     }
     .width(40)
     .height(40)
     .backgroundColor(this.resolveBackgroundColor())
     .borderRadius(AppRadius.XL)
-    .enabled(this.enabled)
-    .opacity(this.enabled ? 1 : 0.45)
+    .enabled(this.interactive)
+    .opacity(this.interactive ? 1 : 0.45)
     .onClick(() => {
-      if (this.enabled) {
+      if (this.interactive) {
         this.onTap();
       }
     })

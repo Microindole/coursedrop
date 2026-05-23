@@ -4,7 +4,7 @@ import { AppColors, AppSize, AppSpacing, AppTypography } from '../../common/Them
 export struct CdEmptyState {
   title: string = '';
   description: string = '';
-  symbol: Resource = $r('sys.symbol.tray_fill');
+  symbol: Resource = $r('sys.symbol.house_fill');
 
   build() {
     Column({ space: AppSpacing.SM }) {

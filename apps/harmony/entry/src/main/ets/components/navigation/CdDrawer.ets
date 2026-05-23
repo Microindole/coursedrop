@@ -3,7 +3,7 @@ import { AppColors, AppRadius, AppSpacing } from '../../common/Theme';
 @Component
 export struct CdDrawer {
   @Link visible: boolean;
-  width: number = 304;
+  drawerWidth: number = 304;
   @BuilderParam content: () => void = this.defaultContent;
 
   @Builder
@@ -24,7 +24,7 @@ export struct CdDrawer {
         Column() {
           this.content()
         }
-        .width(this.width)
+        .width(this.drawerWidth)
         .height('100%')
         .padding(AppSpacing.LG)
         .backgroundColor(AppColors.SURFACE)

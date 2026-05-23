@@ -5,7 +5,7 @@ export struct CdSwitchRow {
   title: string = '';
   description: string = '';
   @Link isOn: boolean;
-  enabled: boolean = true;
+  interactive: boolean = true;
 
   build() {
     Row() {
@@ -30,14 +30,14 @@ export struct CdSwitchRow {
 
       Toggle({ type: ToggleType.Switch, isOn: this.isOn })
         .selectedColor(AppColors.PRIMARY)
-        .enabled(this.enabled)
+        .enabled(this.interactive)
         .onChange((value: boolean) => {
           this.isOn = value;
         })
     }
     .width('100%')
-    .minHeight(AppSize.LIST_ROW_HEIGHT)
+    .height(AppSize.LIST_ROW_HEIGHT)
     .alignItems(VerticalAlign.Center)
-    .opacity(this.enabled ? 1 : 0.45)
+    .opacity(this.interactive ? 1 : 0.45)
   }
 }

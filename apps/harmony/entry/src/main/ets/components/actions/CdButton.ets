@@ -6,7 +6,7 @@ export type CdButtonVariant = 'contained' | 'tonal' | 'text' | 'danger';
 export struct CdButton {
   label: string = '';
   variant: CdButtonVariant = 'contained';
-  enabled: boolean = true;
+  interactive: boolean = true;
   onTap: () => void = () => {};
 
   private resolveBackgroundColor(): string {
@@ -41,10 +41,10 @@ export struct CdButton {
       .fontColor(this.resolveTextColor())
       .backgroundColor(this.resolveBackgroundColor())
       .borderRadius(AppRadius.XL)
-      .enabled(this.enabled)
-      .opacity(this.enabled ? 1 : 0.45)
+      .enabled(this.interactive)
+      .opacity(this.interactive ? 1 : 0.45)
       .onClick(() => {
-        if (this.enabled) {
+        if (this.interactive) {
           this.onTap();
         }
       })

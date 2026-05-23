@@ -4,16 +4,20 @@ import { AppColors, AppRadius, AppSize, AppSpacing, AppTypography } from '../../
 export struct CdListItem {
   title: string = '';
   description: string = '';
-  symbol: Resource = $r('sys.symbol.circle_fill');
+  mark: string = '';
   showChevron: boolean = true;
   onTap: () => void = () => {};
 
   build() {
     ListItem() {
       Row() {
-        SymbolGlyph(this.symbol)
-          .fontSize(AppSize.ICON_MD)
-          .fontColor([AppColors.PRIMARY_SELECTED])
+        Text(this.mark)
+          .fontSize(AppTypography.CAPTION)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.PRIMARY_SELECTED)
+          .width(AppSize.ICON_MD)
+          .height(AppSize.ICON_MD)
+          .textAlign(TextAlign.Center)
           .margin({ right: AppSpacing.MD })
 
         Column({ space: AppSpacing.XS }) {
@@ -36,13 +40,13 @@ export struct CdListItem {
         .layoutWeight(1)
 
         if (this.showChevron) {
-          SymbolGlyph($r('sys.symbol.chevron_right'))
-            .fontSize(AppSize.ICON_MD)
-            .fontColor([AppColors.TEXT_SECONDARY])
+          Text('>')
+            .fontSize(AppTypography.BODY)
+            .fontColor(AppColors.TEXT_SECONDARY)
         }
       }
       .width('100%')
-      .minHeight(AppSize.LIST_ROW_HEIGHT)
+      .height(AppSize.LIST_ROW_HEIGHT)
       .padding({ left: AppSpacing.MD, right: AppSpacing.MD })
       .backgroundColor(AppColors.SURFACE)
       .borderRadius(AppRadius.LG)

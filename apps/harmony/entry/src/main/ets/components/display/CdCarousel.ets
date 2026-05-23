@@ -3,7 +3,7 @@ import { AppRadius } from '../../common/Theme';
 @Component
 export struct CdCarousel {
   images: Resource[] = [];
-  height: number = 148;
+  carouselHeight: number = 148;
   autoPlay: boolean = true;
   private controller: SwiperController = new SwiperController();
 
@@ -12,13 +12,13 @@ export struct CdCarousel {
       ForEach(this.images, (image: Resource) => {
         Image(image)
           .width('100%')
-          .height(this.height)
+          .height(this.carouselHeight)
           .objectFit(ImageFit.Cover)
           .borderRadius(AppRadius.LG)
       }, (image: Resource) => JSON.stringify(image))
     }
     .width('100%')
-    .height(this.height)
+    .height(this.carouselHeight)
     .autoPlay(this.autoPlay)
     .indicator(true)
   }

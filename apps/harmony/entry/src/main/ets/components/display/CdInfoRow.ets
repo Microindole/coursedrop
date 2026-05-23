@@ -4,13 +4,17 @@ import { AppColors, AppSize, AppSpacing, AppTypography } from '../../common/Them
 export struct CdInfoRow {
   title: string = '';
   value: string = '';
-  symbol: Resource = $r('sys.symbol.info_circle_fill');
+  mark: string = '';
 
   build() {
     Row() {
-      SymbolGlyph(this.symbol)
-        .fontSize(AppSize.ICON_MD)
-        .fontColor([AppColors.PRIMARY_SELECTED])
+      Text(this.mark)
+        .fontSize(AppTypography.CAPTION)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(AppColors.PRIMARY_SELECTED)
+        .width(AppSize.ICON_MD)
+        .height(AppSize.ICON_MD)
+        .textAlign(TextAlign.Center)
         .margin({ right: AppSpacing.MD })
 
       Column({ space: AppSpacing.XS }) {

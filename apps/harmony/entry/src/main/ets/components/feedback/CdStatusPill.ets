@@ -24,7 +24,7 @@ export struct CdStatusPill {
     if (this.tone === 'warning') {
       return AppColors.WARNING;
     }
-    return AppColors.PRIMARY_DARK;
+    return AppColors.PRIMARY_SELECTED;
   }
 
   build() {
