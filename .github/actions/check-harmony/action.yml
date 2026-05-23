@@ -51,6 +51,7 @@ runs:
           "entry/src/main/ets/common"
           "entry/src/main/ets/components"
           "entry/src/main/ets/components/actions"
+          "entry/src/main/ets/components/business"
           "entry/src/main/ets/components/display"
           "entry/src/main/ets/components/feedback"
           "entry/src/main/ets/components/inputs"

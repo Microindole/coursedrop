@@ -8,6 +8,7 @@
 components/
   index.ets       统一导出入口
   actions/        按钮、图标按钮、链接、操作宫格
+  business/       CourseDrop 业务组件：分享码、设备、过期、传输、文件操作
   inputs/         输入框、搜索、选择、分段、开关、复选
   layout/         页面、滚动容器、面板、顶部条、标题分区
   navigation/     抽屉、底部标签栏等导航外壳
@@ -31,6 +32,18 @@ import { CdButton, CdPanel, CdTextField } from '../components';
 - 组件只负责展示和基础交互，不直接请求接口。
 
 ## 组件清单
+
+### business
+
+- `CdShareCode`：公网分享码/链接展示，包含复制、刷新、撤回操作入口。
+- `CdDeviceItem`：局域网设备列表项，展示平台、在线状态、连接方式和延迟。
+- `CdNetworkBadge`：传输方式标签，支持 LAN、RELAY、E2EE、OFFLINE。
+- `CdExpireInfo`：过期状态标签，支持正常、即将过期、已过期。
+- `CdTransferStats`：传输统计摘要，展示进行中、完成、失败、将过期数量。
+- `CdFilePickerPanel`：添加内容入口，包含文件、图片、文本、链接。
+- `CdFileActionBar`：批量文件操作栏，支持重新分享、删除、取消选择。
+- `CdBottomSheet`：底部弹层外壳，适合文件操作菜单和详情面板。
+- `CdDetailSheet`：文件/分享详情卡片，展示大小、类型、创建、过期、加密状态。
 
 ### actions
 
@@ -84,8 +97,7 @@ import { CdButton, CdPanel, CdTextField } from '../components';
 ## 扩展计划
 
 ```text
-display/CdShareCode.ets      二维码和分享码展示
-display/CdDeviceItem.ets     局域网设备列表项
-display/CdTransferStats.ets  传输统计摘要
-navigation/CdBottomSheet.ets 底部弹层
+business/CdShareQr.ets       真实二维码渲染，等二维码生成方案确定后补
+business/CdDeviceGrid.ets    局域网设备网格视图
+business/CdTransferTimeline.ets 传输历史时间线
 ```
