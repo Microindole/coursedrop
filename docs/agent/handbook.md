@@ -4,17 +4,17 @@
 
 ## 项目一句话
 
-CourseDrop / 课递：面向课程小组的资料快传与临时存储工具。
+CourseDrop / 课递：本地优先的加密文件传输与分享管理工具。
 
 ## 当前重点
 
-先完成服务器中转传输 MVP：
+当前先把鸿蒙客户端的信息架构跑通，再接真实传输能力：
 
 ```text
-创建房间 -> 加入房间 -> 上传文件 -> 查看列表 -> 下载文件 -> 过期清理
+模型层 -> mock viewmodel -> 页面骨架 -> services -> 真实传输
 ```
 
-局域网直传、WebSocket、剪贴板高级能力都放在后面，不要一开始扩大范围。
+局域网直传、公网临时中转、二维码分享和端到端加密是产品主线，但不要在页面结构稳定前直接堆真实能力。
 
 ## 技术栈
 
@@ -54,7 +54,7 @@ mvn test
 
 ## 客户端现状
 
-已完成标准鸿蒙工程骨架和首页壳。
+已完成标准鸿蒙工程骨架、首页壳、通用组件层和 CourseDrop 业务组件层。
 
 关键文件：
 
@@ -63,6 +63,8 @@ mvn test
 - `apps/harmony/entry/src/main/module.json5`
 - `apps/harmony/entry/src/main/ets/entryability/EntryAbility.ets`
 - `apps/harmony/entry/src/main/ets/pages/HomePage.ets`
+- `apps/harmony/entry/src/main/ets/components/`
+- `apps/harmony/entry/src/main/ets/components/business/`
 
 ## 下一步建议
 
@@ -70,11 +72,11 @@ mvn test
 
 建议顺序：
 
-1. 先用 HTTP 客户端或 curl 手动验证服务端 API。
-2. 在鸿蒙客户端实现 `ApiClient` 的 GET、POST 能力。
-3. 创建 `RoomPage`，展示房间码和传输项列表。
-4. 首页创建/加入成功后跳转到 `RoomPage`。
-5. 再做文件选择、上传和下载。
+1. 稳定客户端模型层。
+2. 用 mock viewmodel 驱动页面。
+3. 搭建首页、分享页、本地库、设备页、设置页骨架。
+4. 页面结构稳定后接入 services。
+5. 再接真实传输、局域网发现和端到端加密。
 
 ## 开发约定
 

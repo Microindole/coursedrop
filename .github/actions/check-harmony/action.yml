@@ -31,6 +31,12 @@ runs:
           "entry/src/main/ets/components/actions/CdButton.ets"
           "entry/src/main/ets/components/inputs/CdTextField.ets"
           "entry/src/main/ets/components/feedback/CdStatusPill.ets"
+          "entry/src/main/ets/models/CommonTypes.ets"
+          "entry/src/main/ets/models/ShareSession.ets"
+          "entry/src/main/ets/models/Device.ets"
+          "entry/src/main/ets/models/TransferTask.ets"
+          "entry/src/main/ets/models/LocalFileEntry.ets"
+          "entry/src/main/ets/models/index.ets"
           "entry/src/main/ets/pages/HomePage.ets"
           "entry/src/main/resources/base/profile/main_pages.json"
         )

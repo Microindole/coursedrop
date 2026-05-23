@@ -1,6 +1,6 @@
 # 客户端 UI 规范
 
-CourseDrop 客户端参考 MUI 的产品界面风格，但不直接依赖 MUI。
+CourseDrop 客户端参考 `PageAndData` 的鸿蒙原生页面组织方式，并吸收 MUI 的产品界面层级，但不直接依赖 MUI 或第三方 UI 库。
 
 原因：
 
@@ -12,9 +12,9 @@ CourseDrop 客户端参考 MUI 的产品界面风格，但不直接依赖 MUI。
 
 - 轻量、清晰、工具型
 - 以白色 surface、浅灰背景和蓝色主操作建立层级
-- 使用 8px 间距体系
-- 表单、按钮、状态标签、列表项组件化
-- 页面只组合业务组件，不裸写复杂样式
+- 使用 12vp 页面边距、16vp 白色功能区、40vp 胶囊按钮
+- 表单、按钮、状态标签、列表项、弹层、业务卡片组件化
+- 页面只组合通用组件和业务组件，不裸写复杂样式
 
 ## 组件策略
 
@@ -40,28 +40,32 @@ common/
   Theme.ets          颜色、间距、圆角、字号 token
 components/
   README.md          组件目录说明
-  CdButton.ets       CourseDrop 按钮
-  CdTextField.ets    CourseDrop 输入框
-  CdStatusPill.ets   状态标签
+  index.ets          统一导出入口
+  actions/           按钮、链接、操作宫格
+  inputs/            输入、搜索、选择、分段、开关、复选
+  layout/            页面、滚动容器、面板、顶部条、标题分区
+  navigation/        抽屉、底部标签栏
+  display/           文本、列表、文件项、消息、分页、信息行、轮播
+  feedback/          状态、横幅、确认面板、进度、空状态
+  business/          分享码、设备、过期、传输、文件操作等业务组件
 pages/
   HomePage.ets       首页入口
 ```
 
-## 后续组件计划
+## 页面路线
 
 ```text
-CdTopBar.ets
-CdRoomHeader.ets
-CdFileItem.ets
-CdEmptyState.ets
-CdProgressRow.ets
-CdSectionHeader.ets
+HomePage             首页入口、统计、最近分享、设备入口
+SharePage            分享码、过期状态、文件列表、文件添加入口
+LocalLibraryPage     本地分享管理器
+DevicePage           局域网设备列表
+SettingsPage         服务器、加密、缓存、清理策略
 ```
 
 ## 命名约定
 
 通用 UI 组件统一使用 `Cd` 前缀，例如 `CdButton`、`CdTextField`。
 
-页面组件使用业务名，例如 `HomePage`、`RoomPage`。
+页面组件使用业务名，例如 `HomePage`、`SharePage`、`LocalLibraryPage`。
 
 组件目录内必须维护 `README.md`，说明组件职责、使用场景和扩展规则。

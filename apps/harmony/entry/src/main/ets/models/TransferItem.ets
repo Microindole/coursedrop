@@ -1,13 +1,16 @@
-export type TransferItemType = 'FILE' | 'TEXT' | 'LINK' | 'IMAGE';
+import { TransferItemType } from './CommonTypes';
 
 export interface TransferItem {
   id: string;
-  roomId: string;
+  roomId?: string;
+  sessionId?: string;
   type: TransferItemType;
   displayName: string;
   contentType: string;
   sizeBytes: number;
+  localUri?: string;
+  remoteUrl?: string;
   createdAt: string;
   expiresAt: string;
+  encrypted?: boolean;
 }
-

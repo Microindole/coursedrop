@@ -1,70 +1,75 @@
 # 下一步任务拆解
 
-这份文档给接手者使用，按优先级列出下一轮最应该做的事情。
+这份文档给接手者使用，按当前产品方向列出下一轮最应该做的事情。
 
-## P0：手动验证服务端 API
+## 当前产品方向
 
-目标：确认服务端当前 MVP 真的能完成传输闭环。
+CourseDrop / 课递现在定位为：
 
-工作目录：
-
-```powershell
-cd D:\works\coursedrop\apps\server
+```text
+本地优先的加密文件传输与分享管理工具
 ```
 
-启动服务：
+核心思路：
 
-```powershell
-mvn spring-boot:run
-```
+- 局域网优先直传。
+- 公网服务器只做临时中转、二维码分发、设备发现和过期缓存。
+- 公网内容应有时效，到期删除。
+- 后续接入端到端加密，服务器不应该理解文件明文。
+- 客户端不是普通文件管理器，而是以“分享行为、传输状态、过期状态”为核心的可视化管理器。
 
-需要验证：
+## P0：稳定客户端模型层
 
-- `POST /api/rooms` 能创建房间
-- `POST /api/rooms/{code}/join` 能加入房间
-- `POST /api/files/upload` 能上传文件
-- `GET /api/rooms/{roomId}/items` 能看到上传项
-- `GET /api/files/{itemId}/download` 能下载文件
-
-验收标准：
-
-- 能用同一个房间完成“上传 -> 列表 -> 下载”
-- 上传文件落到 `apps/server/uploads`
-- SQLite 中出现 `rooms` 和 `transfer_items` 记录
-
-## P1：实现客户端基础网络层
-
-目标：让鸿蒙客户端可以调用服务端 REST API。
+目标：先把页面需要的数据结构定义清楚，后续页面和服务层都围绕这些模型工作。
 
 建议改动范围：
 
 ```text
-apps/harmony/entry/src/main/ets/services/ApiClient.ets
-apps/harmony/entry/src/main/ets/services/RoomService.ets
-apps/harmony/entry/src/main/ets/services/TransferService.ets
+apps/harmony/entry/src/main/ets/models/
 ```
 
-注意：
+需要补齐：
 
-- 先实现 JSON GET/POST。
-- multipart 文件上传可以放到下一步。
-- 服务端地址先使用 `AppConfig.DEFAULT_SERVER_URL`，后续再做设置页。
+- `ShareSession`：一次分享会话，包含分享码、公网链接、过期状态、传输方式、文件列表。
+- `Device`：局域网设备，包含平台、在线状态、连接方式、延迟。
+- `TransferTask`：上传/下载任务，包含进度、状态、速度、错误信息。
+- `LocalFileEntry`：本地分享管理器中的文件项。
 
 验收标准：
 
-- `RoomService.createRoom` 返回真实 `Room`
-- `RoomService.joinRoom` 返回真实 `Room`
-- 错误响应能被转换成可展示的错误信息
+- 模型能覆盖首页、分享页、本地库、设备页所需展示数据。
+- 保留旧 `Room`、`TransferItem`，但后续页面优先使用新模型。
+- 不在模型层写请求逻辑。
 
-## P2：创建 RoomPage
+## P1：用 mock viewmodel 驱动页面
 
-目标：创建或加入房间后进入房间页。
+目标：先用假数据把页面信息架构跑通，不急着接真实网络、文件和加密能力。
 
 建议新增：
 
 ```text
-apps/harmony/entry/src/main/ets/pages/RoomPage.ets
-apps/harmony/entry/src/main/ets/viewmodels/RoomViewModel.ets
+apps/harmony/entry/src/main/ets/viewmodels/ShareViewModel.ets
+apps/harmony/entry/src/main/ets/viewmodels/LocalLibraryViewModel.ets
+apps/harmony/entry/src/main/ets/viewmodels/DeviceViewModel.ets
+```
+
+验收标准：
+
+- 每个页面的加载、空状态、错误状态、列表数据都有明确字段。
+- 页面不直接拼 mock 数据。
+- 页面点击事件先调用 viewmodel 或 toast 占位。
+
+## P2：搭核心页面骨架
+
+目标：使用 `components/` 和 `components/business/` 组件先搭出完整 App 骨架。
+
+建议新增：
+
+```text
+apps/harmony/entry/src/main/ets/pages/SharePage.ets
+apps/harmony/entry/src/main/ets/pages/LocalLibraryPage.ets
+apps/harmony/entry/src/main/ets/pages/DevicePage.ets
+apps/harmony/entry/src/main/ets/pages/SettingsPage.ets
 ```
 
 需要修改：
@@ -76,38 +81,44 @@ apps/harmony/entry/src/main/ets/pages/HomePage.ets
 
 验收标准：
 
-- 首页创建房间后进入房间页
-- 首页加入房间后进入房间页
-- 房间页展示房间名称、房间码、过期时间
-- 房间页能拉取并展示传输项列表
+- 首页能看到传输统计、最近分享、局域网设备入口。
+- 分享页展示分享码、过期状态、文件列表、文件添加入口。
+- 本地库页展示本地文件管理器视角。
+- 设备页展示局域网设备列表。
+- 设置页展示服务器地址、加密、缓存、清理策略入口。
 
-## P3：实现文件上传下载
+## P3：接入服务层能力
 
-目标：客户端完成真实文件传输。
+目标：等页面结构稳定后，再逐步接真实能力。
 
-建议改动范围：
+建议顺序：
 
-```text
-apps/harmony/entry/src/main/ets/services/TransferService.ets
-apps/harmony/entry/src/main/ets/pages/RoomPage.ets
-```
+1. `ApiClient`：JSON GET/POST。
+2. `ShareService`：公网临时分享、撤回、续期。
+3. `TransferService`：上传/下载任务。
+4. `FileService`：文件选择和本地文件信息。
+5. `DeviceDiscoveryService`：局域网设备发现。
+6. `CryptoService`：端到端加密/解密。
 
 验收标准：
 
-- 可以从鸿蒙端选择文件上传
-- 房间列表出现新文件
-- 可以下载文件
-- 上传和下载至少有基本状态提示
+- 页面只依赖 viewmodel，不直接调 HTTP、文件系统或加密实现。
+- 真实服务替换 mock 数据时，页面结构不用大改。
 
-## P4：再做剪贴板
+## P4：服务端按新定位演进
 
-目标：扩展文本、链接、代码片段能力。
+目标：服务端从“房间中转”逐步演进为“临时中转与发现服务”。
 
-不要在 P0 到 P3 之前做剪贴板，避免主链路还没稳定就扩范围。
+后续需要：
 
-建议：
+- 分享码和二维码生命周期。
+- 公网临时文件过期清理。
+- 密文上传和下载。
+- 设备发现/在线状态。
+- 局域网直传的公网 fallback。
 
-- 服务端先复用 `TransferItem`
-- 文本类传输项类型为 `TEXT` 或 `LINK`
-- 客户端只做手动读取/手动发送，不做后台自动监听剪贴板
+不要过早扩大范围。当前优先级仍是：
 
+```text
+模型层 -> mock viewmodel -> 页面骨架 -> services -> 真实传输
+```
