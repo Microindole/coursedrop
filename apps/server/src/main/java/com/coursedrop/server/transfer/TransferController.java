@@ -18,30 +18,30 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api")
 public class TransferController {
-  private final TransferService transferService;
+    private final TransferService transferService;
 
-  public TransferController(TransferService transferService) {
-    this.transferService = transferService;
-  }
+    public TransferController(TransferService transferService) {
+        this.transferService = transferService;
+    }
 
-  @GetMapping("/rooms/{roomId}/items")
-  public List<TransferItemResponse> list(@PathVariable String roomId) {
-    return transferService.list(roomId);
-  }
+    @GetMapping("/rooms/{roomId}/items")
+    public List<TransferItemResponse> list(@PathVariable String roomId) {
+        return transferService.list(roomId);
+    }
 
-  @PostMapping("/files/upload")
-  public TransferItemResponse upload(@RequestParam String roomId, @RequestParam MultipartFile file) {
-    return transferService.upload(roomId, file);
-  }
+    @PostMapping("/files/upload")
+    public TransferItemResponse upload(@RequestParam String roomId, @RequestParam MultipartFile file) {
+        return transferService.upload(roomId, file);
+    }
 
-  @GetMapping("/files/{itemId}/download")
-  public ResponseEntity<?> download(@PathVariable String itemId) {
-    var file = transferService.download(itemId);
-    var encoded = URLEncoder.encode(file.filename(), StandardCharsets.UTF_8).replace("+", "%20");
-    return ResponseEntity.ok()
-        .contentType(MediaType.parseMediaType(file.contentType() == null ? "application/octet-stream" : file.contentType()))
-        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encoded)
-        .body(file.resource());
-  }
+    @GetMapping("/files/{itemId}/download")
+    public ResponseEntity<?> download(@PathVariable String itemId) {
+        var file = transferService.download(itemId);
+        var encoded = URLEncoder.encode(file.filename(), StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .contentType(MediaType
+                        .parseMediaType(file.contentType() == null ? "application/octet-stream" : file.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encoded)
+                .body(file.resource());
+    }
 }
-

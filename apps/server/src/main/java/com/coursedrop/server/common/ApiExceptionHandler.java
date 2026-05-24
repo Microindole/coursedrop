@@ -10,18 +10,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
-  @ExceptionHandler(ApiException.class)
-  ResponseEntity<Map<String, Object>> handleApiException(ApiException exception) {
-    return ResponseEntity.status(exception.status()).body(error(exception.getMessage()));
-  }
+    @ExceptionHandler(ApiException.class)
+    ResponseEntity<Map<String, Object>> handleApiException(ApiException exception) {
+        return ResponseEntity.status(exception.status()).body(error(exception.getMessage()));
+    }
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
-  ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException exception) {
-    return ResponseEntity.badRequest().body(error("Invalid request body"));
-  }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException exception) {
+        return ResponseEntity.badRequest().body(error("Invalid request body"));
+    }
 
-  private Map<String, Object> error(String message) {
-    return Map.of("message", message, "timestamp", Instant.now().toString());
-  }
+    private Map<String, Object> error(String message) {
+        return Map.of("message", message, "timestamp", Instant.now().toString());
+    }
 }
-

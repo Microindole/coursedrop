@@ -5,8 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class CourseDropApplicationTests {
-  @Test
-  void contextLoads() {
-  }
+    @Test
+    void contextLoads() {
+    }
 }
-

@@ -11,27 +11,26 @@ import com.coursedrop.server.transfer.TransferItemRepository;
 
 @Component
 public class CleanupTask {
-  private final TransferItemRepository transferItemRepository;
-  private final RoomRepository roomRepository;
-  private final LocalFileStorageService storageService;
+    private final TransferItemRepository transferItemRepository;
+    private final RoomRepository roomRepository;
+    private final LocalFileStorageService storageService;
 
-  public CleanupTask(
-      TransferItemRepository transferItemRepository,
-      RoomRepository roomRepository,
-      LocalFileStorageService storageService) {
-    this.transferItemRepository = transferItemRepository;
-    this.roomRepository = roomRepository;
-    this.storageService = storageService;
-  }
+    public CleanupTask(
+            TransferItemRepository transferItemRepository,
+            RoomRepository roomRepository,
+            LocalFileStorageService storageService) {
+        this.transferItemRepository = transferItemRepository;
+        this.roomRepository = roomRepository;
+        this.storageService = storageService;
+    }
 
-  @Scheduled(fixedDelayString = "PT30M")
-  public void cleanupExpiredItems() {
-    var now = Instant.now();
-    transferItemRepository.findExpired(now).stream()
-        .filter(item -> item.storageKey() != null)
-        .forEach(item -> storageService.deleteIfExists(item.storageKey()));
-    transferItemRepository.deleteExpired(now);
-    roomRepository.deleteExpired(now);
-  }
+    @Scheduled(fixedDelayString = "PT30M")
+    public void cleanupExpiredItems() {
+        var now = Instant.now();
+        transferItemRepository.findExpired(now).stream()
+                .filter(item -> item.storageKey() != null)
+                .forEach(item -> storageService.deleteIfExists(item.storageKey()));
+        transferItemRepository.deleteExpired(now);
+        roomRepository.deleteExpired(now);
+    }
 }
-

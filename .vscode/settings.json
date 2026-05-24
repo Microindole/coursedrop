@@ -1,0 +1,22 @@
+{
+    "editor.detectIndentation": false,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "java.compile.nullAnalysis.mode": "automatic",
+    "[java]": {
+        "editor.tabSize": 4,
+        "editor.formatOnSave": true
+    },
+    "[json]": {
+        "editor.tabSize": 2
+    },
+    "[jsonc]": {
+        "editor.tabSize": 2
+    },
+    "[yaml]": {
+        "editor.tabSize": 2
+    },
+    "[markdown]": {
+        "editor.tabSize": 2
+    }
+}
