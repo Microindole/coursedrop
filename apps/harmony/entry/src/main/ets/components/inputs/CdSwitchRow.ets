@@ -6,6 +6,7 @@ export struct CdSwitchRow {
   description: string = '';
   @Link isOn: boolean;
   interactive: boolean = true;
+  onChange: (value: boolean) => void = (_value: boolean) => {};
 
   build() {
     Row() {
@@ -33,6 +34,7 @@ export struct CdSwitchRow {
         .enabled(this.interactive)
         .onChange((value: boolean) => {
           this.isOn = value;
+          this.onChange(value);
         })
     }
     .width('100%')

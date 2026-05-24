@@ -2,24 +2,23 @@ import { AppColors, AppRadius, AppSpacing, AppTypography } from '../../common/Th
 
 @Component
 export struct CdTransferStats {
-  activeCount: number = 0;
-  completedCount: number = 0;
-  failedCount: number = 0;
-  expiringCount: number = 0;
+  statsActiveCount: number = 0;
+  statsCompletedCount: number = 0;
+  statsFailedCount: number = 0;
+  statsExpiringCount: number = 0;
 
   @Builder
-  statCell(label: string, value: number, color: string) {
+  statCell(icon: Resource, value: number, color: string) {
     Column({ space: AppSpacing.XS }) {
+      Image(icon)
+        .width(20)
+        .height(20)
+        .fillColor(color)
+
       Text(`${value}`)
         .fontSize(AppTypography.TITLE)
         .fontWeight(FontWeight.Bold)
         .fontColor(color)
-
-      Text(label)
-        .fontSize(AppTypography.CAPTION)
-        .fontColor(AppColors.TEXT_SECONDARY)
-        .maxLines(1)
-        .textOverflow({ overflow: TextOverflow.Ellipsis })
     }
     .layoutWeight(1)
     .alignItems(HorizontalAlign.Center)
@@ -27,10 +26,10 @@ export struct CdTransferStats {
 
   build() {
     Row() {
-      this.statCell('进行中', this.activeCount, AppColors.PRIMARY_SELECTED)
-      this.statCell('已完成', this.completedCount, AppColors.SUCCESS)
-      this.statCell('失败', this.failedCount, AppColors.DANGER)
-      this.statCell('将过期', this.expiringCount, AppColors.WARNING)
+      this.statCell($r('app.media.cd_icon_running'), this.statsActiveCount, AppColors.PRIMARY_SELECTED)
+      this.statCell($r('app.media.cd_icon_done'), this.statsCompletedCount, AppColors.SUCCESS)
+      this.statCell($r('app.media.cd_icon_failed'), this.statsFailedCount, AppColors.DANGER)
+      this.statCell($r('app.media.cd_icon_expire'), this.statsExpiringCount, AppColors.WARNING)
     }
     .width('100%')
     .padding(AppSpacing.MD)

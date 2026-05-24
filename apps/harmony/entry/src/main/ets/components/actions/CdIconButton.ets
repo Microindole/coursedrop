@@ -4,7 +4,7 @@ export type CdIconButtonVariant = 'plain' | 'tonal' | 'danger';
 
 @Component
 export struct CdIconButton {
-  mark: string = '...';
+  icon: Resource = $r('app.media.cd_icon_share');
   variant: CdIconButtonVariant = 'plain';
   interactive: boolean = true;
   onTap: () => void = () => {};
@@ -31,10 +31,10 @@ export struct CdIconButton {
 
   build() {
     Button({ type: ButtonType.Circle }) {
-      Text(this.mark)
-        .fontSize(AppSize.ICON_MD)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(this.resolveIconColor())
+      Image(this.icon)
+        .width(AppSize.ICON_MD)
+        .height(AppSize.ICON_MD)
+        .fillColor(this.resolveIconColor())
     }
     .width(40)
     .height(40)

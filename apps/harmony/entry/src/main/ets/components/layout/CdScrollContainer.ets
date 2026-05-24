@@ -15,7 +15,10 @@ export struct CdScrollContainer {
         this.content()
       }
       .width('100%')
+      .justifyContent(FlexAlign.Start)
+      .alignItems(HorizontalAlign.Start)
       .padding({
+        top: AppSpacing.PAGE_TOP,
         left: AppSpacing.PAGE_HORIZONTAL,
         right: AppSpacing.PAGE_HORIZONTAL,
         bottom: AppSpacing.XL
@@ -23,6 +26,7 @@ export struct CdScrollContainer {
     }
     .width('100%')
     .height('100%')
+    .align(Alignment.TopStart)
     .backgroundColor(AppColors.BACKGROUND)
     .scrollBar(this.showScrollBar ? BarState.Auto : BarState.Off)
   }

@@ -14,6 +14,7 @@ CourseDrop 客户端参考 `PageAndData` 的鸿蒙原生页面组织方式，并
 - 以白色 surface、浅灰背景和蓝色主操作建立层级
 - 使用 12vp 页面边距、16vp 白色功能区、40vp 胶囊按钮
 - 表单、按钮、状态标签、列表项、弹层、业务卡片组件化
+- 主要导航和高频操作优先使用本地 SVG 图标表达，文字只保留必要标签
 - 页面只组合通用组件和业务组件，不裸写复杂样式
 
 ## 组件策略
@@ -47,19 +48,24 @@ components/
   navigation/        抽屉、底部标签栏
   display/           文本、列表、文件项、消息、分页、信息行、轮播
   feedback/          状态、横幅、确认面板、进度、空状态
-  business/          分享码、设备、过期、传输、文件操作等业务组件
+  business/          分享码、设备、过期、传输、文件操作、业务列表等业务组件
 pages/
-  HomePage.ets       首页入口
+  HomePage.ets       应用唯一入口，承载底部分页
+  SharePage.ets      分享页 tab 内容组件
+  LocalLibraryPage.ets 本地库 tab 内容组件
+  DevicePage.ets     设备页 tab 内容组件
+  SettingsPage.ets   设置页 tab 内容组件
 ```
 
 ## 页面路线
 
 ```text
-HomePage             首页入口、统计、最近分享、设备入口
-SharePage            分享码、过期状态、文件列表、文件添加入口
-LocalLibraryPage     本地分享管理器
-DevicePage           局域网设备列表
-SettingsPage         服务器、加密、缓存、清理策略
+HomePage             唯一 @Entry，通过 CdBottomTabs 组织页面分页
+Home tab             统计、最近分享、附近设备概览
+Share tab            分享码、过期状态、文件列表、文件添加入口
+LocalLibrary tab     本地分享管理器
+Device tab           局域网设备列表
+Settings tab         中转源列表、加密、缓存、清理策略
 ```
 
 ## 命名约定

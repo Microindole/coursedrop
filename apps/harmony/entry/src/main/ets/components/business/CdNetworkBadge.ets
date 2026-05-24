@@ -1,4 +1,4 @@
-import { AppColors, AppRadius, AppSpacing, AppTypography } from '../../common/Theme';
+import { AppColors, AppRadius, AppSpacing } from '../../common/Theme';
 
 export type CdNetworkMode = 'lan' | 'relay' | 'e2ee' | 'offline';
 
@@ -6,20 +6,20 @@ export type CdNetworkMode = 'lan' | 'relay' | 'e2ee' | 'offline';
 export struct CdNetworkBadge {
   mode: CdNetworkMode = 'relay';
 
-  private label(): string {
+  private resolveIcon(): Resource {
     if (this.mode === 'lan') {
-      return 'LAN';
+      return $r('app.media.cd_icon_lan');
     }
     if (this.mode === 'e2ee') {
-      return 'E2EE';
+      return $r('app.media.cd_icon_lock');
     }
     if (this.mode === 'offline') {
-      return 'OFFLINE';
+      return $r('app.media.cd_icon_offline');
     }
-    return 'RELAY';
+    return $r('app.media.cd_icon_relay');
   }
 
-  private backgroundColor(): string {
+  private resolveBackgroundColor(): string {
     if (this.mode === 'lan' || this.mode === 'e2ee') {
       return AppColors.SUCCESS_SOFT;
     }
@@ -29,7 +29,7 @@ export struct CdNetworkBadge {
     return AppColors.PRIMARY_SOFT;
   }
 
-  private textColor(): string {
+  private resolveTextColor(): string {
     if (this.mode === 'lan' || this.mode === 'e2ee') {
       return AppColors.SUCCESS;
     }
@@ -40,17 +40,17 @@ export struct CdNetworkBadge {
   }
 
   build() {
-    Text(this.label())
-      .fontSize(AppTypography.CAPTION)
-      .fontWeight(FontWeight.Bold)
-      .fontColor(this.textColor())
+    Image(this.resolveIcon())
+      .width(16)
+      .height(16)
+      .fillColor(this.resolveTextColor())
       .padding({
         left: AppSpacing.SM,
         right: AppSpacing.SM,
         top: AppSpacing.XS,
         bottom: AppSpacing.XS
       })
-      .backgroundColor(this.backgroundColor())
+      .backgroundColor(this.resolveBackgroundColor())
       .borderRadius(AppRadius.SM)
   }
 }

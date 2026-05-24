@@ -8,10 +8,10 @@ export struct CdSearchField {
 
   build() {
     Row({ space: AppSpacing.SM }) {
-      Text('S')
-        .fontSize(AppTypography.CAPTION)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.TEXT_SECONDARY)
+      Image($r('app.media.cd_icon_search'))
+        .width(18)
+        .height(18)
+        .fillColor(AppColors.TEXT_SECONDARY)
 
       TextInput({ placeholder: this.placeholder, text: this.value })
         .layoutWeight(1)

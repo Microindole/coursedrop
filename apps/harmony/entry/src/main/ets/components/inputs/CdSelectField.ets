@@ -12,6 +12,7 @@ export struct CdSelectField {
   options: CdSelectOption[] = [];
   @Link selectedValue: string;
   @State expanded: boolean = false;
+  onChange: (value: string) => void = (_value: string) => {};
 
   private selectedLabel(): string {
     for (let index = 0; index < this.options.length; index++) {
@@ -65,10 +66,10 @@ export struct CdSelectField {
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
 
               if (option.value === this.selectedValue) {
-                Text('OK')
-                  .fontSize(AppTypography.CAPTION)
-                  .fontWeight(FontWeight.Bold)
-                  .fontColor(AppColors.PRIMARY_SELECTED)
+                Image($r('app.media.cd_icon_done'))
+                  .width(16)
+                  .height(16)
+                  .fillColor(AppColors.PRIMARY_SELECTED)
               }
             }
             .width('100%')
@@ -81,6 +82,7 @@ export struct CdSelectField {
             .onClick(() => {
               this.selectedValue = option.value;
               this.expanded = false;
+              this.onChange(option.value);
             })
           }, (option: CdSelectOption) => option.value)
         }

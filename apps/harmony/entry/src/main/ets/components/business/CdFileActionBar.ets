@@ -1,5 +1,5 @@
 import { AppColors, AppRadius, AppSpacing, AppTypography } from '../../common/Theme';
-import { CdButton } from '../actions/CdButton';
+import { CdIconButton } from '../actions/CdIconButton';
 
 @Component
 export struct CdFileActionBar {
@@ -17,40 +17,50 @@ export struct CdFileActionBar {
           .fontColor(AppColors.TEXT)
           .layoutWeight(1)
 
-        Text('取消选择')
-          .fontSize(AppTypography.BODY_SMALL)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(AppColors.PRIMARY_SELECTED)
-          .onClick(() => {
+        CdIconButton({
+          icon: $r('app.media.cd_icon_close'),
+          variant: 'plain',
+          onTap: () => {
             this.onClear();
-          })
+          }
+        })
       }
       .width('100%')
 
-      Row({ space: AppSpacing.SM }) {
-        Column() {
-          CdButton({
-            label: '重新分享',
-            variant: 'contained',
+      Row({ space: AppSpacing.LG }) {
+        Column({ space: AppSpacing.XS }) {
+          CdIconButton({
+            icon: $r('app.media.cd_icon_share'),
+            variant: 'tonal',
             interactive: this.selectedCount > 0,
             onTap: () => {
               this.onShare();
             }
           })
+
+          Text('分享')
+            .fontSize(AppTypography.CAPTION)
+            .fontColor(AppColors.TEXT_SECONDARY)
         }
         .layoutWeight(1)
+        .alignItems(HorizontalAlign.Center)
 
-        Column() {
-          CdButton({
-            label: '删除',
+        Column({ space: AppSpacing.XS }) {
+          CdIconButton({
+            icon: $r('app.media.cd_icon_trash'),
             variant: 'danger',
             interactive: this.selectedCount > 0,
             onTap: () => {
               this.onDelete();
             }
           })
+
+          Text('删除')
+            .fontSize(AppTypography.CAPTION)
+            .fontColor(AppColors.TEXT_SECONDARY)
         }
         .layoutWeight(1)
+        .alignItems(HorizontalAlign.Center)
       }
       .width('100%')
     }

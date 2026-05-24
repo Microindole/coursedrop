@@ -1,5 +1,5 @@
 import { AppColors, AppRadius, AppSpacing, AppTypography } from '../../common/Theme';
-import { CdButton } from '../actions/CdButton';
+import { CdIconButton } from '../actions/CdIconButton';
 import { CdExpireInfo, CdExpireTone } from './CdExpireInfo';
 import { CdNetworkBadge, CdNetworkMode } from './CdNetworkBadge';
 
@@ -45,39 +45,54 @@ export struct CdShareCode {
       .backgroundColor(AppColors.PRIMARY_SOFT)
       .borderRadius(AppRadius.LG)
 
-      Row({ space: AppSpacing.SM }) {
-        Column() {
-          CdButton({
-            label: '复制',
+      Row({ space: AppSpacing.LG }) {
+        Column({ space: AppSpacing.XS }) {
+          CdIconButton({
+            icon: $r('app.media.cd_icon_copy'),
             variant: 'tonal',
             onTap: () => {
               this.onCopy();
             }
           })
+
+          Text('复制')
+            .fontSize(AppTypography.CAPTION)
+            .fontColor(AppColors.TEXT_SECONDARY)
         }
         .layoutWeight(1)
+        .alignItems(HorizontalAlign.Center)
 
-        Column() {
-          CdButton({
-            label: '刷新',
+        Column({ space: AppSpacing.XS }) {
+          CdIconButton({
+            icon: $r('app.media.cd_icon_refresh'),
             variant: 'tonal',
             onTap: () => {
               this.onRefresh();
             }
           })
+
+          Text('刷新')
+            .fontSize(AppTypography.CAPTION)
+            .fontColor(AppColors.TEXT_SECONDARY)
         }
         .layoutWeight(1)
+        .alignItems(HorizontalAlign.Center)
 
-        Column() {
-          CdButton({
-            label: '撤回',
+        Column({ space: AppSpacing.XS }) {
+          CdIconButton({
+            icon: $r('app.media.cd_icon_close'),
             variant: 'danger',
             onTap: () => {
               this.onRevoke();
             }
           })
+
+          Text('撤回')
+            .fontSize(AppTypography.CAPTION)
+            .fontColor(AppColors.TEXT_SECONDARY)
         }
         .layoutWeight(1)
+        .alignItems(HorizontalAlign.Center)
       }
       .width('100%')
     }

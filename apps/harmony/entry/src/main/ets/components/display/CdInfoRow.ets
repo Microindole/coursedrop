@@ -6,15 +6,19 @@ export struct CdInfoRow {
   value: string = '';
   mark: string = '';
 
+  private resolveIcon(): Resource {
+    if (this.mark === 'LINK') {
+      return $r('app.media.cd_icon_link');
+    }
+    return $r('app.media.cd_icon_server');
+  }
+
   build() {
     Row() {
-      Text(this.mark)
-        .fontSize(AppTypography.CAPTION)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.PRIMARY_SELECTED)
+      Image(this.resolveIcon())
         .width(AppSize.ICON_MD)
         .height(AppSize.ICON_MD)
-        .textAlign(TextAlign.Center)
+        .fillColor(AppColors.PRIMARY_SELECTED)
         .margin({ right: AppSpacing.MD })
 
       Column({ space: AppSpacing.XS }) {

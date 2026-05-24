@@ -7,7 +7,7 @@ export struct CdExpireInfo {
   label: string = '';
   tone: CdExpireTone = 'active';
 
-  private backgroundColor(): string {
+  private resolveBackgroundColor(): string {
     if (this.tone === 'soon') {
       return AppColors.WARNING_SOFT;
     }
@@ -17,7 +17,7 @@ export struct CdExpireInfo {
     return AppColors.PRIMARY_SOFT;
   }
 
-  private textColor(): string {
+  private resolveTextColor(): string {
     if (this.tone === 'soon') {
       return AppColors.WARNING;
     }
@@ -29,15 +29,15 @@ export struct CdExpireInfo {
 
   build() {
     Row({ space: AppSpacing.XS }) {
-      Text('EXP')
-        .fontSize(AppTypography.CAPTION)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(this.textColor())
+      Image($r('app.media.cd_icon_expire'))
+        .width(14)
+        .height(14)
+        .fillColor(this.resolveTextColor())
 
       Text(this.label)
         .fontSize(AppTypography.CAPTION)
         .fontWeight(FontWeight.Medium)
-        .fontColor(this.textColor())
+        .fontColor(this.resolveTextColor())
         .maxLines(1)
         .textOverflow({ overflow: TextOverflow.Ellipsis })
     }
@@ -47,7 +47,7 @@ export struct CdExpireInfo {
       top: AppSpacing.XS,
       bottom: AppSpacing.XS
     })
-    .backgroundColor(this.backgroundColor())
+    .backgroundColor(this.resolveBackgroundColor())
     .borderRadius(AppRadius.SM)
   }
 }

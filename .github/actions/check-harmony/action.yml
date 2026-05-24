@@ -36,6 +36,7 @@ runs:
           "entry/src/main/ets/models/Device.ets"
           "entry/src/main/ets/models/TransferTask.ets"
           "entry/src/main/ets/models/LocalFileEntry.ets"
+          "entry/src/main/ets/models/RelayServerConfig.ets"
           "entry/src/main/ets/models/index.ets"
           "entry/src/main/ets/viewmodels/ShareViewModel.ets"
           "entry/src/main/ets/viewmodels/LocalLibraryViewModel.ets"
@@ -43,7 +44,15 @@ runs:
           "entry/src/main/ets/viewmodels/SettingsViewModel.ets"
           "entry/src/main/ets/viewmodels/index.ets"
           "entry/src/main/ets/pages/HomePage.ets"
+          "entry/src/main/ets/pages/SharePage.ets"
+          "entry/src/main/ets/pages/LocalLibraryPage.ets"
+          "entry/src/main/ets/pages/DevicePage.ets"
+          "entry/src/main/ets/pages/SettingsPage.ets"
           "entry/src/main/resources/base/profile/main_pages.json"
+          "entry/src/main/ets/components/business/CdFileList.ets"
+          "entry/src/main/ets/components/business/CdDeviceList.ets"
+          "entry/src/main/ets/components/business/CdRelaySourceList.ets"
+          "entry/src/main/ets/components/navigation/CdBottomTabs.ets"
         )
 
         for file in "${required_files[@]}"; do

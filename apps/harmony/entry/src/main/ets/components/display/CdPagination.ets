@@ -16,10 +16,15 @@ export struct CdPagination {
 
   build() {
     Row({ space: AppSpacing.MD }) {
-      Text('上一页')
-        .fontSize(AppTypography.BODY_SMALL)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(this.currentPage > 1 ? AppColors.PRIMARY_SELECTED : AppColors.TEXT_SECONDARY)
+      Button({ type: ButtonType.Circle }) {
+        Image($r('app.media.cd_icon_prev'))
+          .width(20)
+          .height(20)
+          .fillColor(this.currentPage > 1 ? AppColors.PRIMARY_SELECTED : AppColors.TEXT_SECONDARY)
+      }
+        .width(40)
+        .height(40)
+        .backgroundColor(AppColors.SURFACE)
         .opacity(this.currentPage > 1 ? 1 : 0.45)
         .onClick(() => {
           this.goTo(this.currentPage - 1);
@@ -35,10 +40,15 @@ export struct CdPagination {
         .backgroundColor(AppColors.SURFACE)
         .borderRadius(AppRadius.MD)
 
-      Text('下一页')
-        .fontSize(AppTypography.BODY_SMALL)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(this.currentPage < this.totalPages ? AppColors.PRIMARY_SELECTED : AppColors.TEXT_SECONDARY)
+      Button({ type: ButtonType.Circle }) {
+        Image($r('app.media.cd_icon_next'))
+          .width(20)
+          .height(20)
+          .fillColor(this.currentPage < this.totalPages ? AppColors.PRIMARY_SELECTED : AppColors.TEXT_SECONDARY)
+      }
+        .width(40)
+        .height(40)
+        .backgroundColor(AppColors.SURFACE)
         .opacity(this.currentPage < this.totalPages ? 1 : 0.45)
         .onClick(() => {
           this.goTo(this.currentPage + 1);

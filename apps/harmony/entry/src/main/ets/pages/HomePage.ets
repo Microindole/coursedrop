@@ -1,180 +1,156 @@
+import DevicePage from './DevicePage';
+import LocalLibraryPage from './LocalLibraryPage';
+import SettingsPage from './SettingsPage';
+import SharePage from './SharePage';
 import { AppSpacing } from '../common/Theme';
 import {
-  CdActionTile,
-  CdButton,
-  CdFileItem,
-  CdInfoRow,
+  CdBanner,
+  CdBottomTabs,
+  CdDeviceList,
   CdPageTitle,
-  CdPanel,
   CdScrollContainer,
   CdSectionHeader,
+  CdShareCode,
   CdStatusPill,
-  CdTextField
+  CdTransferStats
 } from '../components/index';
+import { ShareSession } from '../models/ShareSession';
 import { HomeViewModel } from '../viewmodels/HomeViewModel';
 
 @Entry
 @Component
 struct HomePage {
   private viewModel: HomeViewModel = new HomeViewModel();
-  @State roomName: string = '';
-  @State roomCode: string = '';
+  @State currentIndex: number = 0;
 
-  private showTodoToast(action: string): void {
-    try {
-      this.getUIContext().getPromptAction().showToast({
-        message: `${action}接口下一步接入`,
-        duration: 1800
-      });
-    } catch (error) {
-      console.error(`show toast failed: ${JSON.stringify(error)}`);
+  private networkMode(mode: string): 'lan' | 'relay' | 'e2ee' | 'offline' {
+    if (mode === 'LAN') {
+      return 'lan';
+    }
+    if (mode === 'E2EE') {
+      return 'e2ee';
+    }
+    if (mode === 'OFFLINE') {
+      return 'offline';
+    }
+    return 'relay';
+  }
+
+  private expireTone(status: string): 'active' | 'soon' | 'expired' {
+    if (status === 'EXPIRING_SOON') {
+      return 'soon';
+    }
+    if (status === 'EXPIRED') {
+      return 'expired';
+    }
+    return 'active';
+  }
+
+  private expireText(session: ShareSession): string {
+    if (session.expireStatus === 'EXPIRING_SOON') {
+      return '即将过期';
+    }
+    if (session.expireStatus === 'EXPIRED') {
+      return '已过期';
+    }
+    return '有效';
+  }
+
+  @Builder
+  HomeTab() {
+    CdScrollContainer() {
+      Column({ space: AppSpacing.MD }) {
+        Column({ space: AppSpacing.MD }) {
+          CdPageTitle({
+            title: this.viewModel.appName,
+            subtitle: this.viewModel.subtitle
+          })
+
+          Row({ space: AppSpacing.SM }) {
+            CdStatusPill({ label: '局域网优先', tone: 'info' })
+            CdStatusPill({ label: '临时中转', tone: 'success' })
+          }
+          .width('100%')
+        }
+        .alignItems(HorizontalAlign.Start)
+        .width('100%')
+        .padding({ bottom: AppSpacing.SM })
+
+        CdTransferStats({
+          statsActiveCount: this.viewModel.getTransferStats().activeCount,
+          statsCompletedCount: this.viewModel.getTransferStats().completedCount,
+          statsFailedCount: this.viewModel.getTransferStats().failedCount,
+          statsExpiringCount: this.viewModel.getTransferStats().expiringCount
+        })
+
+        CdBanner({
+          title: '页面骨架阶段',
+          description: '当前使用 mock viewmodel 驱动，后续再接 services、文件选择和真实传输。',
+          tone: 'info'
+        })
+
+        CdSectionHeader({ title: '最近分享' })
+
+        ForEach(this.viewModel.recentShares, (share: ShareSession) => {
+          CdShareCode({
+            code: share.code,
+            shareUrl: share.shareUrl,
+            expireText: this.expireText(share),
+            expireTone: this.expireTone(share.expireStatus),
+            networkMode: this.networkMode(share.networkMode)
+          })
+        }, (share: ShareSession) => share.id)
+
+        CdSectionHeader({ title: '附近设备' })
+
+        CdDeviceList({ devices: this.viewModel.nearbyDevices })
+
+        Blank()
+      }
+      .width('100%')
     }
   }
 
+  @Builder
+  ShareTab() {
+    SharePage({ showBack: false })
+  }
+
+  @Builder
+  LibraryTab() {
+    LocalLibraryPage({ showBack: false })
+  }
+
+  @Builder
+  DeviceTab() {
+    DevicePage({ showBack: false })
+  }
+
+  @Builder
+  SettingsTab() {
+    SettingsPage({ showBack: false })
+  }
+
   build() {
-    Stack() {
-      CdScrollContainer() {
-        Column({ space: AppSpacing.MD }) {
-          Column({ space: AppSpacing.MD }) {
-            CdPageTitle({
-              title: this.viewModel.appName,
-              subtitle: this.viewModel.subtitle
-            })
-
-            Row({ space: AppSpacing.SM }) {
-              CdStatusPill({ label: '局域网优先', tone: 'info' })
-              CdStatusPill({ label: '临时中转', tone: 'success' })
-            }
-            .width('100%')
-          }
-          .alignItems(HorizontalAlign.Start)
-          .width('100%')
-          .padding({ top: AppSpacing.PAGE_TOP, bottom: AppSpacing.SM })
-
-          Grid() {
-            GridItem() {
-              CdActionTile({
-                title: '本地发送',
-                subtitle: '同网直传',
-                mark: 'LAN',
-                onTap: () => {
-                  this.showTodoToast('局域网传输');
-                }
-              })
-            }
-
-            GridItem() {
-              CdActionTile({
-                title: '公网分享',
-                subtitle: '二维码时效',
-                mark: 'QR',
-                onTap: () => {
-                  this.showTodoToast('公网分享');
-                }
-              })
-            }
-
-            GridItem() {
-              CdActionTile({
-                title: '分享管理',
-                subtitle: '记录与状态',
-                mark: 'MGR',
-                onTap: () => {
-                  this.showTodoToast('分享管理');
-                }
-              })
-            }
-
-            GridItem() {
-              CdActionTile({
-                title: '加密传输',
-                subtitle: '端到端',
-                mark: 'ENC',
-                onTap: () => {
-                  this.showTodoToast('端到端加密');
-                }
-              })
-            }
-          }
-          .columnsTemplate('1fr 1fr')
-          .rowsTemplate('1fr 1fr')
-          .columnsGap(AppSpacing.SM)
-          .rowsGap(AppSpacing.SM)
-          .width('100%')
-          .height(200)
-
-          CdSectionHeader({ title: '临时投递' })
-
-          CdPanel() {
-            Column({ space: AppSpacing.LG }) {
-              CdTextField({
-                label: '分享名称',
-                placeholder: '例如：移动应用作业资料',
-                value: $roomName
-              })
-
-              CdButton({
-                label: '创建临时分享',
-                variant: 'contained',
-                onTap: () => {
-                  this.showTodoToast('创建分享');
-                }
-              })
-            }
-            .width('100%')
-            .alignItems(HorizontalAlign.Start)
-          }
-
-          CdPanel() {
-            Column({ space: AppSpacing.LG }) {
-              CdTextField({
-                label: '分享码',
-                placeholder: '输入 6 位分享码',
-                value: $roomCode
-              })
-
-              CdButton({
-                label: '加入分享',
-                variant: 'tonal',
-                onTap: () => {
-                  this.roomCode = this.roomCode.toUpperCase();
-                  this.showTodoToast('加入分享');
-                }
-              })
-            }
-            .width('100%')
-            .alignItems(HorizontalAlign.Start)
-          }
-
-          CdSectionHeader({ title: '最近内容', actionText: '全部' })
-
-          CdFileItem({
-            name: 'UI 教程参考资料.zip',
-            meta: '公网临时副本 · 23 小时后过期',
-            tone: 'file'
-          })
-
-          CdFileItem({
-            name: '课堂截图.png',
-            meta: '局域网可用 · 端到端加密',
-            tone: 'image'
-          })
-
-          CdPanel() {
-            Column({ space: AppSpacing.SM }) {
-              CdInfoRow({
-                title: '当前主线',
-                value: '先跑通公网临时中转，再接局域网直传和分享管理器',
-                mark: 'MVP'
-              })
-            }
-            .width('100%')
-          }
-
-          Blank()
+    Stack({ alignContent: Alignment.TopStart }) {
+      CdBottomTabs({
+        currentIndex: $currentIndex,
+        homeContent: () => {
+          this.HomeTab();
+        },
+        shareContent: () => {
+          this.ShareTab();
+        },
+        libraryContent: () => {
+          this.LibraryTab();
+        },
+        deviceContent: () => {
+          this.DeviceTab();
+        },
+        settingsContent: () => {
+          this.SettingsTab();
         }
-        .width('100%')
-      }
+      })
     }
     .width('100%')
     .height('100%')

@@ -7,15 +7,26 @@ export struct CdActionTile {
   mark: string = '';
   onTap: () => void = () => {};
 
+  private resolveIcon(): Resource {
+    if (this.mark === 'IMG') {
+      return $r('app.media.cd_icon_image');
+    }
+    if (this.mark === 'TXT') {
+      return $r('app.media.cd_icon_text');
+    }
+    if (this.mark === 'URL') {
+      return $r('app.media.cd_icon_link');
+    }
+    return $r('app.media.cd_icon_file');
+  }
+
   build() {
     Column({ space: AppSpacing.XS }) {
-      Text(this.mark)
-        .fontSize(AppTypography.SUBTITLE)
-        .fontWeight(FontWeight.Bold)
-        .fontColor(AppColors.PRIMARY_SELECTED)
+      Image(this.resolveIcon())
         .width(AppSize.ICON_LG)
         .height(AppSize.ICON_LG)
-        .textAlign(TextAlign.Center)
+        .fillColor(AppColors.PRIMARY_SELECTED)
+        .padding(AppSpacing.SM)
         .backgroundColor(AppColors.PRIMARY_SOFT)
         .borderRadius(AppRadius.MD)
 

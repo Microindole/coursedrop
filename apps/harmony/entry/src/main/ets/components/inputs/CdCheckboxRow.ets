@@ -5,15 +5,16 @@ export struct CdCheckboxRow {
   title: string = '';
   description: string = '';
   @Link checked: boolean;
+  onChange: (checked: boolean) => void = (_checked: boolean) => {};
 
   build() {
     Row() {
       Row() {
         if (this.checked) {
-          Text('OK')
-            .fontSize(AppTypography.CAPTION)
-            .fontWeight(FontWeight.Bold)
-            .fontColor(Color.White)
+          Image($r('app.media.cd_icon_done'))
+            .width(16)
+            .height(16)
+            .fillColor(Color.White)
         }
       }
       .width(24)
@@ -48,6 +49,7 @@ export struct CdCheckboxRow {
     .alignItems(VerticalAlign.Center)
     .onClick(() => {
       this.checked = !this.checked;
+      this.onChange(this.checked);
     })
   }
 }

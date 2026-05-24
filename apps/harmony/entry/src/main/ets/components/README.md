@@ -8,7 +8,7 @@
 components/
   index.ets       统一导出入口
   actions/        按钮、图标按钮、链接、操作宫格
-  business/       CourseDrop 业务组件：分享码、设备、过期、传输、文件操作
+  business/       CourseDrop 业务组件：分享码、设备、过期、传输、文件操作、业务列表
   inputs/         输入框、搜索、选择、分段、开关、复选
   layout/         页面、滚动容器、面板、顶部条、标题分区
   navigation/     抽屉、底部标签栏等导航外壳
@@ -29,6 +29,7 @@ import { CdButton, CdPanel, CdTextField } from '../components';
 - 页面标题使用 `CdPageTitle`，分区标题使用 `CdSectionHeader`。
 - 主要操作用 40vp 胶囊按钮；高频入口用 `CdActionTile` 宫格。
 - 列表项、状态标签、输入框、开关不要在页面里重复写样式。
+- 页面优先使用业务列表组合组件，不直接散写重复的 `ForEach + Item`。
 - 组件只负责展示和基础交互，不直接请求接口。
 
 ## 组件清单
@@ -37,11 +38,14 @@ import { CdButton, CdPanel, CdTextField } from '../components';
 
 - `CdShareCode`：公网分享码/链接展示，包含复制、刷新、撤回操作入口。
 - `CdDeviceItem`：局域网设备列表项，展示平台、在线状态、连接方式和延迟。
+- `CdDeviceList`：设备列表组合组件，统一设备状态和连接方式展示。
 - `CdNetworkBadge`：传输方式标签，支持 LAN、RELAY、E2EE、OFFLINE。
 - `CdExpireInfo`：过期状态标签，支持正常、即将过期、已过期。
 - `CdTransferStats`：传输统计摘要，展示进行中、完成、失败、将过期数量。
 - `CdFilePickerPanel`：添加内容入口，包含文件、图片、文本、链接。
 - `CdFileActionBar`：批量文件操作栏，支持重新分享、删除、取消选择。
+- `CdFileList`：文件列表组合组件，支持本地库和分享内容两种来源。
+- `CdRelaySourceList`：公网中转源列表，支持启停和优先级操作入口。
 - `CdBottomSheet`：底部弹层外壳，适合文件操作菜单和详情面板。
 - `CdDetailSheet`：文件/分享详情卡片，展示大小、类型、创建、过期、加密状态。
 
@@ -73,6 +77,7 @@ import { CdButton, CdPanel, CdTextField } from '../components';
 ### navigation
 
 - `CdDrawer`：抽屉遮罩外壳，适合后续放服务器设置、筛选、文件详情。
+- `CdBottomTabs`：应用主底部分页，封装 ArkUI `Tabs` 和 tab 图标动效。
 - `CdTabBar`：底部标签栏外壳，适合后续“首页 / 分享 / 设置”主导航。
 
 ### display

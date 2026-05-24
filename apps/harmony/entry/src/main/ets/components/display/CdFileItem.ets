@@ -9,26 +9,26 @@ export struct CdFileItem {
   tone: CdFileTone = 'file';
   onTap: () => void = () => {};
 
-  private resolveMark(): string {
+  private resolveIcon(): Resource {
     if (this.tone === 'image') {
-      return 'IMG';
+      return $r('app.media.cd_icon_image');
     }
     if (this.tone === 'link') {
-      return 'URL';
+      return $r('app.media.cd_icon_link');
     }
     if (this.tone === 'text') {
-      return 'TXT';
+      return $r('app.media.cd_icon_text');
     }
-    return 'DOC';
+    return $r('app.media.cd_icon_file');
   }
 
   build() {
     Row() {
       Row() {
-        Text(this.resolveMark())
-          .fontSize(AppTypography.CAPTION)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(AppColors.PRIMARY_SELECTED)
+        Image(this.resolveIcon())
+          .width(24)
+          .height(24)
+          .fillColor(AppColors.PRIMARY_SELECTED)
       }
       .width(44)
       .height(44)
@@ -54,9 +54,10 @@ export struct CdFileItem {
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
 
-      Text('>')
-        .fontSize(AppTypography.BODY)
-        .fontColor(AppColors.TEXT_SECONDARY)
+      Image($r('app.media.cd_icon_share'))
+        .width(18)
+        .height(18)
+        .fillColor(AppColors.TEXT_SECONDARY)
     }
     .width('100%')
     .padding({

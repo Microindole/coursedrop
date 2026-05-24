@@ -21,3 +21,4 @@ export type {
   TransferTaskStatus
 } from './TransferTask';
 export type { LocalFileEntry } from './LocalFileEntry';
+export type { RelayServerConfig } from './RelayServerConfig';
