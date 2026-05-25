@@ -114,6 +114,8 @@ CourseDrop 当前定位为本地优先的加密文件传输与分享管理工具
 - `id`：账号 ID
 - `username`：账号名
 - `passwordHash`：密码摘要，可以为空
+- `passwordSalt`：密码盐，可以为空
+- `passwordAlgorithm`：密码哈希算法，可以为空
 - `passwordLoginEnabled`：是否允许账号密码登录
 - `createdAt`：创建时间
 
@@ -129,6 +131,7 @@ Web 管理端登录会话。
 - `loginCode`：二维码登录码
 - `accountId`：登录账号 ID，可以为空
 - `fingerprintId`：确认登录的手机设备指纹 ID
+- `cookieTokenHash`：浏览器会话 Cookie 的服务端摘要，可以为空
 - `status`：`PENDING`、`CONFIRMED`、`EXPIRED`
 - `createdAt`：创建时间
 - `expiresAt`：过期时间
@@ -161,6 +164,26 @@ Web 管理端登录会话。
 - `sizeBytes`：大小
 - `storagePath`：服务器临时存储路径
 - `encrypted`：是否为端到端加密密文
+- `encryptionAlgorithm`：加密算法，可以为空
+- `kdfAlgorithm`：密钥派生算法，可以为空
+- `kdfSalt`：密钥派生盐，可以为空
+- `nonce`：加密 nonce/iv，可以为空
 - `sha256`：文件摘要
+- `plainSizeBytes`：明文大小，可以为空
 - `createdAt`：创建时间
 - `expiresAt`：过期时间
+
+### ShareAuditLog
+
+分享删除、撤回和过期清理审计记录。
+
+字段：
+
+- `id`：审计 ID
+- `shareId`：分享 ID
+- `itemId`：分享项 ID，可以为空
+- `reason`：`EXPIRED`、`REVOKED`、`CLEANUP_FAILED`、`MANUAL_ADMIN`
+- `actorType`：`SYSTEM`、`ACCOUNT`、`FINGERPRINT`、`ADMIN`
+- `actorId`：触发者 ID，可以为空
+- `sizeBytes`：被删除文件大小，可以为空
+- `createdAt`：审计时间

@@ -1,17 +1,14 @@
-package com.coursedrop.server.auth;
+package com.coursedrop.server.dto;
 
 import java.time.Instant;
 
 import com.coursedrop.server.enums.WebLoginStatus;
 
-public record WebLoginSession(
-        String id,
+public record WebLoginResponse(
         String loginCode,
+        WebLoginStatus status,
         String accountId,
         String fingerprintId,
-        String cookieTokenHash,
-        WebLoginStatus status,
-        Instant createdAt,
         Instant expiresAt
 ) {
 }

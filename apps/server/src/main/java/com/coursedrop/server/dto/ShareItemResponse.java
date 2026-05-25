@@ -1,12 +1,11 @@
-package com.coursedrop.server.share;
+package com.coursedrop.server.dto;
 
 import java.time.Instant;
 
-public record ShareItemRecord(
+public record ShareItemResponse(
         String id,
         String shareId,
         String displayName,
-        String storageKey,
         String contentType,
         long sizeBytes,
         boolean encrypted,

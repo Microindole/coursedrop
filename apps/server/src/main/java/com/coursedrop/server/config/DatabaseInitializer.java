@@ -54,6 +54,8 @@ public class DatabaseInitializer {
                   id text primary key,
                   username text not null unique,
                   password_hash text,
+                  password_salt text,
+                  password_algorithm text,
                   password_login_enabled integer not null,
                   created_at text not null
                 )
@@ -64,6 +66,7 @@ public class DatabaseInitializer {
                   login_code text not null unique,
                   account_id text,
                   fingerprint_id text,
+                  cookie_token_hash text,
                   status text not null,
                   created_at text not null,
                   expires_at text not null
@@ -90,11 +93,44 @@ public class DatabaseInitializer {
                   content_type text,
                   size_bytes integer not null,
                   encrypted integer not null,
+                  encryption_algorithm text,
+                  kdf_algorithm text,
+                  kdf_salt text,
+                  nonce text,
                   sha256 text,
+                  plain_size_bytes integer,
                   created_at text not null,
                   expires_at text not null,
                   foreign key(share_id) references share_sessions(id)
                 )
                 """);
+        jdbcTemplate.execute("""
+                create table if not exists share_audit_logs (
+                  id text primary key,
+                  share_id text not null,
+                  item_id text,
+                  reason text not null,
+                  actor_type text not null,
+                  actor_id text,
+                  size_bytes integer,
+                  created_at text not null
+                )
+                """);
+        addColumnIfMissing("accounts", "password_salt", "text");
+        addColumnIfMissing("accounts", "password_algorithm", "text");
+        addColumnIfMissing("web_login_sessions", "cookie_token_hash", "text");
+        addColumnIfMissing("share_items", "encryption_algorithm", "text");
+        addColumnIfMissing("share_items", "kdf_algorithm", "text");
+        addColumnIfMissing("share_items", "kdf_salt", "text");
+        addColumnIfMissing("share_items", "nonce", "text");
+        addColumnIfMissing("share_items", "plain_size_bytes", "integer");
+    }
+
+    private void addColumnIfMissing(String tableName, String columnName, String definition) {
+        var exists = jdbcTemplate.queryForList("pragma table_info(" + tableName + ")").stream()
+                .anyMatch(row -> columnName.equals(row.get("name")));
+        if (!exists) {
+            jdbcTemplate.execute("alter table " + tableName + " add column " + columnName + " " + definition);
+        }
     }
 }

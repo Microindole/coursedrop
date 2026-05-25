@@ -1,15 +1,13 @@
-package com.coursedrop.server.share;
+package com.coursedrop.server.dto;
 
 import java.time.Instant;
 
-import com.coursedrop.server.enums.OwnerIdentityType;
 import com.coursedrop.server.enums.ShareSessionStatus;
 
-public record ShareSessionRecord(
+public record ShareSessionResponse(
         String id,
         String code,
-        String ownerIdentityId,
-        OwnerIdentityType ownerIdentityType,
+        String downloadUrl,
         ShareSessionStatus status,
         boolean downloadAuthRequired,
         Instant createdAt,

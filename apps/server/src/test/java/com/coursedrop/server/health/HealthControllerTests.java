@@ -8,6 +8,9 @@ import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
 
+import com.coursedrop.server.controller.HealthController;
+import com.coursedrop.server.dto.HealthResponse;
+
 class HealthControllerTests {
     @Test
     void healthReturnsRelaySourceProbePayload() {

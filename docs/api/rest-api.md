@@ -57,6 +57,11 @@ Content-Type: multipart/form-data
 - `file`：上传文件或密文文件
 - `encrypted`：是否端到端加密
 - `sha256`：文件摘要
+- `encryptionAlgorithm`：加密算法，`encrypted=true` 时必填
+- `kdfAlgorithm`：密钥派生算法，`encrypted=true` 时必填
+- `kdfSalt`：密钥派生 salt，`encrypted=true` 时必填
+- `nonce`：加密 nonce/iv，`encrypted=true` 时必填
+- `plainSizeBytes`：明文大小，`encrypted=true` 时必填
 
 ### 获取分享下载页信息
 
@@ -72,6 +77,8 @@ GET /s/{code}/items/{itemId}/download
 ```
 
 浏览器下载必须登录或通过手机扫码授权。
+
+登录成功后服务端应签发 HttpOnly Cookie。后续浏览器下载请求通过 Cookie 校验身份，不应依赖前端可读 token。
 
 ### App 下载
 
@@ -109,6 +116,8 @@ POST /api/accounts
 POST /api/auth/web-login
 ```
 
+返回二维码登录码。浏览器页面用该登录码生成二维码，并轮询登录状态。
+
 ### 手机确认 Web 登录
 
 ```text
@@ -120,6 +129,24 @@ POST /api/auth/web-login/{loginCode}/confirm
 ```text
 GET /api/auth/web-login/{loginCode}
 ```
+
+确认成功后，服务端为浏览器写入 `CD_SESSION` HttpOnly Cookie。
+
+### 账号密码登录
+
+```text
+POST /api/auth/password-login
+```
+
+账号密码登录默认不可见。只有用户在手机 CourseDrop 中关闭安全设置后才允许使用。
+
+### 查询分享删除审计
+
+```text
+GET /api/shares/{shareId}/audit
+```
+
+用于排查分享过期、撤回或清理失败原因。审计不返回文件内容。
 
 ### 创建房间
 
