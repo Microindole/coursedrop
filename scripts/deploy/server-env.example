@@ -1,0 +1,5 @@
+COURSEDROP_HOST=coursedrop.microindole.me
+COURSEDROP_PORT=9090
+COURSEDROP_USER=cd
+COURSEDROP_HOME=/home/cd/coursedrop
+COURSEDROP_PUBLIC_BASE_URL=https://coursedrop.microindole.me

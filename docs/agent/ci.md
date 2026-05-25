@@ -13,13 +13,23 @@
 
 ```text
 .github/workflows/ci.yml
+.github/workflows/deploy-server.yml
 ```
 
-包含三个 job：
+`ci.yml` 包含三个 job：
 
 - `docs`：检查关键文档是否存在，并确认根 README 指向重要入口
 - `server`：设置 Java 17，执行服务端 `mvn test`
 - `harmony`：检查鸿蒙原生工程的标准目录和关键文件
+
+`deploy-server.yml` 是手动触发的服务器发布工作流：
+
+- `workflow_dispatch` 手动运行
+- 构建并测试 Java server
+- 上传 jar 到 `/home/cd/coursedrop/incoming`
+- 通过 `systemctl --user restart coursedrop` 重启 `cd` 用户服务
+
+部署说明见 `docs/deploy/server-debian.md`。
 
 ## Composite Actions
 
@@ -29,4 +39,4 @@
 .github/actions/check-harmony
 ```
 
-后续如果要增加构建产物上传、Docker 镜像、部署服务器，只需要新增 action 或 job，不要把所有脚本堆进一个 workflow。
+后续如果要增加 Docker 镜像或多环境部署，只需要新增 action 或 job，不要把所有脚本堆进一个 workflow。

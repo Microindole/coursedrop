@@ -29,6 +29,7 @@ CourseDrop / 课递：本地优先的加密文件传输与分享管理工具。
 apps/harmony/   鸿蒙客户端
 apps/server/    Java 服务端
 docs/           中文文档
+docs/deploy/    服务器部署和运维文档
 packages/api-contract/  接口契约
 .github/        GitHub Actions 工作流和可复用 action
 ```

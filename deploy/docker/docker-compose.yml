@@ -3,10 +3,14 @@ services:
     build:
       context: ../../apps/server
     ports:
-      - "8080:8080"
+      - "9090:9090"
+    environment:
+      SERVER_PORT: 9090
+      COURSEDROP_SERVER_PUBLIC_BASE_URL: http://localhost:9090
+      COURSEDROP_SERVER_SECURE_COOKIE: "false"
+      COURSEDROP_STORAGE_UPLOAD_DIR: /data/uploads
     volumes:
       - coursedrop-data:/data
 
 volumes:
   coursedrop-data:
-

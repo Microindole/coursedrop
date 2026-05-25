@@ -1,21 +1,19 @@
 [Unit]
-Description=CourseDrop Server
+Description=CourseDrop Server user service
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=cd
-Group=cd
-WorkingDirectory=/home/cd/coursedrop/app
+WorkingDirectory=%h/coursedrop/app
 Environment=SERVER_PORT=9090
 Environment=COURSEDROP_SERVER_PUBLIC_BASE_URL=https://coursedrop.microindole.me
 Environment=COURSEDROP_SERVER_SECURE_COOKIE=true
 Environment=COURSEDROP_SERVER_CORS_ALLOWED_ORIGINS=https://coursedrop.microindole.me
-Environment=COURSEDROP_STORAGE_UPLOAD_DIR=/home/cd/coursedrop/uploads
-ExecStart=/usr/bin/java -Xms128m -Xmx512m -jar /home/cd/coursedrop/app/coursedrop-server.jar
+Environment=COURSEDROP_STORAGE_UPLOAD_DIR=%h/coursedrop/uploads
+ExecStart=/usr/bin/java -Xms128m -Xmx512m -jar %h/coursedrop/app/coursedrop-server.jar
 Restart=on-failure
 RestartSec=5
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

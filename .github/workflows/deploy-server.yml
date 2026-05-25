@@ -1,0 +1,72 @@
+name: Deploy Java server
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy CourseDrop server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: apps/server/pom.xml
+
+      - name: Build server jar
+        working-directory: apps/server
+        run: mvn --batch-mode test package
+
+      - name: Prepare remote directories
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.COURSEDROP_SSH_HOST }}
+          username: ${{ secrets.COURSEDROP_SSH_USER }}
+          key: ${{ secrets.COURSEDROP_SSH_KEY }}
+          port: ${{ secrets.COURSEDROP_SSH_PORT || 22 }}
+          script: |
+            mkdir -p /home/cd/coursedrop/incoming /home/cd/coursedrop/app /home/cd/coursedrop/uploads /home/cd/coursedrop/logs /home/cd/coursedrop/releases
+
+      - name: Upload jar
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.COURSEDROP_SSH_HOST }}
+          username: ${{ secrets.COURSEDROP_SSH_USER }}
+          key: ${{ secrets.COURSEDROP_SSH_KEY }}
+          port: ${{ secrets.COURSEDROP_SSH_PORT || 22 }}
+          source: apps/server/target/coursedrop-server-0.1.0-SNAPSHOT.jar
+          target: /home/cd/coursedrop/incoming
+          strip_components: 3
+
+      - name: Restart user service
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.COURSEDROP_SSH_HOST }}
+          username: ${{ secrets.COURSEDROP_SSH_USER }}
+          key: ${{ secrets.COURSEDROP_SSH_KEY }}
+          port: ${{ secrets.COURSEDROP_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            APP_HOME=/home/cd/coursedrop
+            JAR_SOURCE="${APP_HOME}/incoming/coursedrop-server-0.1.0-SNAPSHOT.jar"
+            TIMESTAMP="$(date +%Y%m%d%H%M%S)"
+            RELEASE_JAR="${APP_HOME}/releases/coursedrop-server-${TIMESTAMP}.jar"
+            CURRENT_JAR="${APP_HOME}/app/coursedrop-server.jar"
+            mkdir -p "${APP_HOME}/app" "${APP_HOME}/uploads" "${APP_HOME}/logs" "${APP_HOME}/releases"
+            cp "${JAR_SOURCE}" "${RELEASE_JAR}"
+            ln -sfn "${RELEASE_JAR}" "${CURRENT_JAR}.next"
+            mv -Tf "${CURRENT_JAR}.next" "${CURRENT_JAR}"
+            export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+            systemctl --user daemon-reload
+            systemctl --user enable coursedrop >/dev/null
+            systemctl --user restart coursedrop
+            systemctl --user --no-pager status coursedrop || true
