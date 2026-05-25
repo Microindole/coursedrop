@@ -16,6 +16,7 @@ import com.coursedrop.server.common.ApiException;
 import com.coursedrop.server.config.StorageProperties;
 import com.coursedrop.server.mapper.ShareItemRepository;
 import com.coursedrop.server.mapper.ShareSessionRepository;
+import com.coursedrop.server.mapper.IdentityRepository;
 import com.coursedrop.server.dto.CreateShareRequest;
 import com.coursedrop.server.enums.OwnerIdentityType;
 import com.coursedrop.server.share.ShareCodeGenerator;
@@ -37,6 +38,7 @@ public class ShareService {
     private final LocalFileStorageService storageService;
     private final StorageProperties storageProperties;
     private final ShareAuditService auditService;
+    private final IdentityRepository identityRepository;
 
     public ShareService(
             ShareSessionRepository sessionRepository,
@@ -44,13 +46,15 @@ public class ShareService {
             ShareCodeGenerator codeGenerator,
             LocalFileStorageService storageService,
             StorageProperties storageProperties,
-            ShareAuditService auditService) {
+            ShareAuditService auditService,
+            IdentityRepository identityRepository) {
         this.sessionRepository = sessionRepository;
         this.itemRepository = itemRepository;
         this.codeGenerator = codeGenerator;
         this.storageService = storageService;
         this.storageProperties = storageProperties;
         this.auditService = auditService;
+        this.identityRepository = identityRepository;
     }
 
     public ShareSessionResponse create(CreateShareRequest request) {
@@ -121,7 +125,9 @@ public class ShareService {
         return toResponse(item);
     }
 
-    public DownloadFile downloadApp(String code, String itemId) {
+    public DownloadFile downloadApp(String code, String itemId, String fingerprintId, String accountId) {
+        var session = requireDownloadableSession(code);
+        ensureAppDownloadAuthorized(session, fingerprintId, accountId);
         return download(code, itemId);
     }
 
@@ -139,13 +145,63 @@ public class ShareService {
         deleteShareFiles(session.id(), ShareAuditReason.REVOKED, ShareAuditActorType.FINGERPRINT, session.ownerIdentityId());
     }
 
+    public List<ShareSessionResponse> listMine(String ownerIdentityId, OwnerIdentityType ownerIdentityType) {
+        if (ownerIdentityId == null || ownerIdentityId.isBlank() || ownerIdentityType == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Owner identity is required");
+        }
+        return sessionRepository.findByOwner(ownerIdentityId, ownerIdentityType).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public List<ShareSessionResponse> listByStatus(ShareSessionStatus status) {
+        return sessionRepository.findByStatus(status).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public ShareSessionResponse extendExpiry(String shareId, int expireHours) {
+        var session = requireActiveSessionById(shareId);
+        var expiresAt = Instant.now().plus(expireHours, ChronoUnit.HOURS);
+        sessionRepository.updateExpiresAt(shareId, expiresAt);
+        return toResponse(new ShareSessionRecord(
+                session.id(),
+                session.code(),
+                session.ownerIdentityId(),
+                session.ownerIdentityType(),
+                session.status(),
+                session.downloadAuthRequired(),
+                session.createdAt(),
+                expiresAt));
+    }
+
+    public void deleteItem(String shareId, String itemId, ShareAuditActorType actorType, String actorId) {
+        requireActiveSessionById(shareId);
+        var item = itemRepository.findById(itemId)
+                .filter(value -> value.shareId().equals(shareId))
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Share item not found"));
+        if (!storageService.deleteIfExistsWithResult(item.storageKey())) {
+            auditService.record(shareId, item.id(), ShareAuditReason.CLEANUP_FAILED, actorType, actorId, item.sizeBytes());
+        }
+        auditService.record(shareId, item.id(), ShareAuditReason.REVOKED, actorType, actorId, item.sizeBytes());
+        itemRepository.deleteById(item.id());
+    }
+
     public void cleanupExpired(Instant now) {
         sessionRepository.findExpiredActive(now).forEach(session -> {
             sessionRepository.updateStatus(session.id(), ShareSessionStatus.EXPIRED);
             deleteShareFiles(session.id(), ShareAuditReason.EXPIRED, ShareAuditActorType.SYSTEM, null);
         });
         itemRepository.findExpired(now).forEach(item -> {
-            storageService.deleteIfExists(item.storageKey());
+            if (!storageService.deleteIfExistsWithResult(item.storageKey())) {
+                auditService.record(
+                        item.shareId(),
+                        item.id(),
+                        ShareAuditReason.CLEANUP_FAILED,
+                        ShareAuditActorType.SYSTEM,
+                        null,
+                        item.sizeBytes());
+            }
             auditService.record(
                     item.shareId(),
                     item.id(),
@@ -155,6 +211,12 @@ public class ShareService {
                     item.sizeBytes());
         });
         itemRepository.deleteExpired(now);
+    }
+
+    public List<String> listReferencedStorageKeys() {
+        return itemRepository.findAll().stream()
+                .map(ShareItemRecord::storageKey)
+                .toList();
     }
 
     private DownloadFile download(String code, String itemId) {
@@ -201,10 +263,54 @@ public class ShareService {
             ShareAuditActorType actorType,
             String actorId) {
         itemRepository.findByShareId(shareId).forEach(item -> {
-            storageService.deleteIfExists(item.storageKey());
+            if (!storageService.deleteIfExistsWithResult(item.storageKey())) {
+                auditService.record(shareId, item.id(), ShareAuditReason.CLEANUP_FAILED, actorType, actorId, item.sizeBytes());
+            }
             auditService.record(shareId, item.id(), reason, actorType, actorId, item.sizeBytes());
         });
         itemRepository.deleteByShareId(shareId);
+    }
+
+    private void ensureAppDownloadAuthorized(ShareSessionRecord session, String fingerprintId, String accountId) {
+        if (!session.downloadAuthRequired()) {
+            return;
+        }
+        if ((fingerprintId == null || fingerprintId.isBlank()) && (accountId == null || accountId.isBlank())) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "App identity required");
+        }
+        if (session.ownerIdentityType() == OwnerIdentityType.ANONYMOUS) {
+            validateAnyIdentity(fingerprintId, accountId);
+            return;
+        }
+        if (session.ownerIdentityType() == OwnerIdentityType.ACCOUNT) {
+            if (session.ownerIdentityId().equals(accountId)) {
+                return;
+            }
+            if (fingerprintId != null && !fingerprintId.isBlank()) {
+                var fingerprint = identityRepository.findFingerprintById(fingerprintId)
+                        .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Unknown fingerprint"));
+                if (session.ownerIdentityId().equals(fingerprint.accountId())) {
+                    return;
+                }
+            }
+            throw new ApiException(HttpStatus.FORBIDDEN, "Share is not available for this account");
+        }
+        if (session.ownerIdentityType() == OwnerIdentityType.FINGERPRINT) {
+            if (session.ownerIdentityId().equals(fingerprintId)) {
+                return;
+            }
+            throw new ApiException(HttpStatus.FORBIDDEN, "Share is not available for this device");
+        }
+    }
+
+    private void validateAnyIdentity(String fingerprintId, String accountId) {
+        if (accountId != null && !accountId.isBlank()) {
+            identityRepository.findAccountById(accountId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Unknown account"));
+            return;
+        }
+        identityRepository.findFingerprintById(fingerprintId)
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Unknown fingerprint"));
     }
 
     private void validateEncryptionMetadata(

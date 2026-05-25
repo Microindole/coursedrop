@@ -1,6 +1,7 @@
 package com.coursedrop.server.service;
 
 import java.time.Instant;
+import java.util.HashSet;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,15 @@ public class CleanupService {
                 .forEach(item -> storageService.deleteIfExists(item.storageKey()));
         transferItemRepository.deleteExpired(now);
         shareService.cleanupExpired(now);
+        cleanupOrphanShareFiles();
         roomRepository.deleteExpired(now);
+    }
+
+    private void cleanupOrphanShareFiles() {
+        var referencedKeys = new HashSet<String>();
+        shareService.listReferencedStorageKeys().forEach(referencedKeys::add);
+        storageService.listStorageKeys().stream()
+                .filter(key -> !referencedKeys.contains(key))
+                .forEach(storageService::deleteIfExists);
     }
 }

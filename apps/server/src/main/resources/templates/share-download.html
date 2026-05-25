@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CourseDrop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-zinc-50 text-zinc-950 antialiased">
+<main class="mx-auto grid min-h-screen w-full max-w-6xl gap-8 px-5 py-8 md:grid-cols-[1fr_360px] md:items-start md:px-8">
+  <section class="pt-4 md:pt-10">
+    <div class="flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-950 text-sm font-semibold text-white">CD</div>
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight">CourseDrop</h1>
+        <p class="text-sm text-zinc-500">分享码 <span th:text="${share.code}">CODE</span></p>
+      </div>
+    </div>
+
+    <div class="mt-10">
+      <p class="text-sm text-zinc-500">有效期</p>
+      <p class="mt-1 text-lg font-medium" th:text="${share.expiresAt}">2026-05-25T12:00:00Z</p>
+    </div>
+
+    <div class="mt-10 border-y border-zinc-200">
+      <div class="flex items-center justify-between py-4">
+        <div>
+          <h2 class="text-base font-semibold">文件</h2>
+          <p id="download-hint" class="mt-1 text-sm text-zinc-500">登录后可直接下载到这台电脑。</p>
+        </div>
+        <span id="auth-badge" class="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600">未授权</span>
+      </div>
+
+      <ul class="divide-y divide-zinc-200">
+        <li th:each="item : ${share.items}" class="flex items-center justify-between gap-4 py-4">
+          <div class="min-w-0">
+            <p class="truncate text-sm font-medium" th:text="${item.displayName}">file.txt</p>
+            <p class="mt-1 text-xs text-zinc-500">
+              <span th:text="${item.sizeBytes}">0</span> bytes
+              <span th:if="${item.encrypted}" class="ml-2 text-emerald-700">端到端加密</span>
+            </p>
+          </div>
+          <a class="download-link pointer-events-none rounded-lg bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-500 transition"
+             th:href="@{'/s/' + ${share.code} + '/items/' + ${item.id} + '/download'}">
+            下载
+          </a>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <aside class="md:sticky md:top-8">
+    <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <div>
+        <h2 class="text-base font-semibold">验证身份</h2>
+        <p id="login-status" class="mt-1 text-sm text-zinc-500">扫码确认，或使用已启用的账号登录。</p>
+      </div>
+
+      <div class="mt-5 flex justify-center rounded-xl bg-zinc-50 p-4">
+        <img class="h-52 w-52" alt="扫码登录" th:src="@{'/api/auth/web-login/' + ${login.loginCode} + '/qr.svg'}">
+      </div>
+
+      <div class="mt-4 rounded-xl bg-zinc-950 px-4 py-3 text-center text-xl font-semibold tracking-[0.2em] text-white"
+           th:text="${login.loginCode}">
+        CODE
+      </div>
+
+      <div class="my-5 flex items-center gap-3">
+        <div class="h-px flex-1 bg-zinc-200"></div>
+        <span class="text-xs text-zinc-400">或</span>
+        <div class="h-px flex-1 bg-zinc-200"></div>
+      </div>
+
+      <form id="password-login" class="space-y-3">
+        <input class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-950"
+               name="username" autocomplete="username" placeholder="账号">
+        <input class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-950"
+               name="password" type="password" autocomplete="current-password" placeholder="密码">
+        <button class="w-full rounded-lg bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
+                type="submit">
+          登录并下载到电脑
+        </button>
+      </form>
+    </div>
+  </aside>
+</main>
+
+<script th:inline="javascript">
+const loginCode = /*[[${login.loginCode}]]*/ "";
+const statusEl = document.getElementById("login-status");
+const badgeEl = document.getElementById("auth-badge");
+const hintEl = document.getElementById("download-hint");
+const form = document.getElementById("password-login");
+
+function setAuthorized(message) {
+  document.querySelectorAll(".download-link").forEach((link) => {
+    link.classList.remove("pointer-events-none", "bg-zinc-200", "text-zinc-500");
+    link.classList.add("bg-zinc-950", "text-white", "hover:bg-zinc-800");
+  });
+  badgeEl.textContent = "已授权";
+  badgeEl.className = "rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700";
+  statusEl.textContent = message;
+  hintEl.textContent = "可以直接下载到这台电脑。";
+}
+
+async function checkCurrent() {
+  const response = await fetch("/api/auth/web-login/current", { credentials: "include" });
+  if (!response.ok) return false;
+  const body = await response.json();
+  if (body.authorized) {
+    setAuthorized("当前浏览器已登录。");
+    return true;
+  }
+  return false;
+}
+
+async function poll() {
+  if (await checkCurrent()) return;
+  try {
+    const response = await fetch(`/api/auth/web-login/${loginCode}`, { credentials: "include" });
+    if (!response.ok) return;
+    const body = await response.json();
+    if (body.status === "CONFIRMED") {
+      setAuthorized("手机已确认，可以下载。");
+      return;
+    }
+    if (body.status === "EXPIRED" || body.status === "REVOKED") {
+      statusEl.textContent = "登录已失效，请刷新页面重试。";
+      return;
+    }
+    setTimeout(poll, 1500);
+  } catch (error) {
+    setTimeout(poll, 3000);
+  }
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(form);
+  statusEl.textContent = "正在登录...";
+  const response = await fetch("/api/auth/web-login/password", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: data.get("username"),
+      password: data.get("password")
+    })
+  });
+  if (response.ok) {
+    setAuthorized("账号已登录，可以下载。");
+  } else {
+    statusEl.textContent = "登录失败，请检查账号或是否已允许账号密码登录。";
+  }
+});
+
+poll();
+</script>
+</body>
+</html>

@@ -8,19 +8,23 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.coursedrop.server.dto.ConfirmWebLoginRequest;
+import com.coursedrop.server.dto.PasswordLoginRequest;
 import com.coursedrop.server.dto.WebLoginCookieIssue;
 import com.coursedrop.server.dto.WebLoginResponse;
+import com.coursedrop.server.dto.WebLoginSessionResponse;
 import com.coursedrop.server.auth.WebLoginSession;
 import com.coursedrop.server.enums.WebLoginStatus;
 import com.coursedrop.server.common.ApiException;
 import com.coursedrop.server.mapper.IdentityRepository;
 import com.coursedrop.server.mapper.WebLoginRepository;
+import com.coursedrop.server.security.PasswordHasher;
 
 @Service
 public class WebLoginService {
@@ -28,14 +32,23 @@ public class WebLoginService {
 
     private final WebLoginRepository webLoginRepository;
     private final IdentityRepository identityRepository;
+    private final PasswordHasher passwordHasher;
+    private final RateLimitService rateLimitService;
     private final SecureRandom random = new SecureRandom();
 
-    public WebLoginService(WebLoginRepository webLoginRepository, IdentityRepository identityRepository) {
+    public WebLoginService(
+            WebLoginRepository webLoginRepository,
+            IdentityRepository identityRepository,
+            PasswordHasher passwordHasher,
+            RateLimitService rateLimitService) {
         this.webLoginRepository = webLoginRepository;
         this.identityRepository = identityRepository;
+        this.passwordHasher = passwordHasher;
+        this.rateLimitService = rateLimitService;
     }
 
     public WebLoginResponse create() {
+        rateLimitService.check("web-login:create", 30, 60);
         var now = Instant.now();
         var session = new WebLoginSession(
                 UUID.randomUUID().toString(),
@@ -51,6 +64,7 @@ public class WebLoginService {
     }
 
     public WebLoginResponse confirm(String loginCode, ConfirmWebLoginRequest request) {
+        rateLimitService.check("web-login:confirm:" + loginCode, 12, 60);
         var session = requireSession(loginCode);
         ensurePending(session);
         var fingerprint = identityRepository.findFingerprintById(request.fingerprintId())
@@ -88,6 +102,35 @@ public class WebLoginService {
             return new WebLoginCookieIssue(toResponse(session), cookieToken);
         }
         return new WebLoginCookieIssue(toResponse(session), null);
+    }
+
+    public WebLoginCookieIssue passwordLogin(PasswordLoginRequest request) {
+        rateLimitService.check("web-login:password:" + request.username(), 8, 60);
+        var account = identityRepository.findAccountByUsername(request.username())
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
+        if (account.getPasswordLoginEnabled() == null || account.getPasswordLoginEnabled() != 1) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Password login is disabled");
+        }
+        if (!passwordHasher.verify(
+                request.password(),
+                account.getPasswordHash(),
+                account.getPasswordSalt(),
+                account.getPasswordAlgorithm())) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+        }
+        var now = Instant.now();
+        var cookieToken = nextCookieToken();
+        var session = new WebLoginSession(
+                UUID.randomUUID().toString(),
+                nextUniqueCode(),
+                account.getId(),
+                null,
+                hashToken(cookieToken),
+                WebLoginStatus.CONFIRMED,
+                now,
+                now.plus(5, ChronoUnit.MINUTES));
+        webLoginRepository.save(session);
+        return new WebLoginCookieIssue(toResponse(session), cookieToken);
     }
 
     public boolean isCookieAuthorized(String cookieToken) {
@@ -131,6 +174,30 @@ public class WebLoginService {
         return code.toString();
     }
 
+    public void logout(String cookieToken) {
+        if (cookieToken == null || cookieToken.isBlank()) {
+            return;
+        }
+        webLoginRepository.revokeCookieTokenHash(hashToken(cookieToken));
+    }
+
+    public void revoke(String loginCode) {
+        requireSession(loginCode);
+        webLoginRepository.revoke(loginCode);
+    }
+
+    public List<WebLoginSessionResponse> listByFingerprint(String fingerprintId) {
+        return webLoginRepository.findByFingerprintId(fingerprintId).stream()
+                .map(this::toSessionResponse)
+                .toList();
+    }
+
+    public List<WebLoginSessionResponse> listByAccount(String accountId) {
+        return webLoginRepository.findByAccountId(accountId).stream()
+                .map(this::toSessionResponse)
+                .toList();
+    }
+
     private String nextCookieToken() {
         var bytes = new byte[32];
         random.nextBytes(bytes);
@@ -152,6 +219,16 @@ public class WebLoginService {
                 session.status(),
                 session.accountId(),
                 session.fingerprintId(),
+                session.expiresAt());
+    }
+
+    private WebLoginSessionResponse toSessionResponse(WebLoginSession session) {
+        return new WebLoginSessionResponse(
+                session.loginCode(),
+                session.accountId(),
+                session.fingerprintId(),
+                session.status(),
+                session.createdAt(),
                 session.expiresAt());
     }
 }

@@ -50,6 +50,31 @@ public class ShareSessionRepository {
                 .toList();
     }
 
+    public List<ShareSessionRecord> findByOwner(String ownerIdentityId, OwnerIdentityType ownerIdentityType) {
+        return mapper.selectList(new LambdaQueryWrapper<ShareSessionEntity>()
+                .eq(ShareSessionEntity::getOwnerIdentityId, ownerIdentityId)
+                .eq(ShareSessionEntity::getOwnerIdentityType, ownerIdentityType.name())
+                .orderByDesc(ShareSessionEntity::getCreatedAt))
+                .stream()
+                .map(this::toRecord)
+                .toList();
+    }
+
+    public List<ShareSessionRecord> findByStatus(ShareSessionStatus status) {
+        return mapper.selectList(new LambdaQueryWrapper<ShareSessionEntity>()
+                .eq(ShareSessionEntity::getStatus, status.name())
+                .orderByDesc(ShareSessionEntity::getCreatedAt))
+                .stream()
+                .map(this::toRecord)
+                .toList();
+    }
+
+    public void updateExpiresAt(String id, Instant expiresAt) {
+        mapper.update(new LambdaUpdateWrapper<ShareSessionEntity>()
+                .eq(ShareSessionEntity::getId, id)
+                .set(ShareSessionEntity::getExpiresAt, expiresAt.toString()));
+    }
+
     public void delete(String id) {
         mapper.deleteById(id);
     }

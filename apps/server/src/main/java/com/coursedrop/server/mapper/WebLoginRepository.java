@@ -1,6 +1,7 @@
 package com.coursedrop.server.mapper;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -43,6 +44,20 @@ public class WebLoginRepository {
                 .set(WebLoginSessionEntity::getStatus, WebLoginStatus.EXPIRED.name()));
     }
 
+    public void revoke(String loginCode) {
+        mapper.update(new LambdaUpdateWrapper<WebLoginSessionEntity>()
+                .eq(WebLoginSessionEntity::getLoginCode, loginCode)
+                .set(WebLoginSessionEntity::getStatus, WebLoginStatus.REVOKED.name())
+                .set(WebLoginSessionEntity::getCookieTokenHash, null));
+    }
+
+    public void revokeCookieTokenHash(String cookieTokenHash) {
+        mapper.update(new LambdaUpdateWrapper<WebLoginSessionEntity>()
+                .eq(WebLoginSessionEntity::getCookieTokenHash, cookieTokenHash)
+                .set(WebLoginSessionEntity::getStatus, WebLoginStatus.REVOKED.name())
+                .set(WebLoginSessionEntity::getCookieTokenHash, null));
+    }
+
     public void setCookieTokenHash(String loginCode, String cookieTokenHash) {
         mapper.update(new LambdaUpdateWrapper<WebLoginSessionEntity>()
                 .eq(WebLoginSessionEntity::getLoginCode, loginCode)
@@ -53,6 +68,24 @@ public class WebLoginRepository {
         return Optional.ofNullable(mapper.selectOne(new LambdaQueryWrapper<WebLoginSessionEntity>()
                 .eq(WebLoginSessionEntity::getCookieTokenHash, cookieTokenHash)))
                 .map(this::toRecord);
+    }
+
+    public List<WebLoginSession> findByFingerprintId(String fingerprintId) {
+        return mapper.selectList(new LambdaQueryWrapper<WebLoginSessionEntity>()
+                .eq(WebLoginSessionEntity::getFingerprintId, fingerprintId)
+                .orderByDesc(WebLoginSessionEntity::getCreatedAt))
+                .stream()
+                .map(this::toRecord)
+                .toList();
+    }
+
+    public List<WebLoginSession> findByAccountId(String accountId) {
+        return mapper.selectList(new LambdaQueryWrapper<WebLoginSessionEntity>()
+                .eq(WebLoginSessionEntity::getAccountId, accountId)
+                .orderByDesc(WebLoginSessionEntity::getCreatedAt))
+                .stream()
+                .map(this::toRecord)
+                .toList();
     }
 
     private WebLoginSessionEntity toEntity(WebLoginSession session) {

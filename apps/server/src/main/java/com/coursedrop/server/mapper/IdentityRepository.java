@@ -53,6 +53,15 @@ public class IdentityRepository {
                 .eq(AccountEntity::getUsername, username)) > 0;
     }
 
+    public Optional<AccountEntity> findAccountByUsername(String username) {
+        return Optional.ofNullable(accountMapper.selectOne(new LambdaQueryWrapper<AccountEntity>()
+                .eq(AccountEntity::getUsername, username)));
+    }
+
+    public Optional<AccountEntity> findAccountById(String id) {
+        return Optional.ofNullable(accountMapper.selectById(id));
+    }
+
     public void saveAccount(AccountResponse account, String passwordHash, String passwordSalt, String passwordAlgorithm) {
         var entity = new AccountEntity();
         entity.setId(account.id());

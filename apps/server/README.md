@@ -6,6 +6,8 @@ CourseDrop 的 Java Spring Boot 服务端，负责公网限时中转、浏览器
 
 - Java 17
 - Spring Boot 3
+- Thymeleaf
+- Tailwind CDN
 - SQLite
 - MyBatis-Plus
 - 本地磁盘文件存储
@@ -58,12 +60,21 @@ src/main/resources/application.yml
 - `POST /api/auth/web-login`
 - `POST /api/auth/web-login/{loginCode}/confirm`
 - `GET /api/auth/web-login/{loginCode}`
+- `GET /api/auth/web-login/{loginCode}/qr.svg`
+- `POST /api/auth/web-login/password`
+- `POST /api/auth/web-login/logout`
+- `DELETE /api/auth/web-login/{loginCode}`
+- `GET /api/auth/web-login/sessions`
 - `POST /api/shares`
+- `GET /api/shares`
 - `GET /api/shares/{code}`
 - `POST /api/shares/{shareId}/items`
 - `GET /api/shares/{code}/items/{itemId}/download`
 - `DELETE /api/shares/{shareId}`
+- `POST /api/shares/{shareId}/expiry`
+- `DELETE /api/shares/{shareId}/items/{itemId}`
 - `GET /api/shares/{shareId}/audit`
+- `GET /api/health/capabilities`
 - `GET /s/{code}`
 - `GET /s/{code}/items/{itemId}/download`
 - `POST /api/rooms`
@@ -73,12 +84,19 @@ src/main/resources/application.yml
 - `POST /api/files/upload`
 - `GET /api/files/{itemId}/download`
 
-## 待补齐能力
+## 当前补齐情况
 
-- `/s/{code}` 下载页需要补真实二维码、登录状态轮询脚本和授权后的下载状态刷新。
-- Web 登录会话需要补退出登录、手机端撤销、会话列表和失效管理。
-- App 下载鉴权需要补设备指纹/账号会话策略。
-- 分享管理需要补我的分享列表、状态筛选、续期、删除单个分享项。
-- 清理任务需要补失败重试、孤儿文件扫描和 `CLEANUP_FAILED` 审计。
-- 数据库迁移后续建议从 `DatabaseInitializer` 切换到 Flyway 或 Liquibase。
-- 公网部署需要补 HTTPS、`Secure=true` Cookie、限流、CORS 和反向代理 base URL 配置。
+- `/s/{code}` 下载页已接入真实 QR SVG、登录状态轮询和授权后下载按钮启用。
+- Web 登录会话已支持 Cookie 签发、账号密码例外登录、退出登录、撤销、会话列表。
+- Web 端认证成功后可以直接把文件下载到当前电脑浏览器。
+- App 下载接口已支持设备指纹和账号身份鉴权。
+- 分享管理已支持我的分享列表、状态筛选、续期、删除单个分享项。
+- 清理任务已支持孤儿文件扫描和 `CLEANUP_FAILED` 审计。
+- 数据库初始化已收敛为带版本表的轻量迁移服务 `DatabaseMigrationService`。
+- 公网部署基础配置已包含 `secure-cookie`、CORS allowed origins 和 public base URL。
+
+## 后续增强
+
+- 端到端加密协议需要和鸿蒙客户端一起落地，包括客户端加密、解密和完整性校验。
+- 生产部署建议继续接入成熟迁移工具 Flyway 或 Liquibase。
+- 限流目前是进程内实现，生产环境可换成 Redis 或网关限流。

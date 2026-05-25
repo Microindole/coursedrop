@@ -35,6 +35,13 @@ public class ShareItemRepository {
         return Optional.ofNullable(mapper.selectById(id)).map(this::toRecord);
     }
 
+    public List<ShareItemRecord> findAll() {
+        return mapper.selectList(new LambdaQueryWrapper<ShareItemEntity>())
+                .stream()
+                .map(this::toRecord)
+                .toList();
+    }
+
     public List<ShareItemRecord> findExpired(Instant now) {
         return mapper.selectList(new LambdaQueryWrapper<ShareItemEntity>()
                 .lt(ShareItemEntity::getExpiresAt, now.toString()))
@@ -45,6 +52,10 @@ public class ShareItemRepository {
 
     public void deleteByShareId(String shareId) {
         mapper.delete(new LambdaQueryWrapper<ShareItemEntity>().eq(ShareItemEntity::getShareId, shareId));
+    }
+
+    public void deleteById(String id) {
+        mapper.deleteById(id);
     }
 
     public int deleteExpired(Instant now) {

@@ -147,9 +147,16 @@ Web 管理端登录会话。
 - `ownerIdentityId`：设备指纹或账号身份
 - `ownerIdentityType`：`FINGERPRINT` 或 `ACCOUNT`
 - `status`：`ACTIVE`、`EXPIRED`、`REVOKED`
-- `downloadAuthRequired`：浏览器下载是否需要登录
+- `downloadPolicy`：`PUBLIC`、`LOGIN_REQUIRED`、`OWNER_ONLY`
+- `downloadAuthRequired`：过渡字段，后续由 `downloadPolicy` 替代
 - `createdAt`：创建时间
 - `expiresAt`：过期时间
+
+下载策略语义：
+
+- `PUBLIC`：不登录也能下载。
+- `LOGIN_REQUIRED`：任意已登录身份可下载。手机端使用设备指纹，电脑端使用手机扫码授权或账号密码登录。
+- `OWNER_ONLY`：只有分享创建者的设备指纹、账号或绑定到该账号的设备可以下载。
 
 ### ServerShareItem
 
@@ -172,6 +179,13 @@ Web 管理端登录会话。
 - `plainSizeBytes`：明文大小，可以为空
 - `createdAt`：创建时间
 - `expiresAt`：过期时间
+
+端到端加密约束：
+
+- 服务端保存的是密文和元数据。
+- `fileKey` 不进入数据库，不进入 HTTP query 参数。
+- 浏览器分享链接使用 `#key={base64urlFileKey}`，由浏览器本地读取。
+- 手机 App 扫码时从二维码解析 `code + key`，本地解密。
 
 ### ShareAuditLog
 

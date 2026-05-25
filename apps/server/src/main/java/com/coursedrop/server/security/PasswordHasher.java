@@ -4,6 +4,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
+import java.util.Objects;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -31,6 +32,14 @@ public class PasswordHasher {
                 hashWithSalt(password, salt),
                 Base64.getEncoder().encodeToString(salt),
                 ALGORITHM);
+    }
+
+    public boolean verify(String password, String expectedHash, String salt, String algorithm) {
+        if (password == null || expectedHash == null || salt == null || !Objects.equals(ALGORITHM, algorithm)) {
+            return false;
+        }
+        var decodedSalt = Base64.getDecoder().decode(salt);
+        return Objects.equals(hashWithSalt(password, decodedSalt), expectedHash);
     }
 
     private String hashWithSalt(String password, byte[] salt) {

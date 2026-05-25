@@ -9,6 +9,10 @@ spring:
     driver-class-name: org.sqlite.JDBC
 
 coursedrop:
+  server:
+    public-base-url: http://localhost:8080
+    secure-cookie: false
+    cors-allowed-origins: "*"
   storage:
     upload-dir: uploads
     room-ttl-hours: 24

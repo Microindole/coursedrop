@@ -6,15 +6,42 @@ import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 
 @Component
-public class DatabaseInitializer {
+public class DatabaseMigrationService {
     private final JdbcTemplate jdbcTemplate;
 
-    public DatabaseInitializer(JdbcTemplate jdbcTemplate) {
+    public DatabaseMigrationService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     @PostConstruct
-    void initialize() {
+    void migrate() {
+        jdbcTemplate.execute("""
+                create table if not exists schema_migrations (
+                  version integer primary key,
+                  description text not null,
+                  applied_at text not null default current_timestamp
+                )
+                """);
+        run(1, "create base relay schema", this::createBaseSchema);
+        run(2, "add security and encryption metadata", this::addSecurityColumns);
+    }
+
+    private void run(int version, String description, Runnable migration) {
+        Integer count = jdbcTemplate.queryForObject(
+                "select count(*) from schema_migrations where version = ?",
+                Integer.class,
+                version);
+        if (count != null && count > 0) {
+            return;
+        }
+        migration.run();
+        jdbcTemplate.update(
+                "insert into schema_migrations (version, description) values (?, ?)",
+                version,
+                description);
+    }
+
+    private void createBaseSchema() {
         jdbcTemplate.execute("""
                 create table if not exists rooms (
                   id text primary key,
@@ -116,6 +143,9 @@ public class DatabaseInitializer {
                   created_at text not null
                 )
                 """);
+    }
+
+    private void addSecurityColumns() {
         addColumnIfMissing("accounts", "password_salt", "text");
         addColumnIfMissing("accounts", "password_algorithm", "text");
         addColumnIfMissing("web_login_sessions", "cookie_token_hash", "text");

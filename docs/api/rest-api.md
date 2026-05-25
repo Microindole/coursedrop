@@ -16,6 +16,7 @@ http://{server}:8080/api
 
 ```text
 GET /api/health
+GET /api/health/capabilities
 ```
 
 返回：
@@ -41,9 +42,17 @@ POST /api/shares
 ```json
 {
   "expireHours": 24,
-  "downloadAuthRequired": true
+  "downloadPolicy": "LOGIN_REQUIRED"
 }
 ```
+
+`downloadAuthRequired` 是过渡字段，后续应使用 `downloadPolicy`。
+
+下载策略：
+
+- `PUBLIC`：不登录也能下载。
+- `LOGIN_REQUIRED`：任意已登录身份可下载，适合给别人发文件。
+- `OWNER_ONLY`：只有创建者设备指纹或账号可下载，适合自己跨设备传输。
 
 ### 上传分享项
 
@@ -78,7 +87,15 @@ GET /s/{code}/items/{itemId}/download
 
 浏览器下载必须登录或通过手机扫码授权。
 
-登录成功后服务端应签发 HttpOnly Cookie。后续浏览器下载请求通过 Cookie 校验身份，不应依赖前端可读 token。
+登录成功后服务端应签发 HttpOnly Cookie。后续浏览器下载请求通过 Cookie 校验身份，不应依赖前端可读 token。扫码是给当前电脑浏览器授权，授权后文件直接下载到电脑。
+
+端到端加密分享的推荐链接格式：
+
+```text
+GET /s/{code}#key={base64urlFileKey}
+```
+
+`#key` 不会发送给服务端，只由浏览器本地读取用于解密。禁止把密钥放在 query 参数中。
 
 ### App 下载
 
@@ -86,7 +103,12 @@ GET /s/{code}/items/{itemId}/download
 GET /api/shares/{code}/items/{itemId}/download
 ```
 
-CourseDrop App 可携带设备指纹或账号会话下载。
+CourseDrop App 可携带设备指纹或账号会话下载：
+
+- `X-CourseDrop-Fingerprint-Id`
+- `X-CourseDrop-Account-Id`
+
+手机 App 默认使用设备指纹身份，不要求账号。账号只在用户主动创建并绑定手机指纹后，用于账号密码登录或多设备归并。
 
 ### 撤回分享
 
@@ -95,6 +117,17 @@ DELETE /api/shares/{shareId}
 ```
 
 撤回后下载立即失效，服务器删除或等待清理任务删除临时文件。
+
+### 查询和管理分享
+
+```text
+GET /api/shares?ownerIdentityId={id}&ownerIdentityType={type}
+GET /api/shares?status=ACTIVE
+POST /api/shares/{shareId}/expiry
+DELETE /api/shares/{shareId}/items/{itemId}
+```
+
+用于查询我的分享、按状态筛选、续期和删除单个分享项。
 
 ## 身份与扫码登录
 
@@ -109,6 +142,8 @@ POST /api/identity/fingerprints
 ```text
 POST /api/accounts
 ```
+
+账号创建发生在手机端安全设置中。创建后，当前手机设备指纹绑定到账号。默认仍可继续扫码登录；只有用户允许账号密码登录后，Web 才能使用账号密码登录。
 
 ### 创建 Web 扫码登录会话
 
@@ -132,13 +167,32 @@ GET /api/auth/web-login/{loginCode}
 
 确认成功后，服务端为浏览器写入 `CD_SESSION` HttpOnly Cookie。
 
+### 获取 Web 登录二维码
+
+```text
+GET /api/auth/web-login/{loginCode}/qr.svg
+```
+
+返回可扫码的 QR SVG。
+
 ### 账号密码登录
 
 ```text
-POST /api/auth/password-login
+POST /api/auth/web-login/password
 ```
 
 账号密码登录默认不可见。只有用户在手机 CourseDrop 中关闭安全设置后才允许使用。
+
+### Web 会话管理
+
+```text
+POST /api/auth/web-login/logout
+DELETE /api/auth/web-login/{loginCode}
+GET /api/auth/web-login/sessions?fingerprintId={id}
+GET /api/auth/web-login/sessions?accountId={id}
+```
+
+用于退出当前浏览器会话、手机端撤销登录和查询会话列表。
 
 ### 查询分享删除审计
 
