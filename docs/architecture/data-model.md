@@ -88,3 +88,79 @@ CourseDrop 当前定位为本地优先的加密文件传输与分享管理工具
 - 旧版 `TransferItem.roomId`
 
 后续客户端页面优先使用 `ShareSession`，服务端可以逐步从“房间中转”演进到“临时分享会话”。
+
+## 服务端身份模型
+
+### DeviceFingerprint
+
+设备指纹是服务端识别手机端的底层身份。
+
+字段：
+
+- `id`：设备指纹记录 ID
+- `fingerprint`：设备指纹摘要
+- `deviceName`：设备显示名
+- `platform`：平台
+- `accountId`：绑定账号 ID，可以为空
+- `createdAt`：创建时间
+- `lastSeenAt`：最后出现时间
+
+### Account
+
+账号用于把多个设备指纹归并为同一个用户身份。
+
+字段：
+
+- `id`：账号 ID
+- `username`：账号名
+- `passwordHash`：密码摘要，可以为空
+- `passwordLoginEnabled`：是否允许账号密码登录
+- `createdAt`：创建时间
+
+默认登录方式是手机扫码。账号密码登录只有在手机端关闭安全设置后才允许。
+
+### WebLoginSession
+
+Web 管理端登录会话。
+
+字段：
+
+- `id`：会话 ID
+- `loginCode`：二维码登录码
+- `accountId`：登录账号 ID，可以为空
+- `fingerprintId`：确认登录的手机设备指纹 ID
+- `status`：`PENDING`、`CONFIRMED`、`EXPIRED`
+- `createdAt`：创建时间
+- `expiresAt`：过期时间
+
+### ServerShareSession
+
+服务端公网分享会话。它只表示有效期内的临时中转，不表示永久文件夹。
+
+字段：
+
+- `id`：分享会话 ID
+- `code`：分享码
+- `ownerIdentityId`：设备指纹或账号身份
+- `ownerIdentityType`：`FINGERPRINT` 或 `ACCOUNT`
+- `status`：`ACTIVE`、`EXPIRED`、`REVOKED`
+- `downloadAuthRequired`：浏览器下载是否需要登录
+- `createdAt`：创建时间
+- `expiresAt`：过期时间
+
+### ServerShareItem
+
+服务端分享项。
+
+字段：
+
+- `id`：分享项 ID
+- `shareId`：所属分享 ID
+- `displayName`：展示名称
+- `contentType`：MIME 类型
+- `sizeBytes`：大小
+- `storagePath`：服务器临时存储路径
+- `encrypted`：是否为端到端加密密文
+- `sha256`：文件摘要
+- `createdAt`：创建时间
+- `expiresAt`：过期时间

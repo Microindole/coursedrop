@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.coursedrop.server.common.ApiException;
 import com.coursedrop.server.config.StorageProperties;
+import com.coursedrop.server.storage.FileNameCleaner;
 import com.coursedrop.server.room.RoomService;
 import com.coursedrop.server.storage.LocalFileStorageService;
 
@@ -88,7 +89,7 @@ public class TransferService {
         if (filename == null || filename.isBlank()) {
             return "unnamed";
         }
-        return PathNameCleaner.clean(filename);
+        return FileNameCleaner.clean(filename);
     }
 
     private TransferItemResponse toResponse(TransferItemStored item) {

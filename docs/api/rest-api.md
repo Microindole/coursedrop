@@ -8,6 +8,119 @@ http://{server}:8080/api
 
 ## 房间
 
+`/api/rooms` 是早期兼容接口。新的公网中转优先使用 `/api/shares`。
+
+## 健康检查
+
+### 查询中转源状态
+
+```text
+GET /api/health
+```
+
+返回：
+
+```json
+{
+  "status": "UP",
+  "service": "coursedrop-server",
+  "time": "2026-05-25T12:00:00Z"
+}
+```
+
+## 公网分享
+
+### 创建分享
+
+```text
+POST /api/shares
+```
+
+请求体：
+
+```json
+{
+  "expireHours": 24,
+  "downloadAuthRequired": true
+}
+```
+
+### 上传分享项
+
+```text
+POST /api/shares/{shareId}/items
+Content-Type: multipart/form-data
+```
+
+表单字段：
+
+- `file`：上传文件或密文文件
+- `encrypted`：是否端到端加密
+- `sha256`：文件摘要
+
+### 获取分享下载页信息
+
+```text
+GET /api/shares/{code}
+```
+
+### 浏览器下载
+
+```text
+GET /s/{code}
+GET /s/{code}/items/{itemId}/download
+```
+
+浏览器下载必须登录或通过手机扫码授权。
+
+### App 下载
+
+```text
+GET /api/shares/{code}/items/{itemId}/download
+```
+
+CourseDrop App 可携带设备指纹或账号会话下载。
+
+### 撤回分享
+
+```text
+DELETE /api/shares/{shareId}
+```
+
+撤回后下载立即失效，服务器删除或等待清理任务删除临时文件。
+
+## 身份与扫码登录
+
+### 注册或刷新设备指纹
+
+```text
+POST /api/identity/fingerprints
+```
+
+### 创建账号并绑定当前手机指纹
+
+```text
+POST /api/accounts
+```
+
+### 创建 Web 扫码登录会话
+
+```text
+POST /api/auth/web-login
+```
+
+### 手机确认 Web 登录
+
+```text
+POST /api/auth/web-login/{loginCode}/confirm
+```
+
+### 查询 Web 登录状态
+
+```text
+GET /api/auth/web-login/{loginCode}
+```
+
 ### 创建房间
 
 ```text
@@ -79,4 +192,3 @@ GET /api/clipboard?roomId={roomId}
 ```text
 DELETE /api/items/{itemId}
 ```
-

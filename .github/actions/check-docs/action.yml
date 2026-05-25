@@ -17,6 +17,7 @@ runs:
           "docs/architecture/module-boundaries.md"
           "docs/architecture/client-ui.md"
           "docs/architecture/client-services.md"
+          "docs/architecture/server-relay.md"
           "docs/api/rest-api.md"
           "docs/api/websocket-events.md"
           "docs/agent/handbook.md"
