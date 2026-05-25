@@ -41,9 +41,9 @@ apps/harmony/entry/src/main/ets/models/
 - 保留旧 `Room`、`TransferItem`，但后续页面优先使用新模型。
 - 不在模型层写请求逻辑。
 
-## P1：用 mock viewmodel 驱动页面
+## P1：用 viewmodel 驱动页面
 
-目标：先用假数据把页面信息架构跑通，不急着接真实网络、文件和加密能力。
+目标：先用 services 驱动页面信息架构，不让页面直接接触网络、文件和加密能力。
 
 建议新增：
 
@@ -56,7 +56,7 @@ apps/harmony/entry/src/main/ets/viewmodels/DeviceViewModel.ets
 验收标准：
 
 - 每个页面的加载、空状态、错误状态、列表数据都有明确字段。
-- 页面不直接拼 mock 数据。
+- 页面不直接拼服务数据。
 - 页面点击事件先调用 viewmodel 或 toast 占位。
 
 ## P2：搭核心页面骨架
@@ -103,7 +103,7 @@ apps/harmony/entry/src/main/ets/pages/HomePage.ets
 验收标准：
 
 - 页面只依赖 viewmodel，不直接调 HTTP、文件系统或加密实现。
-- 真实服务替换 mock 数据时，页面结构不用大改。
+- services 替换为真实网络、文件系统或数据库实现时，页面结构不用大改。
 
 ## P4：服务端按新定位演进
 
@@ -120,5 +120,5 @@ apps/harmony/entry/src/main/ets/pages/HomePage.ets
 不要过早扩大范围。当前优先级仍是：
 
 ```text
-模型层 -> mock viewmodel -> 页面骨架 -> services -> 真实传输
+模型层 -> viewmodel -> 页面骨架 -> services -> 真实传输
 ```

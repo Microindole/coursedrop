@@ -1,9 +1,9 @@
-import { mockDevices } from '../mocks';
 import { Device } from '../models/Device';
+import { deviceDiscoveryService } from '../services/device';
 
 export class DeviceViewModel {
   scanning: boolean = false;
-  devices: Device[] = mockDevices.slice();
+  devices: Device[] = deviceDiscoveryService.listDevices();
   errorMessage: string = '';
   lastActionText: string = '';
 
@@ -17,14 +17,7 @@ export class DeviceViewModel {
 
   refreshDevices(): void {
     this.scanning = true;
-    this.devices = this.devices.map((device, index) => {
-      if (device.status === 'OFFLINE') {
-        return device;
-      }
-      device.latencyMs = 18 + index * 9;
-      device.lastSeenAt = '2026-05-24T12:00:00+08:00';
-      return device;
-    });
+    this.devices = deviceDiscoveryService.refresh();
     this.scanning = false;
     this.lastActionText = '设备列表已刷新';
   }

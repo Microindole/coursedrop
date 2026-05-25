@@ -1,30 +1,29 @@
 import {
-    CdIconButton,
     CdInfoRow,
     CdPanel,
-    CdRelaySourceList,
     CdScrollContainer,
     CdSectionHeader,
     CdSelectField,
     CdSwitchRow,
-    CdTextField,
     CdTopBar
 } from '../components/index';
 import { AppSpacing } from '../common/Theme';
 import { CachePolicy, SettingsViewModel } from '../viewmodels/SettingsViewModel';
+import router from '@ohos.router';
 
 @Component
 export default struct SettingsPage {
     private viewModel: SettingsViewModel = new SettingsViewModel();
     showBack: boolean = false;
-    @State relayUrl: string = '';
     @State e2eeEnabled: boolean = this.viewModel.e2eeEnabled;
     @State lanFirstEnabled: boolean = this.viewModel.lanFirstEnabled;
     @State expireOption: string = '24';
     @State cachePolicy: string = this.viewModel.cachePolicy;
+    @State actionText: string = this.viewModel.lastActionText;
     @State revision: number = 0;
 
     private refreshView(): void {
+        this.actionText = this.viewModel.lastActionText;
         this.revision += 1;
     }
 
@@ -74,43 +73,17 @@ export default struct SettingsPage {
                     CdSectionHeader({ title: '公网中转源' })
 
                     CdPanel() {
-                        Column({ space: AppSpacing.MD }) {
-                            CdRelaySourceList({
-                                relayServers: this.viewModel.relayServers,
-                                onToggle: (id: string) => {
-                                    this.viewModel.toggleRelayServer(id);
-                                    this.refreshView();
-                                },
-                                onPromote: (id: string) => {
-                                    this.viewModel.promoteRelayServer(id);
-                                    this.refreshView();
-                                }
+                        Row() {
+                            CdInfoRow({
+                                title: '管理中转源',
+                                value: '新增、编辑、停用、删除公网中转服务器',
+                                mark: 'SERVER'
                             })
-
-                            Row() {
-                                Column() {
-                                    CdTextField({
-                                        label: '新增中转源',
-                                        placeholder: 'https://relay.example.com',
-                                        value: $relayUrl
-                                    })
-                                }
-                                .layoutWeight(1)
-
-                                CdIconButton({
-                                    icon: $r('app.media.cd_icon_server'),
-                                    variant: 'tonal',
-                                    onTap: () => {
-                                        this.viewModel.addRelayServer(this.relayUrl);
-                                        this.relayUrl = '';
-                                        this.refreshView();
-                                    }
-                                })
-                            }
-                            .width('100%')
-                            .alignItems(VerticalAlign.Bottom)
                         }
                         .width('100%')
+                        .onClick(() => {
+                            router.pushUrl({ url: 'pages/RelaySourcePage' });
+                        })
                     }
 
                     CdSectionHeader({ title: '安全' })
@@ -171,10 +144,10 @@ export default struct SettingsPage {
                         .width('100%')
                     }
 
-                    if (this.viewModel.lastActionText.length > 0) {
+                    if (this.actionText.length > 0) {
                         CdPanel() {
                             CdInfoRow({
-                                title: this.viewModel.lastActionText,
+                                title: this.actionText,
                                 value: `局域网优先 ${this.lanFirstEnabled ? '开启' : '关闭'} · E2EE ${this.e2eeEnabled ? '开启' : '关闭'}`,
                                 mark: 'SERVER'
                             })

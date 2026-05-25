@@ -132,13 +132,22 @@ websocket/  房间实时事件推送
 职责：
 
 - REST 请求
+- CourseDrop 应用专属文件库索引
 - 文件选择、上传、下载
+- 中转源配置、设备发现
 - 剪贴板、存储等系统能力封装
 
 不放：
 
 - 页面布局
 - 长段 UI 状态
+
+说明：
+
+- 客户端已经移除独立演示数据层，页面数据必须通过 services 进入 viewmodels。
+- services 按领域拆成接口、仓储和实现；页面只依赖 viewmodels，viewmodels 只依赖 service 接口或单例入口。
+- 文件管理不是传统目录树，而是应用专属目录 + SQLite 索引 + 类型/对象/状态视图。
+- 后续替换真实文件 API、SQLite、HTTP、局域网发现时，优先替换 service 实现，不改页面结构。
 
 ### viewmodels
 

@@ -92,7 +92,7 @@ export default struct SharePage {
                     })
 
                     CdBanner({
-                        title: this.viewModel.lastActionText.length > 0 ? this.viewModel.lastActionText : '页面使用 mock 数据',
+                        title: this.viewModel.lastActionText.length > 0 ? this.viewModel.lastActionText : '当前是空分享草稿',
                         description: `状态 ${this.viewModel.currentSession.status} · 内容 ${this.viewModel.currentSession.itemCount} 项`,
                         tone: 'info'
                     })
@@ -120,19 +120,19 @@ export default struct SharePage {
 
                     CdFilePickerPanel({
                         onPickFile: () => {
-                            this.viewModel.addMockItem('FILE');
+                            this.viewModel.addLocalItem('FILE');
                             this.refreshView();
                         },
                         onPickImage: () => {
-                            this.viewModel.addMockItem('IMAGE');
+                            this.viewModel.addLocalItem('IMAGE');
                             this.refreshView();
                         },
                         onSendText: () => {
-                            this.viewModel.addMockItem('TEXT');
+                            this.viewModel.addLocalItem('TEXT');
                             this.refreshView();
                         },
                         onSendLink: () => {
-                            this.viewModel.addMockItem('LINK');
+                            this.viewModel.addLocalItem('LINK');
                             this.refreshView();
                         }
                     })
@@ -143,8 +143,8 @@ export default struct SharePage {
             CdBottomSheet({ visible: $detailVisible }) {
                 CdDetailSheet({
                     title: this.selectedName,
-                    sizeText: 'mock size',
-                    typeText: 'mock item',
+                    sizeText: 'local indexed item',
+                    typeText: 'CourseDrop item',
                     createdText: this.viewModel.currentSession.createdAt,
                     expireText: this.viewModel.getExpireText(),
                     expireTone: this.expireTone(this.viewModel.currentSession.expireStatus),

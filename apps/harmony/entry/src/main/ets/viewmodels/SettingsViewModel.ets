@@ -1,25 +1,10 @@
-import { AppConfig } from '../common/AppConfig';
 import { RelayServerConfig } from '../models/RelayServerConfig';
+import { relaySourceService } from '../services/relay';
 
 export type CachePolicy = 'MANUAL' | 'DAILY' | 'EXPIRED_ONLY';
 
 export class SettingsViewModel {
-  relayServers: RelayServerConfig[] = [
-    {
-      id: 'local-dev',
-      name: '本机调试源',
-      url: AppConfig.DEFAULT_SERVER_URL,
-      enabled: true,
-      priority: 1
-    },
-    {
-      id: 'course-relay',
-      name: '课程公网源',
-      url: 'https://relay.coursedrop.example',
-      enabled: false,
-      priority: 2
-    }
-  ];
+  relayServers: RelayServerConfig[] = relaySourceService.listRelayServers();
   e2eeEnabled: boolean = true;
   lanFirstEnabled: boolean = true;
   defaultExpireHours: string = '24';
@@ -40,52 +25,32 @@ export class SettingsViewModel {
     return '仅清理过期内容';
   }
 
-  addRelayServer(url: string): void {
-    const normalizedUrl = url.trim();
-    if (normalizedUrl.length === 0) {
-      this.lastActionText = '中转源地址为空';
-      return;
-    }
-    const nextPriority = this.relayServers.length + 1;
-    this.relayServers = this.relayServers.concat([{
-      id: `relay-${nextPriority}`,
-      name: `自定义源 ${nextPriority}`,
-      url: normalizedUrl,
-      enabled: true,
-      priority: nextPriority
-    }]);
-    this.lastActionText = '已新增中转源';
+  addRelayServer(url: string): boolean {
+    const previousCount = this.relayServers.length;
+    this.lastActionText = relaySourceService.addRelayServer(url);
+    this.relayServers = relaySourceService.listRelayServers();
+    return this.relayServers.length > previousCount;
+  }
+
+  updateRelayServer(id: string, url: string): boolean {
+    this.lastActionText = relaySourceService.updateRelayServer(id, url);
+    this.relayServers = relaySourceService.listRelayServers();
+    return this.lastActionText === '中转源已更新';
+  }
+
+  removeRelayServer(id: string): void {
+    this.lastActionText = relaySourceService.removeRelayServer(id);
+    this.relayServers = relaySourceService.listRelayServers();
   }
 
   toggleRelayServer(id: string): void {
-    this.relayServers = this.relayServers.map((server) => {
-      if (server.id !== id) {
-        return server;
-      }
-      server.enabled = !server.enabled;
-      return server;
-    });
-    this.lastActionText = '中转源状态已更新';
+    this.lastActionText = relaySourceService.toggleRelayServer(id);
+    this.relayServers = relaySourceService.listRelayServers();
   }
 
   promoteRelayServer(id: string): void {
-    const target = this.relayServers.find((server) => server.id === id);
-    if (target === undefined || target.priority <= 1) {
-      return;
-    }
-    const previousPriority = target.priority - 1;
-    this.relayServers = this.relayServers.map((server) => {
-      if (server.id === id) {
-        server.priority = previousPriority;
-        return server;
-      }
-      if (server.priority === previousPriority) {
-        server.priority = target.priority;
-        return server;
-      }
-      return server;
-    }).sort((left, right) => left.priority - right.priority);
-    this.lastActionText = '中转源优先级已调整';
+    this.lastActionText = relaySourceService.promoteRelayServer(id);
+    this.relayServers = relaySourceService.listRelayServers();
   }
 
   updateSecurity(e2eeEnabled: boolean, lanFirstEnabled: boolean): void {

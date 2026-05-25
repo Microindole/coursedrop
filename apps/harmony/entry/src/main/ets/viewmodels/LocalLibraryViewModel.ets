@@ -1,6 +1,6 @@
-import { mockLocalFiles } from '../mocks';
 import { TransferItemType } from '../models/CommonTypes';
 import { LocalFileEntry } from '../models/LocalFileEntry';
+import { localLibraryService } from '../services/local';
 
 export type LocalLibraryFilter = 'ALL' | TransferItemType;
 
@@ -8,7 +8,7 @@ export class LocalLibraryViewModel {
   searchKeyword: string = '';
   filter: LocalLibraryFilter = 'ALL';
   selectedIds: string[] = [];
-  files: LocalFileEntry[] = mockLocalFiles.slice();
+  files: LocalFileEntry[] = localLibraryService.listFiles();
   lastActionText: string = '';
   pageSize: number = 4;
 
@@ -58,21 +58,15 @@ export class LocalLibraryViewModel {
   }
 
   shareSelected(): void {
-    this.files = this.files.map((file) => {
-      if (!this.selectedIds.includes(file.id)) {
-        return file;
-      }
-      file.shareCount = file.shareCount + 1;
-      file.remoteCached = true;
-      file.lastSharedAt = '2026-05-24T12:00:00+08:00';
-      return file;
-    });
+    localLibraryService.markShared(this.selectedIds);
+    this.files = localLibraryService.listFiles();
     this.lastActionText = `已重新分享 ${this.selectedIds.length} 项`;
   }
 
   deleteSelected(): void {
     const selectedCount = this.selectedIds.length;
-    this.files = this.files.filter((file) => !this.selectedIds.includes(file.id));
+    localLibraryService.removeFiles(this.selectedIds);
+    this.files = localLibraryService.listFiles();
     this.selectedIds = [];
     this.lastActionText = `已删除 ${selectedCount} 项`;
   }

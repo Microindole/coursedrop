@@ -1,0 +1,25 @@
+import { TransferItemType } from '../../models/CommonTypes';
+import { ShareSession } from '../../models/ShareSession';
+import { TransferTask } from '../../models/TransferTask';
+
+export interface TransferStats {
+  activeCount: number;
+  completedCount: number;
+  failedCount: number;
+  expiringCount: number;
+}
+
+export interface ShareOperationResult {
+  success: boolean;
+  message: string;
+}
+
+export interface ShareService {
+  listRecentSessions(limit: number): ShareSession[];
+  getCurrentSession(): ShareSession;
+  listTasks(sessionId: string): TransferTask[];
+  getStats(): TransferStats;
+  refreshShareCode(sessionId: string): ShareOperationResult;
+  revokeShare(sessionId: string): ShareOperationResult;
+  addLocalItem(sessionId: string, type: TransferItemType): ShareOperationResult;
+}

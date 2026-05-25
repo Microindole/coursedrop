@@ -44,15 +44,3 @@ jobs:
         uses: ./.github/actions/check-harmony
         with:
           working-directory: apps/harmony
-
-  harmony-mocks:
-    name: Harmony mock data boundaries
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Check HarmonyOS mock data
-        uses: ./.github/actions/check-harmony-mocks
-        with:
-          working-directory: apps/harmony

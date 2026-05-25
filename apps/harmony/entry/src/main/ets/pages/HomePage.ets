@@ -84,8 +84,8 @@ struct HomePage {
         })
 
         CdBanner({
-          title: '页面骨架阶段',
-          description: '当前使用 mock viewmodel 驱动，后续再接 services、文件选择和真实传输。',
+          title: '本地库尚未建立索引',
+          description: '下一步接应用目录、SQLite 索引、本地文件选择和真实传输。',
           tone: 'info'
         })
 
