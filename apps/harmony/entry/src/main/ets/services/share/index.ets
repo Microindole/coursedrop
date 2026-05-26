@@ -2,8 +2,11 @@ import { LocalShareService } from './LocalShareService';
 import { apiClient } from '../ApiClient';
 import { LocalShareSessionRepository } from './ShareSessionRepository';
 import { RelayShareApi } from './RelayShareApi';
-import { LocalTransferTaskRepository } from './TransferTaskRepository';
+import { transferTaskRepository } from '../transfer';
+import { localFileIndexRepository } from '../local';
+import { fileImportService, filePickerService } from '../file';
 import { ShareService } from './ShareService';
+import { DefaultShareDraftWorkflow } from './ShareDraftWorkflow';
 
 export type { ShareOperationResult, ShareService, TransferStats } from './ShareService';
 export { LocalShareService } from './LocalShareService';
@@ -12,9 +15,17 @@ export { LocalShareSessionRepository } from './ShareSessionRepository';
 export { RelayShareApi } from './RelayShareApi';
 export type { TransferTaskRepository } from './TransferTaskRepository';
 export { LocalTransferTaskRepository } from './TransferTaskRepository';
+export type { ShareDraftWorkflow } from './ShareDraftWorkflow';
+export { DefaultShareDraftWorkflow } from './ShareDraftWorkflow';
 
 export const shareService: ShareService = new LocalShareService(
   new LocalShareSessionRepository(),
-  new LocalTransferTaskRepository(),
-  new RelayShareApi(apiClient)
+  transferTaskRepository,
+  new RelayShareApi(apiClient),
+  localFileIndexRepository
+);
+export const shareDraftWorkflow = new DefaultShareDraftWorkflow(
+  filePickerService,
+  fileImportService,
+  shareService
 );

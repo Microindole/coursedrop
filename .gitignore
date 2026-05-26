@@ -2,6 +2,8 @@
 .vscode/*
 !.vscode/settings.json
 *.iml
+.antigravitycli/
+.claude/
 
 target/
 build/

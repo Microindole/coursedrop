@@ -61,6 +61,11 @@ export default struct SharePage {
         this.refreshView();
     }
 
+    private async addLocalItem(type: 'FILE' | 'IMAGE' | 'TEXT' | 'LINK'): Promise<void> {
+        await this.viewModel.addLocalItem(type);
+        this.refreshView();
+    }
+
     build() {
         Stack({ alignContent: Alignment.TopStart }) {
             CdScrollContainer() {
@@ -124,20 +129,16 @@ export default struct SharePage {
 
                     CdFilePickerPanel({
                         onPickFile: () => {
-                            this.viewModel.addLocalItem('FILE');
-                            this.refreshView();
+                            this.addLocalItem('FILE');
                         },
                         onPickImage: () => {
-                            this.viewModel.addLocalItem('IMAGE');
-                            this.refreshView();
+                            this.addLocalItem('IMAGE');
                         },
                         onSendText: () => {
-                            this.viewModel.addLocalItem('TEXT');
-                            this.refreshView();
+                            this.addLocalItem('TEXT');
                         },
                         onSendLink: () => {
-                            this.viewModel.addLocalItem('LINK');
-                            this.refreshView();
+                            this.addLocalItem('LINK');
                         }
                     })
                 }

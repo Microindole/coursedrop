@@ -3,6 +3,7 @@ import { ShareSession } from '../models/ShareSession';
 import { TransferItem } from '../models/TransferItem';
 import { TransferTask } from '../models/TransferTask';
 import { shareService } from '../services/share';
+import { shareDraftWorkflow } from '../services/share';
 
 export class ShareViewModel {
   currentSession: ShareSession = shareService.getCurrentSession();
@@ -63,9 +64,10 @@ export class ShareViewModel {
     this.lastActionText = result.message;
   }
 
-  addLocalItem(type: TransferItemType): void {
-    const result = shareService.addLocalItem(this.currentSession.id, type);
+  async addLocalItem(type: TransferItemType): Promise<void> {
+    const result = await shareDraftWorkflow.pickAndAttachFiles(this.currentSession.id, type);
     this.currentSession = shareService.getCurrentSession();
     this.lastActionText = result.message;
+    this.errorMessage = result.success ? '' : result.message;
   }
 }

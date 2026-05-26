@@ -23,4 +23,6 @@ export interface ShareService {
   createRelayShare(sessionId: string, expireHours: number, downloadPolicy: string): Promise<ShareOperationResult>;
   revokeShare(sessionId: string): ShareOperationResult;
   addLocalItem(sessionId: string, type: TransferItemType): ShareOperationResult;
+  attachLocalFile(sessionId: string, localFileId: string): ShareOperationResult;
+  markItemUploaded(sessionId: string, itemId: string, remoteItemId: string, remoteUrl: string, expiresAt: string): ShareOperationResult;
 }

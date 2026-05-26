@@ -10,6 +10,7 @@ export interface TransferItem {
   sizeBytes: number;
   localUri?: string;
   remoteUrl?: string;
+  remoteItemId?: string;
   createdAt: string;
   expiresAt: string;
   encrypted?: boolean;

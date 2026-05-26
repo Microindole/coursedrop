@@ -3,49 +3,78 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CourseDrop</title>
+  <title>CourseDrop - 共享文件提取</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'selector' }
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body class="min-h-screen bg-zinc-50 text-zinc-950 antialiased">
-<main class="mx-auto grid min-h-screen w-full max-w-6xl gap-8 px-5 py-8 md:grid-cols-[1fr_360px] md:items-start md:px-8">
-  <section class="pt-4 md:pt-10">
-    <div class="flex items-center gap-3">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-950 text-sm font-semibold text-white">CD</div>
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight">CourseDrop</h1>
-        <p class="text-sm text-zinc-500">分享码 <span th:text="${share.code}">CODE</span></p>
+<body class="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased selection:bg-zinc-200 dark:selection:bg-zinc-800">
+
+<nav class="mx-auto max-w-6xl px-4 md:px-8 pt-6 flex justify-end">
+  <button id="theme-toggle" class="inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 text-zinc-500 dark:text-zinc-400 shadow-sm hover:text-zinc-900 dark:hover:text-white transition">
+    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+  </button>
+</nav>
+
+<main class="mx-auto grid min-h-screen w-full max-w-6xl gap-8 px-4 py-4 md:grid-cols-[1fr_380px] md:items-start md:px-8 lg:py-8">
+  <section class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-6 shadow-sm sm:p-8 backdrop-blur-md">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 dark:border-zinc-800/60 pb-6">
+      <div class="flex items-center gap-3.5">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-950 dark:bg-zinc-100 font-black tracking-tighter text-white dark:text-zinc-950 shadow-md">CD</div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">CourseDrop 提取通道</h1>
+          <p class="mt-0.5 text-sm text-zinc-400 dark:text-zinc-500 font-mono">分享码: <span class="text-zinc-700 dark:text-zinc-300 font-semibold" th:text="${share.code}">CODE</span></p>
+        </div>
+      </div>
+      <div class="text-left sm:text-right text-sm">
+        <span class="text-xs text-zinc-400 dark:text-zinc-500 block uppercase font-medium">有效期至</span>
+        <span class="font-medium text-zinc-600 dark:text-zinc-300 font-mono" th:text="${share.expiresAt}">2026-05-25 12:00</span>
       </div>
     </div>
 
-    <div class="mt-10">
-      <p class="text-sm text-zinc-500">有效期</p>
-      <p class="mt-1 text-lg font-medium" th:text="${share.expiresAt}">2026-05-25T12:00:00Z</p>
-    </div>
-
-    <div class="mt-10 border-y border-zinc-200">
-      <div class="flex items-center justify-between py-4">
+    <div class="mt-6 flex items-center justify-between rounded-xl bg-zinc-50 dark:bg-zinc-950/40 p-4 border border-zinc-100 dark:border-zinc-800/80">
+      <div class="flex items-start gap-3">
+        <div class="mt-0.5 text-zinc-400 dark:text-zinc-500 shrink-0">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+        </div>
         <div>
-          <h2 class="text-base font-semibold">文件</h2>
-          <p id="download-hint" class="mt-1 text-sm text-zinc-500"
-             th:text="${share.downloadAuthRequired} ? '登录后可直接下载到这台电脑。' : '此分享允许直接下载。'">
+          <h2 class="text-sm font-semibold text-zinc-800 dark:text-zinc-200">安全下载策略</h2>
+          <p id="download-hint" class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"
+             th:text="${share.downloadAuthRequired} ? '此分享已被安全锁保护，请通过右侧验证后解禁下载。' : '公共分享链接，文件可直接下载。'">
             登录后可直接下载到这台电脑。
           </p>
         </div>
-        <span id="auth-badge"
-              th:class="${share.downloadAuthRequired} ? 'rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600' : 'rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700'"
-              th:text="${share.downloadAuthRequired} ? '未授权' : '可下载'">未授权</span>
       </div>
+      <span id="auth-badge"
+            th:class="${share.downloadAuthRequired} ? 'rounded-md bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-800 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/20 shrink-0' : 'rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20 shrink-0'"
+            th:text="${share.downloadAuthRequired} ? '受限待验证' : '开放下载'">未授权</span>
+    </div>
 
-      <ul class="divide-y divide-zinc-200">
-        <li th:each="item : ${share.items}" class="flex items-center justify-between gap-4 py-4">
-          <div class="min-w-0">
-            <p class="truncate text-sm font-medium" th:text="${item.displayName}">file.txt</p>
-            <p class="mt-1 text-xs text-zinc-500">
-              <span th:text="${item.sizeBytes}">0</span> bytes
-              <span th:if="${item.encrypted}" class="ml-2 text-emerald-700">端到端加密</span>
-            </p>
+    <div class="mt-6">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-3">包含的文件清单</h3>
+      <ul class="divide-y divide-zinc-100 dark:divide-zinc-800 border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50/30 dark:bg-zinc-950/20">
+        <li th:each="item : ${share.items}" class="flex items-center justify-between gap-4 p-4 transition hover:bg-zinc-50/50 dark:hover:bg-zinc-900/40">
+          <div class="min-w-0 flex items-center gap-3">
+            <div class="h-9 w-9 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+            </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold text-zinc-800 dark:text-zinc-200" th:text="${item.displayName}">file.txt</p>
+              <p class="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500 flex items-center gap-2">
+                <span><span th:text="${item.sizeBytes}">0</span> bytes</span>
+                <span th:if="${item.encrypted}" class="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.2 text-[10px] font-medium text-emerald-700 dark:text-emerald-400 border border-emerald-600/10 dark:border-emerald-500/20">E2EE 加密</span>
+              </p>
+            </div>
           </div>
-          <a th:class="${share.downloadAuthRequired} ? 'download-link pointer-events-none rounded-lg bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-500 transition' : 'download-link rounded-lg bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800'"
+          <a th:class="${share.downloadAuthRequired} ? 'download-link pointer-events-none rounded-lg bg-zinc-100 dark:bg-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-400 dark:text-zinc-500 transition shadow-sm' : 'download-link rounded-lg bg-zinc-950 dark:bg-zinc-100 px-4 py-2 text-xs font-semibold text-white dark:text-zinc-950 transition shadow-sm hover:opacity-90 active:scale-95'"
              th:href="@{'/s/' + ${share.code} + '/items/' + ${item.id} + '/download'}"
              th:attr="data-filename=${item.displayName},data-encrypted=${item.encrypted},data-algorithm=${item.encryptionAlgorithm},data-nonce=${item.nonce}">
             下载
@@ -56,33 +85,34 @@
   </section>
 
   <aside class="md:sticky md:top-8" th:if="${share.downloadAuthRequired}">
-    <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+    <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm backdrop-blur-md">
       <div>
-        <h2 class="text-base font-semibold">验证身份</h2>
-        <p id="login-status" class="mt-1 text-sm text-zinc-500">扫码确认，或使用已启用的账号登录。</p>
+        <h2 class="text-base font-bold text-zinc-900 dark:text-white">验证身份</h2>
+        <p id="login-status" class="mt-1 text-xs text-zinc-400 dark:text-zinc-500 leading-normal">扫码确认，或使用已启用的账号登录。</p>
       </div>
 
-      <div class="mt-5 flex justify-center rounded-xl bg-zinc-50 p-4">
-        <img class="h-52 w-52" alt="扫码登录" th:src="@{'/api/auth/web-login/' + ${login.loginCode} + '/qr.svg'}">
-      </div>
-
-      <div class="mt-4 rounded-xl bg-zinc-950 px-4 py-3 text-center text-xl font-semibold tracking-[0.2em] text-white"
-           th:text="${login.loginCode}">
-        CODE
+      <div class="mt-5 flex flex-col items-center justify-center rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/60 p-4">
+        <div class="relative bg-white p-2 rounded-lg shadow-inner">
+          <img class="h-44 w-44 object-contain" alt="扫码登录" th:src="@{'/api/auth/web-login/' + ${login.loginCode} + '/qr.svg'}">
+        </div>
+        <div class="mt-3 w-full rounded-lg bg-zinc-950 dark:bg-zinc-900 px-3 py-2 text-center font-mono text-base font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 shadow-inner"
+             th:text="${login.loginCode}">
+          CODE
+        </div>
       </div>
 
       <div class="my-5 flex items-center gap-3">
-        <div class="h-px flex-1 bg-zinc-200"></div>
-        <span class="text-xs text-zinc-400">或</span>
-        <div class="h-px flex-1 bg-zinc-200"></div>
+        <div class="h-px flex-1 bg-zinc-100 dark:bg-zinc-800"></div>
+        <span class="text-[10px] font-bold text-zinc-300 dark:text-zinc-600 uppercase">或</span>
+        <div class="h-px flex-1 bg-zinc-100 dark:bg-zinc-800"></div>
       </div>
 
-      <form id="password-login" class="space-y-3">
-        <input class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-950"
+      <form id="password-login" class="space-y-2.5">
+        <input class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-zinc-500 dark:focus:border-zinc-700 focus:bg-white dark:focus:bg-zinc-950"
                name="username" autocomplete="username" placeholder="账号">
-        <input class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-950"
+        <input class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-zinc-500 dark:focus:border-zinc-700 focus:bg-white dark:focus:bg-zinc-950"
                name="password" type="password" autocomplete="current-password" placeholder="密码">
-        <button class="w-full rounded-lg bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
+        <button class="w-full rounded-lg bg-zinc-950 dark:bg-zinc-100 py-2.5 text-xs font-semibold text-white dark:text-zinc-950 shadow-sm transition hover:opacity-90 active:scale-[0.99]"
                 type="submit">
           登录并下载到电脑
         </button>
@@ -92,132 +122,162 @@
 </main>
 
 <script th:inline="javascript" th:if="${share.downloadAuthRequired}">
-const loginCode = /*[[${login.loginCode}]]*/ "";
-const statusEl = document.getElementById("login-status");
-const badgeEl = document.getElementById("auth-badge");
-const hintEl = document.getElementById("download-hint");
-const form = document.getElementById("password-login");
+  const loginCode = /*[[${login.loginCode}]]*/ "";
+  const statusEl = document.getElementById("login-status");
+  const badgeEl = document.getElementById("auth-badge");
+  const hintEl = document.getElementById("download-hint");
+  const form = document.getElementById("password-login");
 
-function setAuthorized(message) {
-  document.querySelectorAll(".download-link").forEach((link) => {
-    link.classList.remove("pointer-events-none", "bg-zinc-200", "text-zinc-500");
-    link.classList.add("bg-zinc-950", "text-white", "hover:bg-zinc-800");
-  });
-  badgeEl.textContent = "已授权";
-  badgeEl.className = "rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700";
-  statusEl.textContent = message;
-  hintEl.textContent = "可以直接下载到这台电脑。";
-}
-
-async function checkCurrent() {
-  const response = await fetch("/api/auth/web-login/current", { credentials: "include" });
-  if (!response.ok) return false;
-  const body = await response.json();
-  if (body.authorized) {
-    setAuthorized("当前浏览器已登录。");
-    return true;
+  function setAuthorized(message) {
+    document.querySelectorAll(".download-link").forEach((link) => {
+      link.classList.remove("pointer-events-none", "bg-zinc-100", "dark:bg-zinc-800", "text-zinc-400", "dark:text-zinc-500");
+      link.classList.add("bg-zinc-950", "dark:bg-zinc-100", "text-white", "dark:text-zinc-950", "active:scale-95");
+    });
+    badgeEl.textContent = "已授权解锁";
+    badgeEl.className = "rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20 shrink-0";
+    statusEl.textContent = message;
+    statusEl.className = "mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium";
+    hintEl.textContent = "可以直接下载到这台电脑。";
   }
-  return false;
-}
 
-async function poll() {
-  if (await checkCurrent()) return;
-  try {
-    const response = await fetch(`/api/auth/web-login/${loginCode}`, { credentials: "include" });
-    if (!response.ok) return;
+  async function checkCurrent() {
+    const response = await fetch("/api/auth/web-login/current", { credentials: "include" });
+    if (!response.ok) return false;
     const body = await response.json();
-    if (body.status === "CONFIRMED") {
-      setAuthorized("手机已确认，可以下载。");
-      return;
+    if (body.authorized) {
+      setAuthorized("当前浏览器会话已通过授权。");
+      return true;
     }
-    if (body.status === "EXPIRED" || body.status === "REVOKED") {
-      statusEl.textContent = "登录已失效，请刷新页面重试。";
-      return;
-    }
-    setTimeout(poll, 1500);
-  } catch (error) {
-    setTimeout(poll, 3000);
+    return false;
   }
-}
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const data = new FormData(form);
-  statusEl.textContent = "正在登录...";
-  const response = await fetch("/api/auth/web-login/password", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: data.get("username"),
-      password: data.get("password")
-    })
-  });
-  if (response.ok) {
-    setAuthorized("账号已登录，可以下载。");
-  } else {
-    statusEl.textContent = "登录失败，请检查账号或是否已允许账号密码登录。";
-  }
-});
-
-poll();
-</script>
-<script>
-const key = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("key");
-
-document.querySelectorAll(".download-link").forEach((link) => {
-  link.addEventListener("click", async (event) => {
-    if (link.dataset.encrypted !== "true" || !key) {
-      return;
-    }
-    event.preventDefault();
+  async function poll() {
+    if (await checkCurrent()) return;
     try {
-      const response = await fetch(link.href, { credentials: "include" });
-      if (!response.ok) {
-        window.location.href = link.href;
+      const response = await fetch(`/api/auth/web-login/${loginCode}`, { credentials: "include" });
+      if (!response.ok) return;
+      const body = await response.json();
+      if (body.status === "CONFIRMED") {
+        setAuthorized("手机端已确认安全授权。");
         return;
       }
-      const cipherBytes = new Uint8Array(await response.arrayBuffer());
-      const plainBytes = await decryptAesGcm(cipherBytes, key, link.dataset.nonce);
-      saveBytes(plainBytes, link.dataset.filename || "coursedrop-file");
+      if (body.status === "EXPIRED" || body.status === "REVOKED") {
+        statusEl.textContent = "登录凭证已失效，请刷新页面重试。";
+        statusEl.className = "mt-1 text-xs text-rose-500 font-medium";
+        return;
+      }
+      setTimeout(poll, 1500);
     } catch (error) {
-      window.location.href = link.href;
+      setTimeout(poll, 3000);
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    statusEl.textContent = "验证中...";
+    const response = await fetch("/api/auth/web-login/password", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: data.get("username"),
+        password: data.get("password")
+      })
+    });
+    if (response.ok) {
+      setAuthorized("账号验证通过，已解锁文件通道。");
+    } else {
+      statusEl.textContent = "登录失败，请检查账号信息。";
+      statusEl.className = "mt-1 text-xs text-rose-500 font-medium";
     }
   });
-});
 
-async function decryptAesGcm(cipherBytes, encodedKey, encodedNonce) {
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    decodeBase64Url(encodedKey),
-    { name: "AES-GCM" },
-    false,
-    ["decrypt"]
-  );
-  return new Uint8Array(await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: decodeBase64Url(encodedNonce) },
-    cryptoKey,
-    cipherBytes
-  ));
-}
+  poll();
+</script>
+<script>
+  const key = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("key");
 
-function decodeBase64Url(value) {
-  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-  return Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
-}
+  document.querySelectorAll(".download-link").forEach((link) => {
+    link.addEventListener("click", async (event) => {
+      if (link.dataset.encrypted !== "true" || !key) {
+        return;
+      }
+      event.preventDefault();
+      try {
+        const response = await fetch(link.href, { credentials: "include" });
+        if (!response.ok) {
+          window.location.href = link.href;
+          return;
+        }
+        const cipherBytes = new Uint8Array(await response.arrayBuffer());
+        const plainBytes = await decryptAesGcm(cipherBytes, key, link.dataset.nonce);
+        saveBytes(plainBytes, link.dataset.filename || "coursedrop-file");
+      } catch (error) {
+        window.location.href = link.href;
+      }
+    });
+  });
 
-function saveBytes(bytes, filename) {
-  const blob = new Blob([bytes]);
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
+  async function decryptAesGcm(cipherBytes, encodedKey, encodedNonce) {
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      decodeBase64Url(encodedKey),
+      { name: "AES-GCM" },
+      false,
+      ["decrypt"]
+    );
+    return new Uint8Array(await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: decodeBase64Url(encodedNonce) },
+      cryptoKey,
+      cipherBytes
+    ));
+  }
+
+  function decodeBase64Url(value) {
+    const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    return Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
+  }
+
+  function saveBytes(bytes, filename) {
+    const blob = new Blob([bytes]);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // 主题切换
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const lightIcon = document.getElementById('theme-toggle-light-icon');
+  const darkIcon = document.getElementById('theme-toggle-dark-icon');
+
+  function updateIcons() {
+    if (document.documentElement.classList.contains('dark')) {
+      lightIcon.classList.remove('hidden');
+      darkIcon.classList.add('hidden');
+    } else {
+      lightIcon.classList.add('hidden');
+      darkIcon.classList.remove('hidden');
+    }
+  }
+  updateIcons();
+
+  themeToggleBtn.addEventListener('click', () => {
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+    updateIcons();
+  });
 </script>
 </body>
 </html>

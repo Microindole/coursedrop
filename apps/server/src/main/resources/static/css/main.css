@@ -1,0 +1,36 @@
+/* src/main/resources/static/css/main.css */
+
+/* 全局背景色过渡，让黑白切换更丝滑 */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 隐藏滚动条 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 动态网格背景：自动适配明暗模式 */
+.bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(9, 9, 11, 0.04) 1px, transparent 1px),
+  linear-gradient(to bottom, rgba(9, 9, 11, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.dark .bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(52, 211, 153, 0.03) 1px, transparent 1px),
+  linear-gradient(to bottom, rgba(52, 211, 153, 0.03) 1px, transparent 1px);
+}
+
+/* 极光微光动画 */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.28; }
+}
+.animate-glow {
+  animation: pulse-glow 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

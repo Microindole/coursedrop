@@ -10,7 +10,9 @@ export type { LocalFileIndexRepository } from './LocalFileIndexRepository';
 export { RuntimeLocalFileIndexRepository } from './LocalFileIndexRepository';
 export type { LibraryGrouping, LocalLibraryService } from './LocalLibraryService';
 
+export const courseDropFileStore = new AppSandboxFileStore();
+export const localFileIndexRepository = new RuntimeLocalFileIndexRepository();
 export const localLibraryService: LocalLibraryService = new IndexedLocalLibraryService(
-  new AppSandboxFileStore(),
-  new RuntimeLocalFileIndexRepository()
+  courseDropFileStore,
+  localFileIndexRepository
 );

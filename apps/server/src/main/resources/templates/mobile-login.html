@@ -3,45 +3,101 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CourseDrop 登录确认</title>
+  <title>CourseDrop — 移动授权验证终端</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'selector' }
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body class="min-h-screen bg-zinc-950 px-5 py-8 text-white antialiased">
-<main class="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md flex-col justify-center">
-  <p class="text-sm font-medium uppercase tracking-[0.24em] text-emerald-300">CourseDrop</p>
-  <h1 class="mt-4 text-3xl font-semibold tracking-tight">确认网页登录</h1>
-  <p class="mt-3 text-sm leading-6 text-zinc-400">
+<body class="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased bg-grid-pattern relative overflow-hidden flex flex-col justify-center items-center px-4 py-6">
+
+<div class="absolute top-4 right-4">
+  <button id="theme-toggle" class="inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 text-zinc-500 dark:text-zinc-400 shadow-sm hover:text-zinc-900 dark:hover:text-white transition">
+    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+  </button>
+</div>
+
+<main class="w-full max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-900 bg-white/90 dark:bg-zinc-900/40 p-6 backdrop-blur-xl shadow-md dark:shadow-2xl dark:shadow-black/60">
+  <div class="flex items-center gap-2">
+    <span class="flex h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
+    <p class="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">CourseDrop Node Auth</p>
+  </div>
+
+  <h1 class="mt-3 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">确认网页登录</h1>
+  <p class="mt-2 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
     在没有鸿蒙真机扫码能力时，可用安卓浏览器打开此页并输入手机端设备指纹 ID 完成登录确认。
   </p>
 
-  <div class="mt-8 border-y border-white/10 py-5">
-    <p class="text-xs uppercase tracking-[0.22em] text-zinc-500">Login Code</p>
-    <p class="mt-2 break-all font-mono text-xl text-emerald-300" th:text="${loginCode}">CODE</p>
+  <div class="mt-6 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/80 p-4 shadow-inner">
+    <p class="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Login Code</p>
+    <p class="mt-1 break-all font-mono text-lg font-bold text-emerald-600 dark:text-emerald-300 tracking-wider" th:text="${loginCode}">CODE</p>
   </div>
 
-  <div th:if="${confirmed}" class="mt-6 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-semibold text-zinc-950">
-    已确认登录。现在可以回到电脑浏览器继续下载。
+  <div th:if="${confirmed}" class="mt-5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    <span>已确认登录。现在可以回到电脑浏览器继续下载。</span>
   </div>
 
   <div th:if="${errorMessage != null and !#strings.isEmpty(errorMessage)}"
-       class="mt-6 rounded-lg border border-red-400/40 bg-red-950/40 px-4 py-3 text-sm text-red-200"
-       th:text="${errorMessage}">
-    登录确认失败
+       class="mt-5 rounded-xl border border-rose-500/20 bg-rose-500/5 p-3.5 text-xs text-rose-600 dark:text-rose-300 flex items-center gap-2">
+    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+    <span th:text="${errorMessage}">登录确认失败</span>
   </div>
 
-  <form class="mt-6 space-y-4" method="post" th:action="@{'/m/login/' + ${loginCode}}">
-    <label class="block">
-      <span class="text-xs font-medium text-zinc-400">Fingerprint ID</span>
+  <form class="mt-5 space-y-4" method="post" th:action="@{'/m/login/' + ${loginCode}}">
+    <div>
+      <label class="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1.5">Fingerprint ID</label>
       <input name="fingerprintId"
-             class="mt-2 min-h-12 w-full rounded-lg border border-white/15 bg-white/10 px-4 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-emerald-300"
+             class="min-h-[48px] w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 px-4 text-sm font-mono text-zinc-900 dark:text-zinc-200 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500/60 focus:bg-white dark:focus:bg-zinc-950"
              placeholder="从 CourseDrop 设置页复制 fingerprintId"
-             autocomplete="off">
-    </label>
-    <button class="min-h-12 w-full rounded-lg bg-emerald-400 px-4 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-300"
+             autocomplete="off"
+             required>
+    </div>
+
+    <button class="min-h-[48px] w-full rounded-xl bg-zinc-950 dark:bg-emerald-400 text-sm font-semibold text-white dark:text-zinc-950 shadow-md transition active:scale-[0.98] hover:opacity-90"
             type="submit">
       确认登录
     </button>
   </form>
 </main>
+
+<footer class="mt-8 text-center text-[11px] text-zinc-400 dark:text-zinc-600 font-mono">
+  CourseDrop Relay &middot; Secure Transit Terminal
+</footer>
+
+<script>
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const lightIcon = document.getElementById('theme-toggle-light-icon');
+  const darkIcon = document.getElementById('theme-toggle-dark-icon');
+
+  function updateIcons() {
+    if (document.documentElement.classList.contains('dark')) {
+      lightIcon.classList.remove('hidden');
+      darkIcon.classList.add('hidden');
+    } else {
+      lightIcon.classList.add('hidden');
+      darkIcon.classList.remove('hidden');
+    }
+  }
+  updateIcons();
+
+  themeToggleBtn.addEventListener('click', () => {
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+    updateIcons();
+  });
+</script>
 </body>
 </html>

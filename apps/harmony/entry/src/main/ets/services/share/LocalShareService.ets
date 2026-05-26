@@ -1,6 +1,9 @@
 import { TransferItemType } from '../../models/CommonTypes';
 import { ShareSession } from '../../models/ShareSession';
+import { TransferItem } from '../../models/TransferItem';
 import { TransferTask } from '../../models/TransferTask';
+import { LocalFileEntry } from '../../models/LocalFileEntry';
+import { LocalFileIndexRepository } from '../local/LocalFileIndexRepository';
 import { ShareOperationResult, ShareService, TransferStats } from './ShareService';
 import { ShareSessionRepository } from './ShareSessionRepository';
 import { TransferTaskRepository } from './TransferTaskRepository';
@@ -11,15 +14,18 @@ export class LocalShareService implements ShareService {
   private sessionRepository: ShareSessionRepository;
   private taskRepository: TransferTaskRepository;
   private relayShareApi: RelayShareApi;
+  private fileIndexRepository: LocalFileIndexRepository;
 
   constructor(
     sessionRepository: ShareSessionRepository,
     taskRepository: TransferTaskRepository,
-    relayShareApi: RelayShareApi
+    relayShareApi: RelayShareApi,
+    fileIndexRepository: LocalFileIndexRepository
   ) {
     this.sessionRepository = sessionRepository;
     this.taskRepository = taskRepository;
     this.relayShareApi = relayShareApi;
+    this.fileIndexRepository = fileIndexRepository;
   }
 
   listRecentSessions(limit: number): ShareSession[] {
@@ -114,11 +120,81 @@ export class LocalShareService implements ShareService {
     };
   }
 
+  attachLocalFile(sessionId: string, localFileId: string): ShareOperationResult {
+    const session = this.findSession(sessionId);
+    const localFile = this.fileIndexRepository.findById(localFileId);
+    if (localFile === undefined) {
+      return {
+        success: false,
+        message: '本地文件不存在'
+      };
+    }
+    const duplicated = session.items.find((item) => item.localUri === localFile.localUri);
+    if (duplicated !== undefined) {
+      return {
+        success: false,
+        message: '该文件已在当前分享中'
+      };
+    }
+    const item = this.toTransferItem(session.id, localFile);
+    session.items.push(item);
+    session.itemCount = session.items.length;
+    session.totalSizeBytes = session.totalSizeBytes + item.sizeBytes;
+    session.title = session.itemCount === 1 ? item.displayName : `${session.itemCount} 个文件`;
+    this.sessionRepository.save(session);
+    return {
+      success: true,
+      message: '已加入分享草稿'
+    };
+  }
+
+  markItemUploaded(
+    sessionId: string,
+    itemId: string,
+    remoteItemId: string,
+    remoteUrl: string,
+    expiresAt: string
+  ): ShareOperationResult {
+    const session = this.findSession(sessionId);
+    const item = session.items.find((next) => next.id === itemId);
+    if (item === undefined) {
+      return {
+        success: false,
+        message: '分享项不存在'
+      };
+    }
+    item.remoteItemId = remoteItemId;
+    item.remoteUrl = remoteUrl;
+    item.expiresAt = expiresAt;
+    this.sessionRepository.save(session);
+    return {
+      success: true,
+      message: '分享项已上传'
+    };
+  }
+
   private findSession(sessionId: string): ShareSession {
     const session = this.sessionRepository.list().find((next) => next.id === sessionId);
     if (session === undefined) {
       throw new Error(`share session not found: ${sessionId}`);
     }
     return session;
+  }
+
+  private toTransferItem(sessionId: string, file: LocalFileEntry): TransferItem {
+    return {
+      id: `local-item-${Date.now()}`,
+      sessionId: sessionId,
+      type: file.type,
+      displayName: file.displayName,
+      contentType: file.contentType,
+      sizeBytes: file.sizeBytes,
+      localUri: file.localUri,
+      remoteItemId: '',
+      remoteUrl: '',
+      createdAt: new Date().toISOString(),
+      expiresAt: '',
+      encrypted: file.encrypted
+    };
   }
 }

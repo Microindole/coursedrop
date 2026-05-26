@@ -3,99 +3,125 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CourseDrop / 课递</title>
+  <title>CourseDrop / 课递 — 限时中转站</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // 注入 Tailwind 主题配置
+    tailwind.config = { darkMode: 'selector' }
+    // 立即执行防止闪烁
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
-<body class="min-h-screen bg-zinc-950 text-white antialiased">
-<main class="min-h-screen">
-  <section class="relative isolate flex min-h-[86vh] items-center overflow-hidden bg-zinc-950 px-6 py-12 md:px-10">
-    <div class="absolute inset-x-0 top-0 -z-10 h-px bg-emerald-300"></div>
-    <div class="absolute inset-y-0 right-0 -z-10 hidden w-1/3 border-l border-white/10 bg-zinc-900 md:block"></div>
-    <div class="mx-auto grid w-full max-w-6xl gap-12 md:grid-cols-[1fr_320px] md:items-center">
-      <div>
-      <p class="text-sm font-medium uppercase tracking-[0.28em] text-emerald-300">CourseDrop Relay</p>
-      <h1 class="mt-5 max-w-3xl text-5xl font-semibold tracking-tight md:text-7xl">CourseDrop / 课递</h1>
-      <p class="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
-        本地优先的限时文件中转服务。手机扫码建立身份，浏览器可登录后直接下载到电脑，服务器只保存有效期内的中转密文或文件。
-      </p>
-      <form class="mt-10 flex max-w-xl flex-col gap-3 sm:flex-row" onsubmit="openShare(event)">
-        <input id="share-code"
-               class="min-h-12 flex-1 rounded-lg border border-white/15 bg-white/10 px-4 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-emerald-300"
-               autocomplete="off"
-               placeholder="输入分享码">
-        <button class="min-h-12 rounded-lg bg-emerald-400 px-5 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-300"
+<body class="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased bg-grid-pattern relative overflow-x-hidden">
+
+<div class="absolute top-0 left-1/4 -z-10 h-[500px] w-[500px] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] mix-blend-screen animate-glow"></div>
+
+<nav class="mx-auto max-w-6xl px-6 pt-6 flex justify-end">
+  <button id="theme-toggle" class="inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 p-2 text-zinc-500 dark:text-zinc-400 backdrop-blur-md shadow-sm hover:text-zinc-900 dark:hover:text-white transition">
+    <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+    <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+  </button>
+</nav>
+
+<main class="mx-auto max-w-6xl px-6 py-6 md:py-16 lg:px-8">
+  <header class="flex flex-col items-center text-center md:items-start md:text-left">
+    <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 dark:border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10 px-3 py-1 text-xs font-medium tracking-wider text-emerald-600 dark:text-emerald-400 backdrop-blur-md">
+      <span class="flex h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
+      CourseDrop Relay v<span th:text="${version}">0.1.0</span>
+    </div>
+    <h1 class="mt-6 text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-6xl md:text-7xl">
+      CourseDrop <span class="bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-200 bg-clip-text text-transparent">/ 课递</span>
+    </h1>
+    <p class="mt-6 max-w-2xl text-base leading-relaxed text-zinc-500 dark:text-zinc-400 sm:text-lg">
+      本地优先的限时文件中转服务。手机扫码建立身份，浏览器登录后直接下载到电脑。
+      <span class="text-zinc-800 dark:text-zinc-200 font-medium">服务器只保存有效期内的中转密文或文件。</span>
+    </p>
+  </header>
+
+  <section class="mt-12 grid gap-8 md:grid-cols-[1fr_360px] items-start">
+    <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/40 p-6 backdrop-blur-xl shadow-md dark:shadow-xl dark:shadow-black/40">
+      <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">提取共享文件</h3>
+      <form class="mt-4 flex flex-col gap-3 sm:flex-row" onsubmit="openShare(event)">
+        <div class="relative flex-1">
+          <input id="share-code"
+                 class="min-h-[52px] w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/60 pl-4 pr-10 text-base font-mono text-emerald-600 dark:text-emerald-400 outline-none transition placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-emerald-500/80 focus:ring-4 focus:ring-emerald-500/5 dark:focus:ring-emerald-500/10"
+                 autocomplete="off"
+                 placeholder="输入 6 位或自定义分享码...">
+        </div>
+        <button class="min-h-[52px] rounded-xl bg-zinc-950 dark:bg-gradient-to-r dark:from-emerald-500 dark:to-teal-500 px-6 text-sm font-semibold text-white dark:text-zinc-950 shadow-md dark:shadow-lg dark:shadow-emerald-500/20 transition duration-200 hover:opacity-90 active:scale-[0.98]"
                 type="submit">
           打开分享
         </button>
       </form>
-      </div>
-      <div class="hidden text-sm md:block">
-        <div class="border-y border-white/10 py-5">
-          <p class="text-zinc-500">relay</p>
-          <p class="mt-2 font-mono text-emerald-300">127.0.0.1:9090</p>
-        </div>
-        <div class="border-b border-white/10 py-5">
-          <p class="text-zinc-500">public</p>
-          <p class="mt-2 break-all font-mono text-zinc-300" th:text="${publicBaseUrl}">https://coursedrop.microindole.me</p>
-        </div>
-        <div class="border-b border-white/10 py-5">
-          <p class="text-zinc-500">policy</p>
-          <p class="mt-2 font-mono text-zinc-300">PUBLIC / LOGIN_REQUIRED / OWNER_ONLY</p>
-        </div>
+
+      <div class="mt-8 border-t border-zinc-100 dark:border-zinc-800/80 pt-6">
+        <h4 class="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">Node System Responsibilities / 服务器职责</h4>
+        <dl class="mt-4 grid gap-6 sm:grid-cols-3">
+          <div>
+            <dt class="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+              <svg class="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+              限时中转
+            </dt>
+            <dd class="mt-2 text-xs text-zinc-500 dark:text-zinc-400 leading-normal">过期或手动撤回后，物理清除存储对象，不留痕迹。</dd>
+          </div>
+          <div>
+            <dt class="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+              <svg class="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+              扫码身份
+            </dt>
+            <dd class="mt-2 text-xs text-zinc-500 dark:text-zinc-400 leading-normal">基于设备指纹，免去繁琐的传统账号注册流程。</dd>
+          </div>
+          <div>
+            <dt class="flex items-center gap-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+              <svg class="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              极速同步
+            </dt>
+            <dd class="mt-2 text-xs text-zinc-500 dark:text-zinc-400 leading-normal">网页端端到端流式解密下载，安全且高效。</dd>
+          </div>
+        </dl>
       </div>
     </div>
-  </section>
 
-  <section class="border-y border-white/10 bg-zinc-900 px-6 py-8 md:px-10">
-    <div class="mx-auto grid max-w-6xl gap-6 md:grid-cols-4">
-      <div>
-        <p class="text-xs uppercase tracking-[0.22em] text-zinc-500">Status</p>
-        <p class="mt-2 text-lg font-medium text-emerald-300" th:text="${status}">online</p>
-      </div>
-      <div>
-        <p class="text-xs uppercase tracking-[0.22em] text-zinc-500">Version</p>
-        <p class="mt-2 text-lg font-medium" th:text="${version}">0.1.0</p>
-      </div>
-      <div>
-        <p class="text-xs uppercase tracking-[0.22em] text-zinc-500">Limit</p>
-        <p class="mt-2 text-lg font-medium"><span th:text="${maxFileSizeMb}">512</span> MB</p>
-      </div>
-      <div>
-        <p class="text-xs uppercase tracking-[0.22em] text-zinc-500">TTL</p>
-        <p class="mt-2 text-lg font-medium"><span th:text="${defaultTtlHours}">24</span> 小时</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="px-6 py-14 md:px-10">
-    <div class="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.2fr_0.8fr]">
-      <div>
-        <h2 class="text-2xl font-semibold tracking-tight">服务器职责</h2>
-        <div class="mt-7 divide-y divide-white/10 border-y border-white/10">
-          <div class="py-4">
-            <p class="font-medium">限时中转</p>
-            <p class="mt-1 text-sm leading-6 text-zinc-400">分享过期或撤回后，服务器删除对应存储对象并记录清理结果。</p>
+    <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-950/40 p-6 backdrop-blur-md">
+      <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4">Node Metadata</h3>
+      <div class="space-y-4 text-xs font-mono">
+        <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-900 pb-2">
+          <span class="text-zinc-400 dark:text-zinc-500">RELAY</span>
+          <span class="text-emerald-600 dark:text-emerald-400 font-semibold">127.0.0.1:9090</span>
+        </div>
+        <div class="flex flex-col gap-1 border-b border-zinc-100 dark:border-zinc-900 pb-2">
+          <span class="text-zinc-400 dark:text-zinc-500">PUBLIC ENDPOINT</span>
+          <span class="text-zinc-700 dark:text-zinc-300 break-all" th:text="${publicBaseUrl}">https://coursedrop.microindole.me</span>
+        </div>
+        <div class="flex flex-col gap-1 border-b border-zinc-100 dark:border-zinc-900 pb-2">
+          <span class="text-zinc-400 dark:text-zinc-500">POLICY RULE</span>
+          <span class="text-zinc-600 dark:text-zinc-400">PUBLIC / LOGIN_REQUIRED / OWNER_ONLY</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 pt-2">
+          <div class="rounded-lg border border-zinc-100 dark:border-zinc-800/40 bg-zinc-50 dark:bg-zinc-900/50 p-2">
+            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 block">FILE LIMIT</span>
+            <span class="text-sm font-bold text-zinc-800 dark:text-zinc-200"><span th:text="${maxFileSizeMb}">512</span> MB</span>
           </div>
-          <div class="py-4">
-            <p class="font-medium">扫码身份</p>
-            <p class="mt-1 text-sm leading-6 text-zinc-400">默认身份来自 CourseDrop 手机端设备指纹，账号只是可选的聚合身份。</p>
-          </div>
-          <div class="py-4">
-            <p class="font-medium">浏览器下载</p>
-            <p class="mt-1 text-sm leading-6 text-zinc-400">电脑端通过手机扫码或已启用的账号密码登录后，可直接下载分享文件。</p>
+          <div class="rounded-lg border border-zinc-100 dark:border-zinc-800/40 bg-zinc-50 dark:bg-zinc-900/50 p-2">
+            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 block">DEFAULT TTL</span>
+            <span class="text-sm font-bold text-zinc-800 dark:text-zinc-200"><span th:text="${defaultTtlHours}">24</span> h</span>
           </div>
         </div>
       </div>
-      <div class="self-start border-l border-white/10 pl-6">
-        <h2 class="text-2xl font-semibold tracking-tight">调试入口</h2>
-        <div class="mt-7 flex flex-col gap-3">
-          <a class="rounded-lg border border-white/15 px-4 py-3 text-sm transition hover:border-emerald-300"
-             href="/api/health">/api/health</a>
-          <a class="rounded-lg border border-white/15 px-4 py-3 text-sm transition hover:border-emerald-300"
-             href="/api/health/capabilities">/api/health/capabilities</a>
+
+      <div class="mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800/60">
+        <span class="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 block mb-2">DEBUG GATEWAY</span>
+        <div class="flex gap-2">
+          <a class="flex-1 text-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30 py-2 text-xs text-zinc-500 dark:text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-600 dark:hover:border-emerald-500/50 dark:hover:text-emerald-400" href="/api/health">/health</a>
+          <a class="flex-1 text-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30 py-2 text-xs text-zinc-500 dark:text-zinc-400 transition hover:border-emerald-500 hover:text-emerald-600 dark:hover:border-emerald-500/50 dark:hover:text-emerald-400" href="/api/health/capabilities">/caps</a>
         </div>
-        <p class="mt-5 text-xs leading-5 text-zinc-500">
-          当前检查时间：<span th:text="${checkedAt}">2026-05-26T00:00:00Z</span>
+        <p class="mt-3 text-[10px] font-mono text-zinc-400 dark:text-zinc-600 text-center">
+          Checked: <span th:text="${checkedAt}">2026-05-26T00:00:00Z</span>
         </p>
       </div>
     </div>
@@ -103,14 +129,41 @@
 </main>
 
 <script>
-function openShare(event) {
-  event.preventDefault();
-  const input = document.getElementById("share-code");
-  const code = input.value.trim();
-  if (code.length > 0) {
-    window.location.href = `/s/${encodeURIComponent(code)}`;
+  function openShare(event) {
+    event.preventDefault();
+    const input = document.getElementById("share-code");
+    const code = input.value.trim();
+    if (code.length > 0) {
+      window.location.href = `/s/${encodeURIComponent(code)}`;
+    }
   }
-}
+
+  // 主题切换核心开关逻辑
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const lightIcon = document.getElementById('theme-toggle-light-icon');
+  const darkIcon = document.getElementById('theme-toggle-dark-icon');
+
+  function updateIcons() {
+    if (document.documentElement.classList.contains('dark')) {
+      lightIcon.classList.remove('hidden');
+      darkIcon.classList.add('hidden');
+    } else {
+      lightIcon.classList.add('hidden');
+      darkIcon.classList.remove('hidden');
+    }
+  }
+  updateIcons();
+
+  themeToggleBtn.addEventListener('click', () => {
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+    updateIcons();
+  });
 </script>
 </body>
 </html>
