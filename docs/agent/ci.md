@@ -22,12 +22,14 @@
 - `server`：设置 Java 17，执行服务端 `mvn test`
 - `harmony`：检查鸿蒙原生工程的标准目录和关键文件
 
-`deploy-server.yml` 是手动触发的服务器发布工作流：
+`deploy-server.yml` 是服务器发布工作流：
 
-- `workflow_dispatch` 手动运行
+- `main` 分支更新且命中 server/deploy 相关路径时自动运行
+- `workflow_dispatch` 仍可手动运行
 - 构建并测试 Java server
 - 上传 jar 到 `/home/cd/coursedrop/incoming`
 - 通过 `systemctl --user restart coursedrop` 重启 `cd` 用户服务
+- 不使用 `sudo`，不重启 Nginx；Nginx 和证书属于服务器一次性初始化
 
 部署说明见 `docs/deploy/server-debian.md`。
 

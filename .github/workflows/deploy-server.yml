@@ -1,6 +1,14 @@
 name: Deploy Java server
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/server/**'
+      - 'deploy/**'
+      - 'scripts/deploy/**'
+      - '.github/workflows/deploy-server.yml'
   workflow_dispatch:
 
 permissions:

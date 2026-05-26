@@ -40,8 +40,8 @@ public class BrowserDownloadController {
             @PathVariable String itemId,
             @CookieValue(name = "CD_SESSION", required = false) String cookieToken,
             @RequestHeader(name = "X-CourseDrop-Web-Authorized", defaultValue = "false") boolean authorized) {
-        var cookieAuthorized = webLoginService.isCookieAuthorized(cookieToken);
-        return ShareController.downloadResponse(shareService.downloadBrowser(code, itemId, authorized || cookieAuthorized));
+        var identity = webLoginService.findCookieIdentity(cookieToken).orElse(null);
+        return ShareController.downloadResponse(shareService.downloadBrowser(code, itemId, identity, authorized));
     }
 
 }

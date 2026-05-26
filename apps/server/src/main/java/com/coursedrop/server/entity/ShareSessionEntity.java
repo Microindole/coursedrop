@@ -12,6 +12,7 @@ public class ShareSessionEntity {
     private String ownerIdentityType;
     private String status;
     private Integer downloadAuthRequired;
+    private String downloadPolicy;
     private String createdAt;
     private String expiresAt;
 
@@ -61,6 +62,14 @@ public class ShareSessionEntity {
 
     public void setDownloadAuthRequired(Integer downloadAuthRequired) {
         this.downloadAuthRequired = downloadAuthRequired;
+    }
+
+    public String getDownloadPolicy() {
+        return downloadPolicy;
+    }
+
+    public void setDownloadPolicy(String downloadPolicy) {
+        this.downloadPolicy = downloadPolicy;
     }
 
     public String getCreatedAt() {

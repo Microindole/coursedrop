@@ -148,7 +148,7 @@ Web 管理端登录会话。
 - `ownerIdentityType`：`FINGERPRINT` 或 `ACCOUNT`
 - `status`：`ACTIVE`、`EXPIRED`、`REVOKED`
 - `downloadPolicy`：`PUBLIC`、`LOGIN_REQUIRED`、`OWNER_ONLY`
-- `downloadAuthRequired`：过渡字段，后续由 `downloadPolicy` 替代
+- `downloadAuthRequired`：旧客户端兼容字段，内部逻辑以 `downloadPolicy` 为准
 - `createdAt`：创建时间
 - `expiresAt`：过期时间
 

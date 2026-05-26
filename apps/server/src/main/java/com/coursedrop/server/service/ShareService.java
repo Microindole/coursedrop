@@ -18,6 +18,8 @@ import com.coursedrop.server.mapper.ShareItemRepository;
 import com.coursedrop.server.mapper.ShareSessionRepository;
 import com.coursedrop.server.mapper.IdentityRepository;
 import com.coursedrop.server.dto.CreateShareRequest;
+import com.coursedrop.server.dto.WebLoginIdentity;
+import com.coursedrop.server.enums.DownloadPolicy;
 import com.coursedrop.server.enums.OwnerIdentityType;
 import com.coursedrop.server.share.ShareCodeGenerator;
 import com.coursedrop.server.dto.ShareDownloadPageResponse;
@@ -66,7 +68,7 @@ public class ShareService {
                 request.ownerIdentityId(),
                 identityType,
                 ShareSessionStatus.ACTIVE,
-                request.downloadAuthRequired(),
+                request.resolvedDownloadPolicy(),
                 now,
                 now.plus(request.expireHours(), ChronoUnit.HOURS));
         sessionRepository.save(session);
@@ -78,7 +80,8 @@ public class ShareService {
         return new ShareDownloadPageResponse(
                 session.code(),
                 session.status(),
-                session.downloadAuthRequired(),
+                session.downloadPolicy(),
+                session.downloadPolicy() != DownloadPolicy.PUBLIC,
                 session.expiresAt(),
                 itemRepository.findByShareId(session.id()).stream().map(this::toResponse).toList());
     }
@@ -131,10 +134,9 @@ public class ShareService {
         return download(code, itemId);
     }
 
-    public DownloadFile downloadBrowser(String code, String itemId, boolean authorized) {
-        if (!authorized) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Login required");
-        }
+    public DownloadFile downloadBrowser(String code, String itemId, WebLoginIdentity identity, boolean developmentAuthorized) {
+        var session = requireDownloadableSession(code);
+        ensureBrowserDownloadAuthorized(session, identity, developmentAuthorized);
         return download(code, itemId);
     }
 
@@ -170,7 +172,7 @@ public class ShareService {
                 session.ownerIdentityId(),
                 session.ownerIdentityType(),
                 session.status(),
-                session.downloadAuthRequired(),
+                session.downloadPolicy(),
                 session.createdAt(),
                 expiresAt));
     }
@@ -272,15 +274,41 @@ public class ShareService {
     }
 
     private void ensureAppDownloadAuthorized(ShareSessionRecord session, String fingerprintId, String accountId) {
-        if (!session.downloadAuthRequired()) {
+        if (session.downloadPolicy() == DownloadPolicy.PUBLIC) {
+            return;
+        }
+        if (session.downloadPolicy() == DownloadPolicy.LOGIN_REQUIRED) {
+            validateAnyIdentity(fingerprintId, accountId);
             return;
         }
         if ((fingerprintId == null || fingerprintId.isBlank()) && (accountId == null || accountId.isBlank())) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "App identity required");
         }
-        if (session.ownerIdentityType() == OwnerIdentityType.ANONYMOUS) {
-            validateAnyIdentity(fingerprintId, accountId);
+        ensureOwnerIdentity(session, fingerprintId, accountId);
+    }
+
+    private void ensureBrowserDownloadAuthorized(
+            ShareSessionRecord session,
+            WebLoginIdentity identity,
+            boolean developmentAuthorized) {
+        if (session.downloadPolicy() == DownloadPolicy.PUBLIC) {
             return;
+        }
+        if (developmentAuthorized && session.downloadPolicy() == DownloadPolicy.LOGIN_REQUIRED) {
+            return;
+        }
+        if (identity == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Login required");
+        }
+        if (session.downloadPolicy() == DownloadPolicy.LOGIN_REQUIRED) {
+            return;
+        }
+        ensureOwnerIdentity(session, identity.fingerprintId(), identity.accountId());
+    }
+
+    private void ensureOwnerIdentity(ShareSessionRecord session, String fingerprintId, String accountId) {
+        if (session.ownerIdentityType() == OwnerIdentityType.ANONYMOUS) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Anonymous share has no owner identity");
         }
         if (session.ownerIdentityType() == OwnerIdentityType.ACCOUNT) {
             if (session.ownerIdentityId().equals(accountId)) {
@@ -308,6 +336,9 @@ public class ShareService {
             identityRepository.findAccountById(accountId)
                     .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Unknown account"));
             return;
+        }
+        if (fingerprintId == null || fingerprintId.isBlank()) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Identity required");
         }
         identityRepository.findFingerprintById(fingerprintId)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Unknown fingerprint"));
@@ -362,7 +393,8 @@ public class ShareService {
                 session.code(),
                 "/s/" + session.code(),
                 session.status(),
-                session.downloadAuthRequired(),
+                session.downloadPolicy(),
+                session.downloadPolicy() != DownloadPolicy.PUBLIC,
                 session.createdAt(),
                 session.expiresAt());
     }

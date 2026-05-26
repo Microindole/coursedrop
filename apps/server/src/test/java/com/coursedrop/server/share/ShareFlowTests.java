@@ -31,6 +31,14 @@ class ShareFlowTests {
     private ObjectMapper objectMapper;
 
     @Test
+    void homePageRendersServerEntry() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("CourseDrop / 课递")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/api/health")));
+    }
+
+    @Test
     void shareCanUploadAndDownloadThroughAppEndpoint() throws Exception {
         var fingerprintResult = mockMvc.perform(post("/api/identity/fingerprints")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -50,7 +58,7 @@ class ShareFlowTests {
                 .content("""
                         {
                           "expireHours": 1,
-                          "downloadAuthRequired": true,
+                          "downloadPolicy": "OWNER_ONLY",
                           "ownerIdentityId": "%s",
                           "ownerIdentityType": "FINGERPRINT"
                         }
@@ -61,6 +69,7 @@ class ShareFlowTests {
         var shareId = share.get("id").asText();
         var code = share.get("code").asText();
         assertThat(share.get("downloadUrl").asText()).isEqualTo("/s/" + code);
+        assertThat(share.get("downloadPolicy").asText()).isEqualTo("OWNER_ONLY");
 
         var file = new MockMultipartFile(
                 "file",
@@ -87,13 +96,41 @@ class ShareFlowTests {
     }
 
     @Test
-    void browserDownloadRequiresAuthorizationHeader() throws Exception {
+    void publicBrowserDownloadDoesNotRequireAuthorization() throws Exception {
         var createResult = mockMvc.perform(post("/api/shares")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
                           "expireHours": 1,
-                          "downloadAuthRequired": false,
+                          "downloadPolicy": "PUBLIC",
+                          "ownerIdentityType": "ANONYMOUS"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode share = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        var shareId = share.get("id").asText();
+        var code = share.get("code").asText();
+
+        var file = new MockMultipartFile("file", "locked.txt", "text/plain", "locked".getBytes());
+        var uploadResult = mockMvc.perform(multipart("/api/shares/{shareId}/items", shareId).file(file))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode item = objectMapper.readTree(uploadResult.getResponse().getContentAsString());
+        var itemId = item.get("id").asText();
+
+        mockMvc.perform(get("/s/{code}/items/{itemId}/download", code, itemId))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void loginRequiredBrowserDownloadRequiresAuthorizationHeader() throws Exception {
+        var createResult = mockMvc.perform(post("/api/shares")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "expireHours": 1,
+                          "downloadPolicy": "LOGIN_REQUIRED",
                           "ownerIdentityType": "ANONYMOUS"
                         }
                         """))
@@ -125,7 +162,7 @@ class ShareFlowTests {
                 .content("""
                         {
                           "expireHours": 1,
-                          "downloadAuthRequired": true,
+                          "downloadPolicy": "LOGIN_REQUIRED",
                           "ownerIdentityType": "ANONYMOUS"
                         }
                         """))
@@ -147,7 +184,7 @@ class ShareFlowTests {
                 .content("""
                         {
                           "expireHours": 1,
-                          "downloadAuthRequired": false,
+                          "downloadPolicy": "PUBLIC",
                           "ownerIdentityType": "ANONYMOUS"
                         }
                         """))
@@ -203,7 +240,7 @@ class ShareFlowTests {
                 .content("""
                         {
                           "expireHours": 1,
-                          "downloadAuthRequired": false,
+                          "downloadPolicy": "PUBLIC",
                           "ownerIdentityId": "owner-1",
                           "ownerIdentityType": "FINGERPRINT"
                         }

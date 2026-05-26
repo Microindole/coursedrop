@@ -9,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.coursedrop.server.dto.ConfirmWebLoginRequest;
 import com.coursedrop.server.dto.PasswordLoginRequest;
 import com.coursedrop.server.dto.WebLoginCookieIssue;
+import com.coursedrop.server.dto.WebLoginIdentity;
 import com.coursedrop.server.dto.WebLoginResponse;
 import com.coursedrop.server.dto.WebLoginSessionResponse;
 import com.coursedrop.server.auth.WebLoginSession;
@@ -134,13 +136,17 @@ public class WebLoginService {
     }
 
     public boolean isCookieAuthorized(String cookieToken) {
+        return findCookieIdentity(cookieToken).isPresent();
+    }
+
+    public Optional<WebLoginIdentity> findCookieIdentity(String cookieToken) {
         if (cookieToken == null || cookieToken.isBlank()) {
-            return false;
+            return Optional.empty();
         }
         return webLoginRepository.findByCookieTokenHash(hashToken(cookieToken))
                 .filter(session -> session.status() == WebLoginStatus.CONFIRMED)
                 .filter(session -> session.expiresAt().isAfter(Instant.now()))
-                .isPresent();
+                .map(session -> new WebLoginIdentity(session.accountId(), session.fingerprintId()));
     }
 
     private WebLoginSession requireSession(String loginCode) {

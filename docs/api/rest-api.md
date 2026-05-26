@@ -46,7 +46,7 @@ POST /api/shares
 }
 ```
 
-`downloadAuthRequired` 是过渡字段，后续应使用 `downloadPolicy`。
+新客户端应使用 `downloadPolicy`。`downloadAuthRequired` 仍作为旧客户端兼容字段保留；未传 `downloadPolicy` 时，服务端会把 `downloadAuthRequired=true` 映射为 `LOGIN_REQUIRED`，否则映射为 `PUBLIC`。
 
 下载策略：
 
@@ -85,9 +85,11 @@ GET /s/{code}
 GET /s/{code}/items/{itemId}/download
 ```
 
-浏览器下载必须登录或通过手机扫码授权。
+`PUBLIC` 分享可直接下载。`LOGIN_REQUIRED` 和 `OWNER_ONLY` 分享必须登录或通过手机扫码授权。
 
 登录成功后服务端应签发 HttpOnly Cookie。后续浏览器下载请求通过 Cookie 校验身份，不应依赖前端可读 token。扫码是给当前电脑浏览器授权，授权后文件直接下载到电脑。
+
+`OWNER_ONLY` 下载会校验 Cookie 绑定的账号或设备指纹是否匹配分享创建者。
 
 端到端加密分享的推荐链接格式：
 

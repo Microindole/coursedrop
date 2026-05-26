@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.coursedrop.server.entity.ShareSessionEntity;
+import com.coursedrop.server.enums.DownloadPolicy;
 import com.coursedrop.server.enums.OwnerIdentityType;
 import com.coursedrop.server.share.ShareSessionRecord;
 import com.coursedrop.server.enums.ShareSessionStatus;
@@ -86,7 +87,8 @@ public class ShareSessionRepository {
         entity.setOwnerIdentityId(record.ownerIdentityId());
         entity.setOwnerIdentityType(record.ownerIdentityType().name());
         entity.setStatus(record.status().name());
-        entity.setDownloadAuthRequired(record.downloadAuthRequired() ? 1 : 0);
+        entity.setDownloadPolicy(record.downloadPolicy().name());
+        entity.setDownloadAuthRequired(record.downloadPolicy() == DownloadPolicy.PUBLIC ? 0 : 1);
         entity.setCreatedAt(record.createdAt().toString());
         entity.setExpiresAt(record.expiresAt().toString());
         return entity;
@@ -99,8 +101,17 @@ public class ShareSessionRepository {
                 entity.getOwnerIdentityId(),
                 OwnerIdentityType.valueOf(entity.getOwnerIdentityType()),
                 ShareSessionStatus.valueOf(entity.getStatus()),
-                entity.getDownloadAuthRequired() != null && entity.getDownloadAuthRequired() == 1,
+                resolveDownloadPolicy(entity),
                 Instant.parse(entity.getCreatedAt()),
                 Instant.parse(entity.getExpiresAt()));
+    }
+
+    private DownloadPolicy resolveDownloadPolicy(ShareSessionEntity entity) {
+        if (entity.getDownloadPolicy() != null && !entity.getDownloadPolicy().isBlank()) {
+            return DownloadPolicy.valueOf(entity.getDownloadPolicy());
+        }
+        return entity.getDownloadAuthRequired() != null && entity.getDownloadAuthRequired() == 1
+                ? DownloadPolicy.LOGIN_REQUIRED
+                : DownloadPolicy.PUBLIC;
     }
 }

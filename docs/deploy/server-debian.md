@@ -126,7 +126,12 @@ sudo loginctl enable-linger cd
 .github/workflows/deploy-server.yml
 ```
 
-先手动触发 `workflow_dispatch`，不要一开始绑定 push 自动部署。
+当前工作流支持两种触发：
+
+- `main` 分支更新且命中 server/deploy 相关路径时自动发布。
+- `workflow_dispatch` 手动发布，用于首次验证或紧急重发。
+
+建议首次部署先手动触发一次，确认服务和 Nginx 都正常；跑通后让 main 分支自动发布接管日常更新。
 
 需要配置仓库 Secrets：
 

@@ -3,6 +3,7 @@ package com.coursedrop.server.share;
 import java.time.Instant;
 
 import com.coursedrop.server.enums.OwnerIdentityType;
+import com.coursedrop.server.enums.DownloadPolicy;
 import com.coursedrop.server.enums.ShareSessionStatus;
 
 public record ShareSessionRecord(
@@ -11,7 +12,7 @@ public record ShareSessionRecord(
         String ownerIdentityId,
         OwnerIdentityType ownerIdentityType,
         ShareSessionStatus status,
-        boolean downloadAuthRequired,
+        DownloadPolicy downloadPolicy,
         Instant createdAt,
         Instant expiresAt
 ) {

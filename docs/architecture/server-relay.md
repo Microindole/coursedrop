@@ -149,14 +149,22 @@ OWNER_ONLY
 - 自己跨设备传文件：使用 `OWNER_ONLY`。只有自己的手机指纹、绑定账号或绑定设备可下载。
 - 临时公开文件：使用 `PUBLIC`。不要求登录，但仍受有效期和撤回控制。
 
-当前 `downloadAuthRequired` 是过渡字段，后续应替换为明确的 `downloadPolicy`：
+当前服务端已使用明确的 `downloadPolicy` 作为内部鉴权依据：
+
+```text
+PUBLIC
+LOGIN_REQUIRED
+OWNER_ONLY
+```
+
+`downloadAuthRequired` 只作为旧客户端兼容入参和响应字段保留：
 
 ```text
 downloadAuthRequired=false -> PUBLIC
 downloadAuthRequired=true  -> LOGIN_REQUIRED
 ```
 
-`OWNER_ONLY` 需要新增策略值后再启用，不应把 `LOGIN_REQUIRED` 错误实现成“只能所有者下载”。
+新客户端应直接传 `downloadPolicy`。`LOGIN_REQUIRED` 表示任意已登录身份可下载，`OWNER_ONLY` 才表示只能所有者下载。
 
 ## 已落地的安全与审计基线
 
@@ -299,10 +307,14 @@ transfer/     早期传输兼容模型
 
 下载接口分浏览器和 App 两类：
 
-- 浏览器下载校验 `CD_SESSION`。
+- `PUBLIC` 分享允许浏览器和 App 不登录下载。
+- `LOGIN_REQUIRED` 分享要求浏览器持有 `CD_SESSION`，或 App 携带有效设备指纹/账号身份。
+- `OWNER_ONLY` 分享要求访问者匹配分享创建者指纹、账号，或绑定到该账号的设备指纹。
+- 浏览器下载优先校验 `CD_SESSION`。
 - CourseDrop App 下载请求可携带 `X-CourseDrop-Fingerprint-Id` 或 `X-CourseDrop-Account-Id`。
-- 分享开启 `downloadAuthRequired` 后，服务端会校验设备指纹或账号身份。
 - 账号型分享允许已绑定到该账号的设备指纹下载。
+
+`X-CourseDrop-Web-Authorized` 只保留为测试兼容入口，不作为正式 Web 鉴权方式。
 
 ### 端到端加密协议
 
@@ -435,6 +447,7 @@ Web 端下载到电脑有两种实现阶段：
 
 当前工程化基线：
 
+- 根路径 `/` 提供 Thymeleaf + Tailwind 服务首页，用于公网部署验收、分享码入口和健康检查入口。
 - CRUD 使用 MyBatis-Plus。
 - 数据库结构初始化收敛为带 `schema_migrations` 版本表的轻量迁移服务。
 - 登录码创建、确认和密码登录有进程内限流。

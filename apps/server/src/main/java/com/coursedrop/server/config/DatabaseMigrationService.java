@@ -24,6 +24,7 @@ public class DatabaseMigrationService {
                 """);
         run(1, "create base relay schema", this::createBaseSchema);
         run(2, "add security and encryption metadata", this::addSecurityColumns);
+        run(3, "add explicit share download policy", this::addDownloadPolicy);
     }
 
     private void run(int version, String description, Runnable migration) {
@@ -107,6 +108,7 @@ public class DatabaseMigrationService {
                   owner_identity_type text not null,
                   status text not null,
                   download_auth_required integer not null,
+                  download_policy text not null default 'PUBLIC',
                   created_at text not null,
                   expires_at text not null
                 )
@@ -154,6 +156,18 @@ public class DatabaseMigrationService {
         addColumnIfMissing("share_items", "kdf_salt", "text");
         addColumnIfMissing("share_items", "nonce", "text");
         addColumnIfMissing("share_items", "plain_size_bytes", "integer");
+    }
+
+    private void addDownloadPolicy() {
+        addColumnIfMissing("share_sessions", "download_policy", "text not null default 'PUBLIC'");
+        jdbcTemplate.execute("""
+                update share_sessions
+                set download_policy = case
+                  when download_auth_required = 1 then 'LOGIN_REQUIRED'
+                  else 'PUBLIC'
+                end
+                where download_policy is null or download_policy = ''
+                """);
     }
 
     private void addColumnIfMissing(String tableName, String columnName, String definition) {

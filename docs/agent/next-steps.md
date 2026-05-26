@@ -117,6 +117,7 @@ apps/harmony/entry/src/main/ets/pages/HomePage.ets
 - `auth`：Web 扫码登录码、真实 QR SVG、手机确认、浏览器 `CD_SESSION` Cookie、账号密码例外登录、退出和撤销。
 - `cleanup`：服务器限时存储、过期删除、撤回删除。
 - `download`：浏览器下载页、登录状态轮询、浏览器下载接口、App 身份鉴权下载接口。
+- `homepage`：根路径 `/` 提供服务首页、分享码入口、健康检查和能力入口。
 - `audit`：分享撤回和过期清理的删除审计。
 - `security`：账号密码使用独立 salt 和 PBKDF2 哈希。
 - `mapper/entity`：主要 CRUD 已迁到 MyBatis-Plus，`dto/`、`enums/` 已集中。
@@ -125,20 +126,19 @@ apps/harmony/entry/src/main/ets/pages/HomePage.ets
 
 服务端后续增强：
 
-1. 将下载授权从 `downloadAuthRequired` 过渡到 `downloadPolicy`：`PUBLIC`、`LOGIN_REQUIRED`、`OWNER_ONLY`。
-2. 默认身份继续以手机设备指纹为核心；账号只作为用户主动创建后的可选增强。
-3. 端到端加密协议需要和鸿蒙客户端联调：默认算法、KDF 参数、密钥来源、解密和完整性校验。
-4. Web 端完整解密阶段需要读取 URL fragment 中的 `key`，用 WebCrypto 在浏览器本地解密。
-5. 当前限流是进程内实现，生产部署可替换为 Redis 或网关限流。
-6. 当前迁移服务是轻量内部实现，生产部署可替换为 Flyway 或 Liquibase。
-7. 测试已覆盖主流程、扫码 Cookie、加密元数据和分享管理；后续可继续补 room/transfer 兼容接口和清理任务细节。
+1. 默认身份继续以手机设备指纹为核心；账号只作为用户主动创建后的可选增强。
+2. 端到端加密协议需要和鸿蒙客户端联调：默认算法、KDF 参数、密钥来源、解密和完整性校验。
+3. Web 端完整解密阶段需要读取 URL fragment 中的 `key`，用 WebCrypto 在浏览器本地解密。
+4. 当前限流是进程内实现，生产部署可替换为 Redis 或网关限流。
+5. 当前迁移服务是轻量内部实现，生产部署可替换为 Flyway 或 Liquibase。
+6. 测试已覆盖主流程、扫码 Cookie、加密元数据、下载策略、首页和分享管理；后续可继续补 room/transfer 兼容接口和清理任务细节。
 
 下一轮建议顺序：
 
 1. 让鸿蒙客户端接入 server API，先跑通设备注册、创建分享、上传、扫码下载。
-2. 服务端先把下载策略补成 `PUBLIC / LOGIN_REQUIRED / OWNER_ONLY`。
-3. 在客户端实现端到端加密，再和服务端元数据校验联调。
-4. 根据真实联调结果完善浏览器下载页和分享管理体验。
+2. 在客户端实现端到端加密，再和服务端元数据校验联调。
+3. 根据真实联调结果完善浏览器下载页和分享管理体验。
+4. 部署到 `coursedrop.microindole.me`，用 GitHub Actions 的 main 分支自动发布持续联调。
 
 不要过早扩大范围。当前优先级仍是：
 

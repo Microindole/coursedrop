@@ -54,6 +54,7 @@ src/main/resources/application.yml
 
 ## 当前已实现接口
 
+- `GET /`
 - `GET /api/health`
 - `POST /api/identity/fingerprints`
 - `POST /api/accounts`
@@ -87,6 +88,8 @@ src/main/resources/application.yml
 ## 当前补齐情况
 
 - `/s/{code}` 下载页已接入真实 QR SVG、登录状态轮询和授权后下载按钮启用。
+- `/` 首页已接入服务状态、分享码入口、健康检查入口和服务器能力概览。
+- 分享下载策略已使用 `downloadPolicy`：`PUBLIC`、`LOGIN_REQUIRED`、`OWNER_ONLY`。
 - Web 登录会话已支持 Cookie 签发、账号密码例外登录、退出登录、撤销、会话列表。
 - Web 端认证成功后可以直接把文件下载到当前电脑浏览器。
 - App 下载接口已支持设备指纹和账号身份鉴权。

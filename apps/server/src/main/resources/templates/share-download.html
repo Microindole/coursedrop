@@ -26,9 +26,14 @@
       <div class="flex items-center justify-between py-4">
         <div>
           <h2 class="text-base font-semibold">文件</h2>
-          <p id="download-hint" class="mt-1 text-sm text-zinc-500">登录后可直接下载到这台电脑。</p>
+          <p id="download-hint" class="mt-1 text-sm text-zinc-500"
+             th:text="${share.downloadAuthRequired} ? '登录后可直接下载到这台电脑。' : '此分享允许直接下载。'">
+            登录后可直接下载到这台电脑。
+          </p>
         </div>
-        <span id="auth-badge" class="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600">未授权</span>
+        <span id="auth-badge"
+              th:class="${share.downloadAuthRequired} ? 'rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600' : 'rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700'"
+              th:text="${share.downloadAuthRequired} ? '未授权' : '可下载'">未授权</span>
       </div>
 
       <ul class="divide-y divide-zinc-200">
@@ -40,7 +45,7 @@
               <span th:if="${item.encrypted}" class="ml-2 text-emerald-700">端到端加密</span>
             </p>
           </div>
-          <a class="download-link pointer-events-none rounded-lg bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-500 transition"
+          <a th:class="${share.downloadAuthRequired} ? 'download-link pointer-events-none rounded-lg bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-500 transition' : 'download-link rounded-lg bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800'"
              th:href="@{'/s/' + ${share.code} + '/items/' + ${item.id} + '/download'}">
             下载
           </a>
@@ -49,7 +54,7 @@
     </div>
   </section>
 
-  <aside class="md:sticky md:top-8">
+  <aside class="md:sticky md:top-8" th:if="${share.downloadAuthRequired}">
     <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
       <div>
         <h2 class="text-base font-semibold">验证身份</h2>
@@ -85,7 +90,7 @@
   </aside>
 </main>
 
-<script th:inline="javascript">
+<script th:inline="javascript" th:if="${share.downloadAuthRequired}">
 const loginCode = /*[[${login.loginCode}]]*/ "";
 const statusEl = document.getElementById("login-status");
 const badgeEl = document.getElementById("auth-badge");
