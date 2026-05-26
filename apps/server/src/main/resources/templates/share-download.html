@@ -46,7 +46,8 @@
             </p>
           </div>
           <a th:class="${share.downloadAuthRequired} ? 'download-link pointer-events-none rounded-lg bg-zinc-200 px-4 py-2 text-sm font-medium text-zinc-500 transition' : 'download-link rounded-lg bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800'"
-             th:href="@{'/s/' + ${share.code} + '/items/' + ${item.id} + '/download'}">
+             th:href="@{'/s/' + ${share.code} + '/items/' + ${item.id} + '/download'}"
+             th:attr="data-filename=${item.displayName},data-encrypted=${item.encrypted},data-algorithm=${item.encryptionAlgorithm},data-nonce=${item.nonce}">
             下载
           </a>
         </li>
@@ -160,6 +161,63 @@ form.addEventListener("submit", async (event) => {
 });
 
 poll();
+</script>
+<script>
+const key = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("key");
+
+document.querySelectorAll(".download-link").forEach((link) => {
+  link.addEventListener("click", async (event) => {
+    if (link.dataset.encrypted !== "true" || !key) {
+      return;
+    }
+    event.preventDefault();
+    try {
+      const response = await fetch(link.href, { credentials: "include" });
+      if (!response.ok) {
+        window.location.href = link.href;
+        return;
+      }
+      const cipherBytes = new Uint8Array(await response.arrayBuffer());
+      const plainBytes = await decryptAesGcm(cipherBytes, key, link.dataset.nonce);
+      saveBytes(plainBytes, link.dataset.filename || "coursedrop-file");
+    } catch (error) {
+      window.location.href = link.href;
+    }
+  });
+});
+
+async function decryptAesGcm(cipherBytes, encodedKey, encodedNonce) {
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    decodeBase64Url(encodedKey),
+    { name: "AES-GCM" },
+    false,
+    ["decrypt"]
+  );
+  return new Uint8Array(await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: decodeBase64Url(encodedNonce) },
+    cryptoKey,
+    cipherBytes
+  ));
+}
+
+function decodeBase64Url(value) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  return Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
+}
+
+function saveBytes(bytes, filename) {
+  const blob = new Blob([bytes]);
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
 </script>
 </body>
 </html>

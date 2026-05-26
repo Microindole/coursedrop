@@ -56,6 +56,11 @@ export default struct SharePage {
         return `${task.direction} · ${task.networkMode}`;
     }
 
+    private async createRelayShare(): Promise<void> {
+        await this.viewModel.refreshShareCode();
+        this.refreshView();
+    }
+
     build() {
         Stack({ alignContent: Alignment.TopStart }) {
             CdScrollContainer() {
@@ -82,8 +87,7 @@ export default struct SharePage {
                             this.refreshView();
                         },
                         onRefresh: () => {
-                            this.viewModel.refreshShareCode();
-                            this.refreshView();
+                            this.createRelayShare();
                         },
                         onRevoke: () => {
                             this.viewModel.revokeShare();

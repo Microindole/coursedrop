@@ -2,8 +2,8 @@ import { AppColors, AppSize, AppSpacing, AppTypography } from '../../common/Them
 
 @Component
 export struct CdTextField {
-  label: string = '';
-  placeholder: string = '';
+  @Prop label: string = '';
+  @Prop placeholder: string = '';
   @Link value: string;
 
   build() {

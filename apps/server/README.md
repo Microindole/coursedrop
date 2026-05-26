@@ -58,6 +58,12 @@ src/main/resources/application.yml
 - `GET /api/health`
 - `POST /api/identity/fingerprints`
 - `POST /api/accounts`
+- `GET /api/accounts/{accountId}`
+- `POST /api/accounts/{accountId}/security`
+- `POST /api/accounts/{accountId}/password`
+- `GET /api/accounts/{accountId}/fingerprints`
+- `POST /api/accounts/{accountId}/fingerprints`
+- `DELETE /api/accounts/{accountId}/fingerprints/{fingerprintId}`
 - `POST /api/auth/web-login`
 - `POST /api/auth/web-login/{loginCode}/confirm`
 - `GET /api/auth/web-login/{loginCode}`
@@ -91,6 +97,8 @@ src/main/resources/application.yml
 - `/` 首页已接入服务状态、分享码入口、健康检查入口和服务器能力概览。
 - 分享下载策略已使用 `downloadPolicy`：`PUBLIC`、`LOGIN_REQUIRED`、`OWNER_ONLY`。
 - Web 登录会话已支持 Cookie 签发、账号密码例外登录、退出登录、撤销、会话列表。
+- 账号安全设置已支持开关账号密码登录、修改密码、绑定和解绑设备指纹。
+- 浏览器下载页已支持使用 URL fragment 中的 `#key=` 对 AES-GCM 加密文件做本地 WebCrypto 解密。
 - Web 端认证成功后可以直接把文件下载到当前电脑浏览器。
 - App 下载接口已支持设备指纹和账号身份鉴权。
 - 分享管理已支持我的分享列表、状态筛选、续期、删除单个分享项。

@@ -2,8 +2,8 @@ import { AppColors, AppSpacing, AppTypography } from '../../common/Theme';
 
 @Component
 export struct CdSectionHeader {
-  title: string = '';
-  actionText: string = '';
+  @Prop title: string = '';
+  @Prop actionText: string = '';
   onAction: () => void = () => {};
 
   build() {

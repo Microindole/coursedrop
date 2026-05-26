@@ -2,6 +2,7 @@ import { ExpireStatus, NetworkMode } from './CommonTypes';
 import { TransferItem } from './TransferItem';
 
 export type ShareSessionStatus = 'DRAFT' | 'ACTIVE' | 'REVOKED' | 'EXPIRED';
+export type DownloadPolicy = 'PUBLIC' | 'LOGIN_REQUIRED' | 'OWNER_ONLY';
 
 export interface ShareSession {
   id: string;
@@ -16,5 +17,6 @@ export interface ShareSession {
   itemCount: number;
   totalSizeBytes: number;
   encrypted: boolean;
+  downloadPolicy?: DownloadPolicy;
   items: TransferItem[];
 }

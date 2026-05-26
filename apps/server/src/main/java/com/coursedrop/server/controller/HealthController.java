@@ -3,6 +3,7 @@ package com.coursedrop.server.controller;
 import java.time.Clock;
 import java.time.Instant;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,16 +20,15 @@ public class HealthController {
     private final StorageProperties storageProperties;
     private final ServerProperties serverProperties;
 
-    public HealthController() {
-        this(Clock.systemUTC(), null, null);
-    }
-
+    @Autowired
     public HealthController(StorageProperties storageProperties, ServerProperties serverProperties) {
         this(Clock.systemUTC(), storageProperties, serverProperties);
     }
 
     public HealthController(Clock clock) {
-        this(clock, null, null);
+        this(clock,
+                new StorageProperties("uploads", 24, 168, 100),
+                new ServerProperties("http://localhost:8080", false, "*"));
     }
 
     public HealthController(Clock clock, StorageProperties storageProperties, ServerProperties serverProperties) {

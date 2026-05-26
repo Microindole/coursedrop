@@ -4,9 +4,9 @@ export type CdIconButtonVariant = 'plain' | 'tonal' | 'danger';
 
 @Component
 export struct CdIconButton {
-  icon: Resource = $r('app.media.cd_icon_share');
-  variant: CdIconButtonVariant = 'plain';
-  interactive: boolean = true;
+  @Prop icon: Resource = $r('app.media.cd_icon_share');
+  @Prop variant: CdIconButtonVariant = 'plain';
+  @Prop interactive: boolean = true;
   onTap: () => void = () => {};
 
   private resolveBackgroundColor(): ResourceColor {

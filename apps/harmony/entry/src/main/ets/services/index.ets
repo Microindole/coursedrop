@@ -5,6 +5,8 @@ export { localLibraryService, IndexedLocalLibraryService } from './local';
 export type { LibraryGrouping, LocalLibraryService } from './local';
 export { relaySourceService, ConfigurableRelaySourceService } from './relay';
 export type { RelaySourceService } from './relay';
+export { identityService, IdentityService } from './identity';
+export type { LocalIdentity, DeviceFingerprintResponse, IdentityRepository } from './identity';
 export { roomService, RoomService } from './RoomService';
 export { shareService, LocalShareService } from './share';
 export type { ShareOperationResult, ShareService, TransferStats } from './share';

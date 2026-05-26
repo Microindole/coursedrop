@@ -99,6 +99,8 @@ GET /s/{code}#key={base64urlFileKey}
 
 `#key` 不会发送给服务端，只由浏览器本地读取用于解密。禁止把密钥放在 query 参数中。
 
+当前浏览器下载页已经支持基础本地解密：当分享项为 `encrypted=true` 且 URL 带有 `#key={base64urlFileKey}` 时，页面会使用 WebCrypto `AES-GCM` 在浏览器本地解密密文并保存明文文件。没有 `#key` 时仍下载密文文件。
+
 ### App 下载
 
 ```text
@@ -147,6 +149,55 @@ POST /api/accounts
 
 账号创建发生在手机端安全设置中。创建后，当前手机设备指纹绑定到账号。默认仍可继续扫码登录；只有用户允许账号密码登录后，Web 才能使用账号密码登录。
 
+### 账号安全设置
+
+```text
+GET /api/accounts/{accountId}
+POST /api/accounts/{accountId}/security
+POST /api/accounts/{accountId}/password
+GET /api/accounts/{accountId}/fingerprints
+POST /api/accounts/{accountId}/fingerprints
+DELETE /api/accounts/{accountId}/fingerprints/{fingerprintId}
+```
+
+用途：
+
+- 查询账号状态。
+- 开启或关闭账号密码登录。
+- 修改账号密码。
+- 查询账号绑定的设备指纹。
+- 绑定新的设备指纹。
+- 解绑已有设备指纹。
+
+这些接口需要证明调用者能管理该账号。请求应携带其一：
+
+- `X-CourseDrop-Account-Id`：必须等于路径中的 `{accountId}`。
+- `X-CourseDrop-Fingerprint-Id`：该设备指纹必须已经绑定到路径中的 `{accountId}`。
+
+`POST /api/accounts/{accountId}/security` 请求体：
+
+```json
+{
+  "passwordLoginEnabled": true
+}
+```
+
+`POST /api/accounts/{accountId}/password` 请求体：
+
+```json
+{
+  "password": "new-password"
+}
+```
+
+`POST /api/accounts/{accountId}/fingerprints` 请求体：
+
+```json
+{
+  "fingerprintId": "device-fingerprint-id"
+}
+```
+
 ### 创建 Web 扫码登录会话
 
 ```text
@@ -175,7 +226,26 @@ GET /api/auth/web-login/{loginCode}
 GET /api/auth/web-login/{loginCode}/qr.svg
 ```
 
-返回可扫码的 QR SVG。
+返回可扫码的 QR SVG。二维码内容指向：
+
+```text
+GET /m/login/{loginCode}
+```
+
+没有鸿蒙真机时，可用安卓手机扫码打开该页面，输入 CourseDrop 设置页里的 `fingerprintId` 后确认网页登录。
+
+### 手机浏览器确认页
+
+```text
+GET /m/login/{loginCode}
+POST /m/login/{loginCode}
+```
+
+`POST` 表单字段：
+
+- `fingerprintId`：手机端或模拟器注册到服务端后的设备指纹 ID。
+
+该页面是开发和课程演示用入口。正式 App 仍应直接调用 `POST /api/auth/web-login/{loginCode}/confirm`。
 
 ### 账号密码登录
 

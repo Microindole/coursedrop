@@ -20,6 +20,7 @@ export interface ShareService {
   listTasks(sessionId: string): TransferTask[];
   getStats(): TransferStats;
   refreshShareCode(sessionId: string): ShareOperationResult;
+  createRelayShare(sessionId: string, expireHours: number, downloadPolicy: string): Promise<ShareOperationResult>;
   revokeShare(sessionId: string): ShareOperationResult;
   addLocalItem(sessionId: string, type: TransferItemType): ShareOperationResult;
 }

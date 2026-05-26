@@ -48,11 +48,13 @@ export class ShareViewModel {
     return this.currentSession.shareUrl;
   }
 
-  refreshShareCode(): void {
-    this.loading = false;
-    const result = shareService.refreshShareCode(this.currentSession.id);
+  async refreshShareCode(): Promise<void> {
+    this.loading = true;
+    const result = await shareService.createRelayShare(this.currentSession.id, 24, 'LOGIN_REQUIRED');
     this.currentSession = shareService.getCurrentSession();
     this.lastActionText = result.message;
+    this.errorMessage = result.success ? '' : result.message;
+    this.loading = false;
   }
 
   revokeShare(): void {

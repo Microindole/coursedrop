@@ -48,6 +48,7 @@ services/
     ShareSessionRepository.ets 分享会话仓储
     TransferTaskRepository.ets 传输任务仓储
     LocalShareService.ets      分享业务实现
+    RelayShareApi.ets          公网分享 API 封装
 
   local/
     LocalLibraryService.ets    本地库领域接口
@@ -59,6 +60,11 @@ services/
     RelaySourceService.ets     中转源领域接口
     RelaySourceRepository.ets  中转源仓储
     ConfigurableRelaySourceService.ets 中转源业务实现
+    RelayHealthService.ets     中转源健康检查和能力探测
+
+  identity/
+    IdentityService.ets        设备指纹注册和本机身份状态
+    IdentityRepository.ets     本机身份仓储
 
   device/
     DeviceDiscoveryService.ets 设备发现领域接口
@@ -71,6 +77,9 @@ services/
 1. `RelaySourceRepository` 接首选项持久化。
 2. `LocalFileIndexRepository` 接 SQLite 索引。
 3. `CourseDropFileStore` 接应用沙箱目录、文件选择器和导入流程。
-4. `ShareService` 接公网服务端分享码、续期、撤回接口。
-5. `DeviceDiscoveryService` 接局域网发现和公网在线状态。
-6. `TransferService` 接上传、下载、局域网直传和公网 fallback。
+4. `ApiClient` 已接入 HarmonyOS HTTP 能力，使用启用的中转源作为 base URL。
+5. `RelayHealthService` 已可探测 `/api/health` 和 `/api/health/capabilities`。
+6. `IdentityService` 已可调用 `/api/identity/fingerprints` 注册或刷新本机指纹身份，并可用输入的网页登录码调用 `/api/auth/web-login/{loginCode}/confirm` 模拟扫码确认。
+7. `ShareService` 已可调用 `/api/shares` 创建公网分享码；上传、续期、撤回继续接后端接口。
+8. `DeviceDiscoveryService` 接局域网发现和公网在线状态。
+9. `TransferService` 接上传、下载、局域网直传和公网 fallback。

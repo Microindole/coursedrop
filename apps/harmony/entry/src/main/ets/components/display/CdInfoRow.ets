@@ -2,9 +2,9 @@ import { AppColors, AppSize, AppSpacing, AppTypography } from '../../common/Them
 
 @Component
 export struct CdInfoRow {
-  title: string = '';
-  value: string = '';
-  mark: string = '';
+  @Prop title: string = '';
+  @Prop value: string = '';
+  @Prop mark: string = '';
 
   private resolveIcon(): Resource {
     if (this.mark === 'LINK') {

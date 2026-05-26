@@ -1,10 +1,12 @@
 import {
+    CdButton,
     CdInfoRow,
     CdPanel,
     CdScrollContainer,
     CdSectionHeader,
     CdSelectField,
     CdSwitchRow,
+    CdTextField,
     CdTopBar
 } from '../components/index';
 import { AppSpacing } from '../common/Theme';
@@ -20,6 +22,7 @@ export default struct SettingsPage {
     @State expireOption: string = '24';
     @State cachePolicy: string = this.viewModel.cachePolicy;
     @State actionText: string = this.viewModel.lastActionText;
+    @State loginCode: string = '';
     @State revision: number = 0;
 
     private refreshView(): void {
@@ -35,6 +38,16 @@ export default struct SettingsPage {
             return 'MANUAL';
         }
         return 'EXPIRED_ONLY';
+    }
+
+    private async registerCurrentDevice(): Promise<void> {
+        await this.viewModel.registerCurrentDevice();
+        this.refreshView();
+    }
+
+    private async confirmWebLogin(): Promise<void> {
+        await this.viewModel.confirmWebLogin(this.loginCode);
+        this.refreshView();
     }
 
     build() {
@@ -56,6 +69,34 @@ export default struct SettingsPage {
 
                     CdPanel() {
                         Column({ space: AppSpacing.MD }) {
+                            CdInfoRow({
+                                title: '本机身份',
+                                value: this.viewModel.localIdentity === undefined ? '尚未注册到中转服务器' : this.viewModel.localIdentity.fingerprintId,
+                                mark: 'ID'
+                            })
+
+                            CdButton({
+                                label: '注册或刷新本机身份',
+                                variant: 'tonal',
+                                onTap: () => {
+                                    this.registerCurrentDevice();
+                                }
+                            })
+
+                            CdTextField({
+                                label: '网页登录码',
+                                placeholder: '输入电脑浏览器显示的登录码',
+                                value: $loginCode
+                            })
+
+                            CdButton({
+                                label: '确认网页登录',
+                                variant: 'tonal',
+                                onTap: () => {
+                                    this.confirmWebLogin();
+                                }
+                            })
+
                             CdSwitchRow({
                                 title: '局域网优先',
                                 description: '同网设备优先直连，跨网络再走公网中转',

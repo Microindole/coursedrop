@@ -120,6 +120,6 @@ public class WebLoginController {
     }
 
     private String loginPayload(String loginCode) {
-        return serverProperties.publicBaseUrl() + "/api/auth/web-login/" + loginCode;
+        return serverProperties.publicBaseUrl() + "/m/login/" + loginCode;
     }
 }

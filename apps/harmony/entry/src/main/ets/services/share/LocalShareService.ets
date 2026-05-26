@@ -4,17 +4,22 @@ import { TransferTask } from '../../models/TransferTask';
 import { ShareOperationResult, ShareService, TransferStats } from './ShareService';
 import { ShareSessionRepository } from './ShareSessionRepository';
 import { TransferTaskRepository } from './TransferTaskRepository';
+import { RelayShareApi } from './RelayShareApi';
+import { identityService } from '../identity';
 
 export class LocalShareService implements ShareService {
   private sessionRepository: ShareSessionRepository;
   private taskRepository: TransferTaskRepository;
+  private relayShareApi: RelayShareApi;
 
   constructor(
     sessionRepository: ShareSessionRepository,
-    taskRepository: TransferTaskRepository
+    taskRepository: TransferTaskRepository,
+    relayShareApi: RelayShareApi
   ) {
     this.sessionRepository = sessionRepository;
     this.taskRepository = taskRepository;
+    this.relayShareApi = relayShareApi;
   }
 
   listRecentSessions(limit: number): ShareSession[] {
@@ -52,8 +57,43 @@ export class LocalShareService implements ShareService {
     }
     return {
       success: false,
-      message: '公网分享码需要接入 RelaySourceService 和后端接口'
+      message: '请点击创建公网分享'
     };
+  }
+
+  async createRelayShare(sessionId: string, expireHours: number, downloadPolicy: string): Promise<ShareOperationResult> {
+    const session = this.findSession(sessionId);
+    try {
+      const identity = identityService.getLocalIdentity();
+      const ownerIdentityId = identity === undefined ? '' : identity.fingerprintId;
+      const ownerIdentityType = identity === undefined ? 'ANONYMOUS' : 'FINGERPRINT';
+      const response = await this.relayShareApi.createShare(
+        expireHours,
+        downloadPolicy,
+        ownerIdentityId,
+        ownerIdentityType
+      );
+      session.id = response.id;
+      session.code = response.code;
+      session.shareUrl = response.downloadUrl;
+      session.status = 'ACTIVE';
+      session.networkMode = 'RELAY';
+      session.expireStatus = 'ACTIVE';
+      session.createdAt = response.createdAt;
+      session.expiresAt = response.expiresAt;
+      session.downloadPolicy = response.downloadPolicy === 'OWNER_ONLY' ? 'OWNER_ONLY' :
+        response.downloadPolicy === 'PUBLIC' ? 'PUBLIC' : 'LOGIN_REQUIRED';
+      this.sessionRepository.save(session);
+      return {
+        success: true,
+        message: '公网分享已创建'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `创建失败：${String(error)}`
+      };
+    }
   }
 
   revokeShare(sessionId: string): ShareOperationResult {

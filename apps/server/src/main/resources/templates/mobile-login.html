@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CourseDrop 登录确认</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-zinc-950 px-5 py-8 text-white antialiased">
+<main class="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md flex-col justify-center">
+  <p class="text-sm font-medium uppercase tracking-[0.24em] text-emerald-300">CourseDrop</p>
+  <h1 class="mt-4 text-3xl font-semibold tracking-tight">确认网页登录</h1>
+  <p class="mt-3 text-sm leading-6 text-zinc-400">
+    在没有鸿蒙真机扫码能力时，可用安卓浏览器打开此页并输入手机端设备指纹 ID 完成登录确认。
+  </p>
+
+  <div class="mt-8 border-y border-white/10 py-5">
+    <p class="text-xs uppercase tracking-[0.22em] text-zinc-500">Login Code</p>
+    <p class="mt-2 break-all font-mono text-xl text-emerald-300" th:text="${loginCode}">CODE</p>
+  </div>
+
+  <div th:if="${confirmed}" class="mt-6 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-semibold text-zinc-950">
+    已确认登录。现在可以回到电脑浏览器继续下载。
+  </div>
+
+  <div th:if="${errorMessage != null and !#strings.isEmpty(errorMessage)}"
+       class="mt-6 rounded-lg border border-red-400/40 bg-red-950/40 px-4 py-3 text-sm text-red-200"
+       th:text="${errorMessage}">
+    登录确认失败
+  </div>
+
+  <form class="mt-6 space-y-4" method="post" th:action="@{'/m/login/' + ${loginCode}}">
+    <label class="block">
+      <span class="text-xs font-medium text-zinc-400">Fingerprint ID</span>
+      <input name="fingerprintId"
+             class="mt-2 min-h-12 w-full rounded-lg border border-white/15 bg-white/10 px-4 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-emerald-300"
+             placeholder="从 CourseDrop 设置页复制 fingerprintId"
+             autocomplete="off">
+    </label>
+    <button class="min-h-12 w-full rounded-lg bg-emerald-400 px-4 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-300"
+            type="submit">
+      确认登录
+    </button>
+  </form>
+</main>
+</body>
+</html>

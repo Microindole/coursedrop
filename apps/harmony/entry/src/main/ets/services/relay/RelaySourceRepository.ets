@@ -10,7 +10,17 @@ export class LocalRelaySourceRepository implements RelaySourceRepository {
   private relayServers: RelayServerConfig[] = [];
 
   list(): RelayServerConfig[] {
-    return this.relayServers;
+    const servers: RelayServerConfig[] = [];
+    this.relayServers.forEach((server: RelayServerConfig) => {
+      servers.push({
+        id: server.id,
+        name: server.name,
+        url: server.url,
+        enabled: server.enabled,
+        priority: server.priority
+      });
+    });
+    return servers;
   }
 
   save(server: RelayServerConfig): void {

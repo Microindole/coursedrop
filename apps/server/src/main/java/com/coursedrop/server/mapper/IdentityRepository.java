@@ -1,6 +1,7 @@
 package com.coursedrop.server.mapper;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -48,6 +49,22 @@ public class IdentityRepository {
                 .set(DeviceFingerprintEntity::getAccountId, accountId));
     }
 
+    public void unbindFingerprint(String fingerprintId, String accountId) {
+        fingerprintMapper.update(new LambdaUpdateWrapper<DeviceFingerprintEntity>()
+                .eq(DeviceFingerprintEntity::getId, fingerprintId)
+                .eq(DeviceFingerprintEntity::getAccountId, accountId)
+                .set(DeviceFingerprintEntity::getAccountId, null));
+    }
+
+    public List<DeviceFingerprintResponse> findFingerprintsByAccountId(String accountId) {
+        return fingerprintMapper.selectList(new LambdaQueryWrapper<DeviceFingerprintEntity>()
+                .eq(DeviceFingerprintEntity::getAccountId, accountId)
+                .orderByDesc(DeviceFingerprintEntity::getLastSeenAt))
+                .stream()
+                .map(this::toFingerprintResponse)
+                .toList();
+    }
+
     public boolean usernameExists(String username) {
         return accountMapper.selectCount(new LambdaQueryWrapper<AccountEntity>()
                 .eq(AccountEntity::getUsername, username)) > 0;
@@ -72,6 +89,20 @@ public class IdentityRepository {
         entity.setPasswordLoginEnabled(account.passwordLoginEnabled() ? 1 : 0);
         entity.setCreatedAt(account.createdAt().toString());
         accountMapper.insert(entity);
+    }
+
+    public void updatePasswordLoginEnabled(String accountId, boolean enabled) {
+        accountMapper.update(new LambdaUpdateWrapper<AccountEntity>()
+                .eq(AccountEntity::getId, accountId)
+                .set(AccountEntity::getPasswordLoginEnabled, enabled ? 1 : 0));
+    }
+
+    public void updatePassword(String accountId, String passwordHash, String passwordSalt, String passwordAlgorithm) {
+        accountMapper.update(new LambdaUpdateWrapper<AccountEntity>()
+                .eq(AccountEntity::getId, accountId)
+                .set(AccountEntity::getPasswordHash, passwordHash)
+                .set(AccountEntity::getPasswordSalt, passwordSalt)
+                .set(AccountEntity::getPasswordAlgorithm, passwordAlgorithm));
     }
 
     private DeviceFingerprintEntity toFingerprintEntity(DeviceFingerprintResponse response) {
