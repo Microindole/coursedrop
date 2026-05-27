@@ -4,6 +4,7 @@ import { TransferItem } from '../models/TransferItem';
 import { TransferTask } from '../models/TransferTask';
 import { shareService } from '../services/share';
 import { shareDraftWorkflow } from '../services/share';
+import { transferService } from '../services/transfer';
 
 export class ShareViewModel {
   currentSession: ShareSession = shareService.getCurrentSession();
@@ -53,7 +54,11 @@ export class ShareViewModel {
     this.loading = true;
     const result = await shareService.createRelayShare(this.currentSession.id, 24, 'LOGIN_REQUIRED');
     this.currentSession = shareService.getCurrentSession();
-    this.lastActionText = result.message;
+    if (result.success) {
+      await this.uploadCurrentItems();
+    }
+    this.currentSession = shareService.getCurrentSession();
+    this.lastActionText = result.success ? '公网分享已创建，上传任务已启动' : result.message;
     this.errorMessage = result.success ? '' : result.message;
     this.loading = false;
   }
@@ -69,5 +74,18 @@ export class ShareViewModel {
     this.currentSession = shareService.getCurrentSession();
     this.lastActionText = result.message;
     this.errorMessage = result.success ? '' : result.message;
+  }
+
+  private async uploadCurrentItems(): Promise<void> {
+    for (let index = 0; index < this.currentSession.items.length; index += 1) {
+      const item = this.currentSession.items[index];
+      if (item.remoteItemId === undefined || item.remoteItemId.length === 0) {
+        await transferService.uploadLocalFile({
+          shareId: this.currentSession.id,
+          localFileId: item.id,
+          encrypted: false
+        });
+      }
+    }
   }
 }

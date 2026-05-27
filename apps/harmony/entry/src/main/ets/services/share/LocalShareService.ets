@@ -183,7 +183,7 @@ export class LocalShareService implements ShareService {
 
   private toTransferItem(sessionId: string, file: LocalFileEntry): TransferItem {
     return {
-      id: `local-item-${Date.now()}`,
+      id: file.id,
       sessionId: sessionId,
       type: file.type,
       displayName: file.displayName,

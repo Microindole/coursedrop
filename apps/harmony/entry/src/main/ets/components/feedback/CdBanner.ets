@@ -4,10 +4,10 @@ export type CdBannerTone = 'info' | 'success' | 'warning' | 'danger';
 
 @Component
 export struct CdBanner {
-  title: string = '';
-  description: string = '';
-  tone: CdBannerTone = 'info';
-  actionText: string = '';
+  @Prop title: string = '';
+  @Prop description: string = '';
+  @Prop tone: CdBannerTone = 'info';
+  @Prop actionText: string = '';
   onAction: () => void = () => {};
 
   private resolveBackgroundColor(): string {

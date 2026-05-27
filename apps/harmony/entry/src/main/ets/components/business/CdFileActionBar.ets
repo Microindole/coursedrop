@@ -3,7 +3,7 @@ import { CdIconButton } from '../actions/CdIconButton';
 
 @Component
 export struct CdFileActionBar {
-  selectedCount: number = 0;
+  @Prop selectedCount: number = 0;
   onShare: () => void = () => {};
   onDelete: () => void = () => {};
   onClear: () => void = () => {};

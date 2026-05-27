@@ -30,6 +30,8 @@ CourseDrop/
 
 应用专属目录由 `EntryAbility` 启动时把 `this.context.filesDir` 写入 `AppRuntimeContext`，服务层基于真实应用沙箱根目录推导本地库路径。Ability 启动期不直接导入 services，避免启动阶段初始化业务单例。
 
+轻量配置使用 Preferences 持久化，当前包括中转源、本机身份和设置策略。结构化业务数据，例如本地文件索引、分享草稿和传输任务，后续使用 RDB/SQLite，不放入 Preferences。
+
 公网服务地址不再有默认本地地址。`RelaySourceService` 负责维护多中转源，并把当前最高优先级的启用源同步到 `ApiClient`。
 
 ## 当前服务
@@ -37,6 +39,8 @@ CourseDrop/
 ```text
 services/
   ApiClient.ets                公网中转 HTTP 客户端基础配置
+  common/AppPreferencesStore.ets Preferences 封装，持久化轻量配置
+  common/AppRdbStore.ets       RDB/SQLite 连接封装
   ShareService.ets             分享服务兼容导出
   LocalLibraryService.ets      本地库服务兼容导出
   RelaySourceService.ets       中转源服务兼容导出
@@ -60,6 +64,8 @@ services/
   file/
     FilePickerService.ets      系统文件选择器边界
     FileImportService.ets      选择文件导入和索引写入边界
+    FileSystemService.ets      文件元数据、复制和读取能力
+    LocalFileImportWorkflow.ets 本地库导入编排
     FileTypeResolver.ets       MIME/文件名到业务类型的解析
     FileModels.ets             文件选择和导入 DTO
 
@@ -72,6 +78,11 @@ services/
   identity/
     IdentityService.ets        设备指纹注册和本机身份状态
     IdentityRepository.ets     本机身份仓储
+
+  settings/
+    SettingsService.ets        安全、过期和缓存策略服务
+    SettingsRepository.ets     设置项 Preferences 仓储
+    SettingsModels.ets         设置 DTO 和枚举
 
   device/
     DeviceDiscoveryService.ets 设备发现领域接口
@@ -88,22 +99,31 @@ services/
   crypto/
     EncryptionService.ets      端到端加解密边界
     CryptoModels.ets           加解密 DTO
+
+  scan/
+    QrPayloadParser.ets        二维码内容解析
+    ScanDispatchService.ets    扫码结果分发到登录/分享流程
 ```
 
 ## 替换路线
 
-1. `RelaySourceRepository` 接首选项持久化。
-2. `LocalFileIndexRepository` 接 SQLite 索引。当前运行期实现只保留内存状态，但已经返回拷贝，避免页面或服务层直接修改仓储内部数组。
-3. `CourseDropFileStore` 已按应用沙箱根目录推导 `library/incoming/staging/cache`，后续补目录创建和真实文件复制。
+1. `RelaySourceRepository` 已接 Preferences 持久化，中转源重启后保留。
+2. `LocalFileIndexRepository` 已有 RDB/SQLite 仓储实现，并保留同步内存缓存供页面读取。后续需要补 RDB 初始化完成后的页面刷新事件。
+3. `CourseDropFileStore` 已按应用沙箱根目录推导 `library/incoming/staging/cache`，`FileImportService` 导入时会复制到 `library`。
 4. `ApiClient` 已接入 HarmonyOS HTTP 能力，使用启用的中转源作为 base URL。
 5. `RelayHealthService` 已可探测 `/api/health` 和 `/api/health/capabilities`。
-6. `IdentityService` 已可调用 `/api/identity/fingerprints` 注册或刷新本机指纹身份，并可用输入的网页登录码调用 `/api/auth/web-login/{loginCode}/confirm` 模拟扫码确认。
-7. `ShareService` 已可调用 `/api/shares` 创建公网分享码；上传、续期、撤回继续接后端接口。
-8. `ShareDraftWorkflow` 已把“选择文件 -> 导入索引 -> 加入分享草稿”串成独立编排。页面只表达用户意图，不直接访问 picker 或仓储。
-9. `FilePickerService` 负责系统文件选择器，未接入时必须明确失败，不能返回假文件。
-10. `FileImportService` 负责把选择结果写入本地索引；真实文件复制和目录创建在文件系统能力接入后补齐。
-11. `ShareService` 已提供 `attachLocalFile` 和 `markItemUploaded`。本地草稿项保留本地 id，上传成功后单独记录 `remoteItemId/remoteUrl/expiresAt`，避免上传任务、本地索引和远端项互相覆盖。
-12. `TransferTaskService` 已提供传输任务状态机：创建、开始、进度、完成、失败、取消。
-13. `RelayTransferApi` 是公网中转上传/下载边界；multipart 上传和下载保存接入后替换当前明确失败实现。
-14. `EncryptionService` 是端到端加密边界；真实 AES-GCM/密钥派生接入前不能伪造已加密结果。
-15. `DeviceDiscoveryService` 接局域网发现和公网在线状态。
+6. `IdentityService` 已可调用 `/api/identity/fingerprints` 注册或刷新本机指纹身份，本机身份已接 Preferences 持久化，并可用输入的网页登录码调用 `/api/auth/web-login/{loginCode}/confirm` 模拟扫码确认。
+7. `SettingsService` 已持久化 E2EE、局域网优先、默认过期时间和缓存策略。
+8. `ShareService` 已可调用 `/api/shares` 创建公网分享码；上传、续期、撤回继续接后端接口。
+9. `ShareDraftWorkflow` 已把“选择文件 -> 导入索引 -> 加入分享草稿”串成独立编排。页面只表达用户意图，不直接访问 picker 或仓储。
+10. `FilePickerService` 已接入 `DocumentViewPicker`，当前依赖系统返回的 URI，并从 URI/文件名推断显示名和类型。
+11. `LocalFileImportWorkflow` 已把本地库“导入文件/图片”串到 `FilePickerService -> FileImportService -> LocalFileIndexRepository`。本地库页面只调用 ViewModel，不直接访问 picker 或仓储。
+12. `LocalFileImportWorkflow` 还提供开发用 `createDebugTextFile`，用于在模拟器文件选择器不可用时真实写入 CourseDrop/library 并写入索引；它不是假数据，后续可隐藏到调试入口。
+13. `FileImportService` 负责读取文件元数据、复制到 `CourseDrop/library`，并把本地副本写入 RDB 索引。
+14. `ShareService` 已提供 `attachLocalFile` 和 `markItemUploaded`。本地草稿项保留本地 id，上传成功后单独记录 `remoteItemId/remoteUrl/expiresAt`，避免上传任务、本地索引和远端项互相覆盖。
+15. `TransferTaskService` 已提供传输任务状态机：创建、开始、进度、完成、失败、取消。
+16. `RelayTransferApi` 已实现基础 multipart 上传到 `/api/shares/{shareId}/items`，下载保存仍待接入。
+17. `ShareViewModel` 创建公网分享后会遍历草稿项发起上传任务，上传状态由 `TransferTaskService` 管理。
+18. `QrPayloadParser` 可识别网页登录二维码 `/m/login/{code}`、分享链接 `/s/{code}`、`login:` 和 `share:` 前缀；`ScanDispatchService` 已能分发网页登录确认。
+19. `EncryptionService` 是端到端加密边界；真实 AES-GCM/密钥派生接入前不能伪造已加密结果。
+20. `DeviceDiscoveryService` 接局域网发现和公网在线状态。

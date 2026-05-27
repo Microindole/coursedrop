@@ -1,4 +1,5 @@
 import { apiClient } from '../ApiClient';
+import { fileSystemService } from '../file';
 import { courseDropFileStore, localFileIndexRepository } from '../local';
 import { HttpRelayTransferApi } from './RelayTransferApi';
 import { DefaultTransferService } from './TransferService';
@@ -18,7 +19,7 @@ export { RuntimeTransferTaskRepository } from './TransferTaskRepository';
 
 export const transferTaskRepository = new RuntimeTransferTaskRepository();
 export const transferTaskService = new DefaultTransferTaskService(transferTaskRepository);
-export const relayTransferApi = new HttpRelayTransferApi(apiClient);
+export const relayTransferApi = new HttpRelayTransferApi(apiClient, fileSystemService);
 export const transferService: TransferService = new DefaultTransferService(
   transferTaskService,
   relayTransferApi,

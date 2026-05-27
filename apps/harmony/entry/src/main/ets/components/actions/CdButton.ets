@@ -4,9 +4,9 @@ export type CdButtonVariant = 'contained' | 'tonal' | 'text' | 'danger';
 
 @Component
 export struct CdButton {
-  label: string = '';
-  variant: CdButtonVariant = 'contained';
-  interactive: boolean = true;
+  @Prop label: string = '';
+  @Prop variant: CdButtonVariant = 'contained';
+  @Prop interactive: boolean = true;
   onTap: () => void = () => {};
 
   private resolveBackgroundColor(): string {

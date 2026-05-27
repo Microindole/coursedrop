@@ -4,15 +4,19 @@ import { identityService } from '../services/identity';
 import { LocalIdentity } from '../services/identity';
 import { relaySourceService } from '../services/relay';
 import { relayHealthService } from '../services/relay';
+import { scanDispatchService } from '../services/scan';
+import { settingsService } from '../services/settings';
+import type { CachePolicy } from '../services/settings';
 
-export type CachePolicy = 'MANUAL' | 'DAILY' | 'EXPIRED_ONLY';
+export type { CachePolicy } from '../services/settings';
 
 export class SettingsViewModel {
   relayServers: RelayServerConfig[] = relaySourceService.listRelayServers();
-  e2eeEnabled: boolean = true;
-  lanFirstEnabled: boolean = true;
-  defaultExpireHours: string = '24';
-  cachePolicy: CachePolicy = 'EXPIRED_ONLY';
+  private settings = settingsService.getSettings();
+  e2eeEnabled: boolean = this.settings.e2eeEnabled;
+  lanFirstEnabled: boolean = this.settings.lanFirstEnabled;
+  defaultExpireHours: string = this.settings.defaultExpireHours;
+  cachePolicy: CachePolicy = this.settings.cachePolicy;
   lastActionText: string = '';
   localIdentity: LocalIdentity | undefined = identityService.getLocalIdentity();
 
@@ -121,14 +125,25 @@ export class SettingsViewModel {
   }
 
   updateSecurity(e2eeEnabled: boolean, lanFirstEnabled: boolean): void {
-    this.e2eeEnabled = e2eeEnabled;
-    this.lanFirstEnabled = lanFirstEnabled;
+    this.settings = settingsService.updateSecurity(e2eeEnabled, lanFirstEnabled);
+    this.e2eeEnabled = this.settings.e2eeEnabled;
+    this.lanFirstEnabled = this.settings.lanFirstEnabled;
     this.lastActionText = '连接策略已更新';
   }
 
+  async handleScannedText(rawText: string): Promise<void> {
+    try {
+      const result = await scanDispatchService.dispatch(rawText);
+      this.lastActionText = result.message;
+    } catch (error) {
+      this.lastActionText = `扫码处理失败：${String(error)}`;
+    }
+  }
+
   updatePolicies(expireHours: string, cachePolicy: CachePolicy): void {
-    this.defaultExpireHours = expireHours;
-    this.cachePolicy = cachePolicy;
+    this.settings = settingsService.updatePolicies(expireHours, cachePolicy);
+    this.defaultExpireHours = this.settings.defaultExpireHours;
+    this.cachePolicy = this.settings.cachePolicy;
     this.lastActionText = '过期与缓存策略已更新';
   }
 }

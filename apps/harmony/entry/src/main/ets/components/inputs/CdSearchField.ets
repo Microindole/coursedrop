@@ -4,6 +4,7 @@ import { AppColors, AppRadius, AppSize, AppSpacing, AppTypography } from '../../
 export struct CdSearchField {
   placeholder: string = '搜索';
   @Link value: string;
+  onChangeValue: (value: string) => void = () => {};
   onSubmit: () => void = () => {};
 
   build() {
@@ -23,6 +24,7 @@ export struct CdSearchField {
         .padding({ left: 0, right: 0 })
         .onChange((value: string) => {
           this.value = value;
+          this.onChangeValue(value);
         })
         .onSubmit(() => {
           this.onSubmit();

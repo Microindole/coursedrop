@@ -4,9 +4,9 @@ export type CdFileTone = 'file' | 'image' | 'link' | 'text';
 
 @Component
 export struct CdFileItem {
-  name: string = '';
-  meta: string = '';
-  tone: CdFileTone = 'file';
+  @Prop name: string = '';
+  @Prop meta: string = '';
+  @Prop tone: CdFileTone = 'file';
   onTap: () => void = () => {};
 
   private resolveIcon(): Resource {

@@ -1,6 +1,8 @@
 import { TransferItemType } from '../models/CommonTypes';
 import { LocalFileEntry } from '../models/LocalFileEntry';
 import { localLibraryService } from '../services/local';
+import { localFileImportWorkflow } from '../services/file';
+import { shareService } from '../services/share';
 
 export type LocalLibraryFilter = 'ALL' | TransferItemType;
 
@@ -10,7 +12,18 @@ export class LocalLibraryViewModel {
   selectedIds: string[] = [];
   files: LocalFileEntry[] = localLibraryService.listFiles();
   lastActionText: string = '';
-  pageSize: number = 4;
+  pageSize: number = 5;
+
+  reload(): void {
+    this.files = localLibraryService.listFiles();
+  }
+
+  getVisibleActionText(): string {
+    if (this.lastActionText.length > 0) {
+      return this.lastActionText;
+    }
+    return '本地库只管理 CourseDrop 索引内容';
+  }
 
   getFilteredFiles(): LocalFileEntry[] {
     return this.files.filter((file) => {
@@ -39,6 +52,23 @@ export class LocalLibraryViewModel {
     return this.getFilteredFiles().slice(startIndex, startIndex + this.pageSize);
   }
 
+  getTotalCount(): number {
+    return this.getFilteredFiles().length;
+  }
+
+  async importFiles(type?: TransferItemType): Promise<void> {
+    const result = await localFileImportWorkflow.importFiles(type);
+    this.reload();
+    this.lastActionText = result.message;
+  }
+
+  createDebugTextFile(): void {
+    this.lastActionText = '正在生成测试文件...';
+    const result = localFileImportWorkflow.createDebugTextFile();
+    this.reload();
+    this.lastActionText = result.message;
+  }
+
   toggleSelected(id: string): void {
     if (this.isSelected(id)) {
       this.selectedIds = this.selectedIds.filter((selectedId) => selectedId !== id);
@@ -58,9 +88,18 @@ export class LocalLibraryViewModel {
   }
 
   shareSelected(): void {
+    let attachedCount = 0;
+    const session = shareService.getCurrentSession();
+    for (let index = 0; index < this.selectedIds.length; index += 1) {
+      const result = shareService.attachLocalFile(session.id, this.selectedIds[index]);
+      if (result.success) {
+        attachedCount += 1;
+      }
+    }
     localLibraryService.markShared(this.selectedIds);
     this.files = localLibraryService.listFiles();
-    this.lastActionText = `已重新分享 ${this.selectedIds.length} 项`;
+    this.selectedIds = [];
+    this.lastActionText = attachedCount > 0 ? `已加入分享草稿 ${attachedCount} 项` : '所选内容已在分享草稿中';
   }
 
   deleteSelected(): void {

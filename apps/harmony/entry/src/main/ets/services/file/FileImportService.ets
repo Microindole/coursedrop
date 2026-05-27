@@ -2,6 +2,7 @@ import { LocalFileEntry } from '../../models/LocalFileEntry';
 import { CourseDropFileStore } from '../local/CourseDropFileStore';
 import { LocalFileIndexRepository } from '../local/LocalFileIndexRepository';
 import { FileImportPlan, FileImportResult, PickedFile } from './FileModels';
+import { FileSystemService } from './FileSystemService';
 
 export interface FileImportService {
   createImportPlan(file: PickedFile): FileImportPlan;
@@ -11,10 +12,16 @@ export interface FileImportService {
 export class CourseDropFileImportService implements FileImportService {
   private fileStore: CourseDropFileStore;
   private indexRepository: LocalFileIndexRepository;
+  private fileSystemService: FileSystemService;
 
-  constructor(fileStore: CourseDropFileStore, indexRepository: LocalFileIndexRepository) {
+  constructor(
+    fileStore: CourseDropFileStore,
+    indexRepository: LocalFileIndexRepository,
+    fileSystemService: FileSystemService
+  ) {
     this.fileStore = fileStore;
     this.indexRepository = indexRepository;
+    this.fileSystemService = fileSystemService;
   }
 
   createImportPlan(file: PickedFile): FileImportPlan {
@@ -29,18 +36,20 @@ export class CourseDropFileImportService implements FileImportService {
   }
 
   async importPickedFile(file: PickedFile): Promise<FileImportResult> {
-    const targetDirectory = this.fileStore.stagingRoot();
+    const targetDirectory = this.fileStore.libraryRoot();
     if (targetDirectory.length === 0) {
       throw new Error('应用沙箱目录未初始化');
     }
+    const localUri = this.fileSystemService.copyToDirectory(file.uri, targetDirectory, file.displayName);
+    const metadata = this.fileSystemService.stat(localUri, file.contentType);
     const localFileId = `local-${Date.now()}`;
     const entry: LocalFileEntry = {
       id: localFileId,
       displayName: file.displayName,
       type: file.type,
-      contentType: file.contentType,
-      sizeBytes: file.sizeBytes,
-      localUri: file.uri,
+      contentType: metadata.contentType,
+      sizeBytes: metadata.sizeBytes,
+      localUri: localUri,
       shareCount: 0,
       remoteCached: false,
       encrypted: false
@@ -48,7 +57,7 @@ export class CourseDropFileImportService implements FileImportService {
     this.indexRepository.save(entry);
     return {
       localFileId: localFileId,
-      localUri: file.uri
+      localUri: localUri
     };
   }
 }

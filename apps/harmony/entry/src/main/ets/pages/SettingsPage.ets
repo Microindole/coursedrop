@@ -10,7 +10,8 @@ import {
     CdTopBar
 } from '../components/index';
 import { AppSpacing } from '../common/Theme';
-import { CachePolicy, SettingsViewModel } from '../viewmodels/SettingsViewModel';
+import { SettingsViewModel } from '../viewmodels/SettingsViewModel';
+import type { CachePolicy } from '../viewmodels/SettingsViewModel';
 import router from '@ohos.router';
 
 @Component
@@ -19,10 +20,11 @@ export default struct SettingsPage {
     showBack: boolean = false;
     @State e2eeEnabled: boolean = this.viewModel.e2eeEnabled;
     @State lanFirstEnabled: boolean = this.viewModel.lanFirstEnabled;
-    @State expireOption: string = '24';
+    @State expireOption: string = this.viewModel.defaultExpireHours;
     @State cachePolicy: string = this.viewModel.cachePolicy;
     @State actionText: string = this.viewModel.lastActionText;
     @State loginCode: string = '';
+    @State scannedText: string = '';
     @State revision: number = 0;
 
     private refreshView(): void {
@@ -47,6 +49,11 @@ export default struct SettingsPage {
 
     private async confirmWebLogin(): Promise<void> {
         await this.viewModel.confirmWebLogin(this.loginCode);
+        this.refreshView();
+    }
+
+    private async handleScannedText(): Promise<void> {
+        await this.viewModel.handleScannedText(this.scannedText);
         this.refreshView();
     }
 
@@ -94,6 +101,20 @@ export default struct SettingsPage {
                                 variant: 'tonal',
                                 onTap: () => {
                                     this.confirmWebLogin();
+                                }
+                            })
+
+                            CdTextField({
+                                label: '扫码内容调试',
+                                placeholder: '粘贴二维码内容或 login:/share: 前缀',
+                                value: $scannedText
+                            })
+
+                            CdButton({
+                                label: '处理扫码内容',
+                                variant: 'tonal',
+                                onTap: () => {
+                                    this.handleScannedText();
                                 }
                             })
 

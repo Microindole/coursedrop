@@ -3,7 +3,7 @@ import { AppColors, AppRadius, AppSpacing, AppTypography } from '../../common/Th
 @Component
 export struct CdPagination {
   @Link currentPage: number;
-  totalPages: number = 1;
+  @Prop totalPages: number = 1;
   onChange: (page: number) => void = () => {};
 
   private goTo(page: number): void {

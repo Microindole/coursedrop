@@ -23,7 +23,7 @@ export class DefaultShareDraftWorkflow implements ShareDraftWorkflow {
 
   async pickAndAttachFiles(sessionId: string, _typeHint?: TransferItemType): Promise<ShareOperationResult> {
     try {
-      const files = await this.filePickerService.pickFiles();
+      const files = await this.filePickerService.pickFiles(_typeHint);
       if (files.length === 0) {
         return {
           success: false,

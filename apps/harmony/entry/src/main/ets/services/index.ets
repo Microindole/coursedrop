@@ -12,7 +12,18 @@ export { shareService, shareDraftWorkflow, LocalShareService } from './share';
 export type { ShareDraftWorkflow, ShareOperationResult, ShareService, TransferStats } from './share';
 export { transferService, DefaultTransferService } from './transfer';
 export type { DownloadShareItemCommand, TransferService, UploadLocalFileCommand } from './transfer';
-export { filePickerService, fileImportService, fileTypeResolver } from './file';
-export type { FileImportPlan, FileImportResult, FileImportService, FilePickerService, PickedFile } from './file';
+export { filePickerService, fileImportService, fileTypeResolver, localFileImportWorkflow } from './file';
+export type {
+  FileImportPlan,
+  FileImportResult,
+  FileImportService,
+  FilePickerService,
+  LocalFileImportResult,
+  PickedFile
+} from './file';
 export { encryptionService, CourseDropEncryptionService } from './crypto';
 export type { DecryptionPlan, DecryptionResult, EncryptionPlan, EncryptionResult, EncryptionService } from './crypto';
+export { settingsService, SettingsService } from './settings';
+export type { AppSettings, CachePolicy, SettingsRepository } from './settings';
+export { qrPayloadParser, scanDispatchService, QrPayloadParser, ScanDispatchService } from './scan';
+export type { QrPayload, QrPayloadType, ScanDispatchResult } from './scan';

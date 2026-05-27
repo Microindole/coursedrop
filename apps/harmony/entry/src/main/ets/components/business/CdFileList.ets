@@ -6,10 +6,10 @@ import { CdFileItem, CdFileTone } from '../display/CdFileItem';
 
 @Component
 export struct CdFileList {
-  localFiles: LocalFileEntry[] = [];
-  transferItems: TransferItem[] = [];
-  selectedIds: string[] = [];
-  source: 'local' | 'transfer' = 'local';
+  @Prop localFiles: LocalFileEntry[] = [];
+  @Prop transferItems: TransferItem[] = [];
+  @Prop selectedIds: string[] = [];
+  @Prop source: 'local' | 'transfer' = 'local';
   onLocalTap: (id: string) => void = (_id: string) => {};
   onTransferTap: (id: string) => void = (_id: string) => {};
 
