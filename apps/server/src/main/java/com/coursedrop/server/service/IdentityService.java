@@ -81,9 +81,6 @@ public class IdentityService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Device fingerprint not found"));
         var account = identityRepository.findAccountByUsername(request.username().trim())
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
-        if (account.getPasswordLoginEnabled() == null || account.getPasswordLoginEnabled() != 1) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Account password login is disabled");
-        }
         if (!passwordHasher.verify(
                 request.password(),
                 account.getPasswordHash(),
@@ -98,7 +95,7 @@ public class IdentityService {
         return new AccountResponse(
                 account.getId(),
                 account.getUsername(),
-                true,
+                account.getPasswordLoginEnabled() != null && account.getPasswordLoginEnabled() == 1,
                 Instant.parse(account.getCreatedAt()));
     }
 

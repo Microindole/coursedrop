@@ -9,7 +9,7 @@ import {
   CdTextField,
   CdTopBar
 } from '../components/index';
-import { AppSpacing, AppColors, AppRadius, AppTypography } from '../common/Theme';
+import { AppSpacing, AppColors, AppTypography } from '../common/Theme';
 import { SettingsViewModel, CachePolicy } from '../viewmodels/SettingsViewModel';
 import router from '@ohos.router';
 
@@ -30,16 +30,30 @@ export default struct SettingsPage {
   @State accountPasswordLoginEnabled: boolean = false;
 
   aboutToAppear() {
-    this.syncSettings();
+    this.syncSettings(false);
   }
 
-  private syncSettings() {
+  private syncSettings(showToast: boolean = true) {
     this.e2eeEnabled = this.viewModel.e2eeEnabled;
     this.lanFirstEnabled = this.viewModel.lanFirstEnabled;
     this.expireOption = this.viewModel.defaultExpireHours;
     this.cachePolicy = this.viewModel.cachePolicy;
     this.accountPasswordLoginEnabled = this.viewModel.passwordLoginEnabled;
     this.actionText = this.viewModel.lastActionText.length > 0 ? this.viewModel.lastActionText : '配置信息已同步';
+    if (showToast && this.actionText.length > 0) {
+      this.showActionToast(this.actionText);
+    }
+  }
+
+  private showActionToast(message: string) {
+    try {
+      this.getUIContext().getPromptAction().showToast({
+        message: message,
+        duration: 2200
+      });
+    } catch (error) {
+      console.error(`[CourseDrop] show toast failed: ${String(error)}`);
+    }
   }
 
   private cachePolicyValue(value: string): CachePolicy {
@@ -56,6 +70,7 @@ export default struct SettingsPage {
   private async confirmWebLogin() {
     if (this.loginCode.length === 0) {
       this.actionText = '请输入网页登录提取码';
+      this.showActionToast(this.actionText);
       return;
     }
     await this.viewModel.confirmWebLogin(this.loginCode);
@@ -66,6 +81,7 @@ export default struct SettingsPage {
   private async handleScannedText() {
     if (this.scannedText.length === 0) {
       this.actionText = '请输入要解析的扫码调试数据';
+      this.showActionToast(this.actionText);
       return;
     }
     await this.viewModel.handleScannedText(this.scannedText);
@@ -397,19 +413,6 @@ export default struct SettingsPage {
           .width('100%')
         }
 
-        // 设置底部的状态显示栏
-        if (this.actionText.length > 0) {
-          CdPanel({ hasShadow: false }) {
-            Row() {
-              Text(this.actionText)
-                .fontSize(11)
-                .fontColor(AppColors.TEXT_SECONDARY)
-                .textAlign(TextAlign.Center)
-                .width('100%')
-            }
-            .width('100%')
-          }
-        }
       }
     }
     .width('100%')

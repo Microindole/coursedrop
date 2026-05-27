@@ -177,14 +177,13 @@ POST /api/accounts/login
 }
 ```
 
-该接口只给 CourseDrop App 使用，用于“我已经有账号，现在把这台手机/模拟器绑定进账号”。服务端会校验：
+该接口只给 CourseDrop App 使用，用于“我已经有账号，现在把这台手机/模拟器绑定进账号”。它不受 Web 账号密码登录开关限制；`passwordLoginEnabled` 只限制浏览器端 `/api/auth/web-login/password`。服务端会校验：
 
 - 账号存在且密码正确。
-- 账号已开启 `passwordLoginEnabled`。
 - `fingerprintId` 已注册。
 - 当前指纹没有绑定到其他账号。
 
-校验通过后，服务端把当前设备指纹绑定到该账号并返回 `AccountResponse`。如果账号未开启账号密码登录，返回 `403 Forbidden`；如果账号或密码错误，返回 `401 Unauthorized`；如果指纹已绑定其他账号，返回 `409 Conflict`。
+校验通过后，服务端把当前设备指纹绑定到该账号并返回 `AccountResponse`。如果账号或密码错误，返回 `401 Unauthorized`；如果指纹已绑定其他账号，返回 `409 Conflict`。
 
 ### 账号安全设置
 

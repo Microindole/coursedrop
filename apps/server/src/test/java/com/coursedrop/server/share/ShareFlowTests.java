@@ -448,17 +448,6 @@ class ShareFlowTests {
         var secondFingerprintId = objectMapper.readTree(secondFingerprintResult.getResponse().getContentAsString())
                 .get("id").asText();
 
-        mockMvc.perform(post("/api/accounts/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                          "username": "%s",
-                          "password": "login-secret",
-                          "fingerprintId": "%s"
-                        }
-                        """.formatted(username, secondFingerprintId)))
-                .andExpect(status().isForbidden());
-
         mockMvc.perform(post("/api/accounts/{accountId}/security", accountId)
                 .header("X-CourseDrop-Fingerprint-Id", firstFingerprintId)
                 .contentType(MediaType.APPLICATION_JSON)
