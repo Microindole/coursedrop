@@ -1,5 +1,5 @@
-import camera from '@ohos.multimedia.camera';
-import cameraPicker from '@ohos.multimedia.cameraPicker';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { scanBarcode, scanCore } from '@kit.ScanKit';
 import { AppRuntimeContext } from '../../common/AppRuntimeContext';
 
 export interface CameraScanResult {
@@ -20,15 +20,35 @@ export class CameraScanService {
         capturedUri: ''
       };
     }
-    const profile = new cameraPicker.PickerProfile();
-    profile.cameraPosition = camera.CameraPosition.CAMERA_POSITION_BACK;
-    const mediaTypes: cameraPicker.PickerMediaType[] = [cameraPicker.PickerMediaType.PHOTO];
-    const result = await cameraPicker.pick(context, mediaTypes, profile);
-    return {
-      success: false,
-      message: '已打开系统相机，但当前 SDK 未提供通用二维码解码 API，请使用调试文本或系统浏览器扫码完成联调',
-      rawText: '',
-      capturedUri: result.resultUri
+    const options: scanBarcode.ScanOptions = {
+      scanTypes: [scanCore.ScanType.QR_CODE],
+      enableMultiMode: false,
+      enableAlbum: true
     };
+    try {
+      const result = await scanBarcode.startScanForResult(context, options);
+      return {
+        success: result.originalValue.length > 0,
+        message: result.originalValue.length > 0 ? '扫码识别成功' : '未识别到二维码内容',
+        rawText: result.originalValue,
+        capturedUri: ''
+      };
+    } catch (error) {
+      const businessError = error as BusinessError;
+      if (businessError.code === scanCore.ScanErrorCode.SCAN_SERVICE_CANCELED) {
+        return {
+          success: false,
+          message: '扫码已取消',
+          rawText: '',
+          capturedUri: ''
+        };
+      }
+      return {
+        success: false,
+        message: `扫码失败：${businessError.message}`,
+        rawText: '',
+        capturedUri: ''
+      };
+    }
   }
 }
