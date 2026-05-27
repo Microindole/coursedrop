@@ -10,6 +10,25 @@ export interface CreateRelayShareResponse {
   createdAt: string;
 }
 
+export interface RelayShareItemResponse {
+  id: string;
+  shareId: string;
+  displayName: string;
+  contentType: string;
+  sizeBytes: number;
+  encrypted: boolean;
+  expiresAt: string;
+}
+
+export interface RelayShareDownloadResponse {
+  code: string;
+  status: string;
+  downloadPolicy: string;
+  downloadAuthRequired: boolean;
+  expiresAt: string;
+  items: RelayShareItemResponse[];
+}
+
 export class RelayShareApi {
   private apiClient: ApiClient;
 
@@ -44,5 +63,26 @@ export class RelayShareApi {
       response.downloadUrl = `${this.apiClient.getBaseUrl()}${response.downloadUrl}`;
     }
     return response;
+  }
+
+  async revokeShare(shareId: string): Promise<void> {
+    await this.apiClient.delete(`/api/shares/${shareId}`);
+  }
+
+  async extendShare(shareId: string, expireHours: number): Promise<CreateRelayShareResponse> {
+    const body = JSON.stringify({
+      expireHours: expireHours
+    });
+    const responseText = await this.apiClient.postJson(`/api/shares/${shareId}/expiry`, body);
+    const response = JSON.parse(responseText) as CreateRelayShareResponse;
+    if (response.downloadUrl.startsWith('/')) {
+      response.downloadUrl = `${this.apiClient.getBaseUrl()}${response.downloadUrl}`;
+    }
+    return response;
+  }
+
+  async getShareByCode(code: string): Promise<RelayShareDownloadResponse> {
+    const responseText = await this.apiClient.get(`/api/shares/${code}`);
+    return JSON.parse(responseText) as RelayShareDownloadResponse;
   }
 }

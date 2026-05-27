@@ -6,6 +6,7 @@ import { relaySourceService } from '../services/relay';
 import { relayHealthService } from '../services/relay';
 import { scanDispatchService } from '../services/scan';
 import { settingsService } from '../services/settings';
+import { courseDropFileStore, localFileIndexRepository } from '../services/local';
 import type { CachePolicy } from '../services/settings';
 
 export type { CachePolicy } from '../services/settings';
@@ -19,6 +20,9 @@ export class SettingsViewModel {
   cachePolicy: CachePolicy = this.settings.cachePolicy;
   lastActionText: string = '';
   localIdentity: LocalIdentity | undefined = identityService.getLocalIdentity();
+  lastScannedShareCode: string = '';
+  accountUsername: string = '';
+  passwordLoginEnabled: boolean = false;
 
   reloadRelayServers(): RelayServerConfig[] {
     this.relayServers = relaySourceService.listRelayServers();
@@ -131,10 +135,56 @@ export class SettingsViewModel {
     this.lastActionText = '连接策略已更新';
   }
 
+  async createAccount(username: string, password: string, passwordLoginEnabled: boolean): Promise<void> {
+    const normalizedUsername = username.trim();
+    if (normalizedUsername.length === 0) {
+      this.lastActionText = '请输入账号名';
+      return;
+    }
+    try {
+      const account = await identityService.createAccount(normalizedUsername, password, passwordLoginEnabled);
+      this.localIdentity = identityService.getLocalIdentity();
+      this.accountUsername = account.username;
+      this.passwordLoginEnabled = account.passwordLoginEnabled;
+      this.lastActionText = `账号已创建并绑定本机：${account.username}`;
+    } catch (error) {
+      this.lastActionText = `创建账号失败：${String(error)}`;
+    }
+  }
+
+  async updateAccountSecurity(passwordLoginEnabled: boolean): Promise<void> {
+    try {
+      const account = await identityService.updateAccountSecurity(passwordLoginEnabled);
+      this.passwordLoginEnabled = account.passwordLoginEnabled;
+      this.lastActionText = account.passwordLoginEnabled ? '账号密码登录已开启' : '账号密码登录已关闭';
+    } catch (error) {
+      this.lastActionText = `更新账号安全失败：${String(error)}`;
+    }
+  }
+
+  getLibraryRoot(): string {
+    return courseDropFileStore.libraryRoot();
+  }
+
+  getIncomingRoot(): string {
+    return courseDropFileStore.incomingRoot();
+  }
+
+  getLocalIndexCount(): number {
+    return localFileIndexRepository.list().length;
+  }
+
+  getRelaySourceCount(): number {
+    return this.relayServers.length;
+  }
+
   async handleScannedText(rawText: string): Promise<void> {
     try {
       const result = await scanDispatchService.dispatch(rawText);
       this.lastActionText = result.message;
+      if (result.payload.type === 'SHARE') {
+        this.lastScannedShareCode = result.payload.code;
+      }
     } catch (error) {
       this.lastActionText = `扫码处理失败：${String(error)}`;
     }

@@ -33,4 +33,5 @@ export interface RelayDownloadResult {
   localUri: string;
   displayName: string;
   sizeBytes: number;
+  contentType: string;
 }

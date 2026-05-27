@@ -1,12 +1,18 @@
 import { AppColors, AppRadius, AppSize, AppSpacing, AppTypography } from '../../common/Theme';
 import { TransferItem } from '../../models/TransferItem';
 import { TransferItemType } from '../../models/CommonTypes';
-import { FileTypeColors } from '../../pages/SharePage';
 import { CdPanel } from '../common/CdPanel';
+import { CdIconButton } from '../common/CdIconButton';
+
+export interface ShareDraftFileTypeColors {
+  main: string;
+  bg: string;
+}
 
 @Component
 export struct CdShareDraftList {
   items: TransferItem[] = [];
+  onRemoveItem: (itemId: string) => void = () => {};
 
   private formatSize(sizeBytes: number): string {
     if (sizeBytes < 1024) return `${sizeBytes} B`;
@@ -28,7 +34,7 @@ export struct CdShareDraftList {
     return $r('app.media.cd_icon_file');
   }
 
-  private typeColors(type: TransferItemType): FileTypeColors {
+  private typeColors(type: TransferItemType): ShareDraftFileTypeColors {
     if (type === 'IMAGE') return { main: AppColors.TONE_IMAGE, bg: AppColors.TONE_IMAGE_BG };
     if (type === 'TEXT') return { main: AppColors.TONE_TEXT, bg: AppColors.TONE_TEXT_BG };
     if (type === 'LINK') return { main: AppColors.TONE_LINK, bg: AppColors.TONE_LINK_BG };
@@ -89,6 +95,16 @@ export struct CdShareDraftList {
               }
               .layoutWeight(1)
               .alignItems(HorizontalAlign.Start)
+
+              if (item.remoteItemId === undefined || item.remoteItemId.length === 0) {
+                CdIconButton({
+                  icon: $r('app.media.cd_icon_close'),
+                  variant: 'plain',
+                  onTap: () => {
+                    this.onRemoveItem(item.id);
+                  }
+                })
+              }
             }
             .width('100%')
             .padding({ top: AppSpacing.MD, bottom: AppSpacing.MD })

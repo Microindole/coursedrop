@@ -4,11 +4,13 @@ import { LocalFileIndexRepository } from '../local/LocalFileIndexRepository';
 import { CourseDropFileStore } from '../local/CourseDropFileStore';
 import { RelayTransferApi } from './RelayTransferApi';
 import { TransferTaskService } from './TransferTaskService';
+import { FileTypeResolver } from '../file/FileTypeResolver';
 
 export interface UploadLocalFileCommand {
   shareId: string;
   localFileId: string;
   encrypted: boolean;
+  onUploaded?: (remoteItemId: string, remoteUrl: string, expiresAt: string) => void;
 }
 
 export interface DownloadShareItemCommand {
@@ -30,6 +32,7 @@ export class DefaultTransferService implements TransferService {
   private transferApi: RelayTransferApi;
   private fileIndexRepository: LocalFileIndexRepository;
   private fileStore: CourseDropFileStore;
+  private fileTypeResolver: FileTypeResolver = new FileTypeResolver();
 
   constructor(
     taskService: TransferTaskService,
@@ -48,13 +51,16 @@ export class DefaultTransferService implements TransferService {
     const task = this.taskService.createTask(file.id, 'UPLOAD', 'RELAY', command.shareId);
     this.taskService.start(task.id);
     try {
-      await this.transferApi.uploadShareItem({
+      const response = await this.transferApi.uploadShareItem({
         shareId: command.shareId,
         localUri: file.localUri,
         displayName: file.displayName,
         contentType: file.contentType,
         encrypted: command.encrypted
       });
+      if (command.onUploaded !== undefined) {
+        command.onUploaded(response.id, '', '');
+      }
       file.remoteCached = true;
       file.shareCount = file.shareCount + 1;
       file.lastSharedAt = new Date().toISOString();
@@ -69,12 +75,23 @@ export class DefaultTransferService implements TransferService {
     const task = this.taskService.createTask(command.itemId, 'DOWNLOAD', 'RELAY');
     this.taskService.start(task.id);
     try {
-      await this.transferApi.downloadShareItem({
+      const result = await this.transferApi.downloadShareItem({
         code: command.code,
         itemId: command.itemId,
         targetDirectory: this.fileStore.incomingRoot(),
         fingerprintId: command.fingerprintId,
         accountId: command.accountId
+      });
+      this.fileIndexRepository.save({
+        id: `download-${Date.now()}`,
+        displayName: result.displayName,
+        type: this.fileTypeResolver.resolve(result.contentType, result.displayName),
+        contentType: result.contentType,
+        sizeBytes: result.sizeBytes,
+        localUri: result.localUri,
+        shareCount: 0,
+        remoteCached: false,
+        encrypted: false
       });
       return this.taskService.complete(task.id);
     } catch (error) {

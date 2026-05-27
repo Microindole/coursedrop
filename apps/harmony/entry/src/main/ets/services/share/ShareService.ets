@@ -21,8 +21,11 @@ export interface ShareService {
   getStats(): TransferStats;
   refreshShareCode(sessionId: string): ShareOperationResult;
   createRelayShare(sessionId: string, expireHours: number, downloadPolicy: string): Promise<ShareOperationResult>;
-  revokeShare(sessionId: string): ShareOperationResult;
+  revokeShare(sessionId: string): Promise<ShareOperationResult>;
+  extendShare(sessionId: string, expireHours: number): Promise<ShareOperationResult>;
   addLocalItem(sessionId: string, type: TransferItemType): ShareOperationResult;
   attachLocalFile(sessionId: string, localFileId: string): ShareOperationResult;
+  removeDraftItem(sessionId: string, itemId: string): ShareOperationResult;
+  clearDraft(sessionId: string): ShareOperationResult;
   markItemUploaded(sessionId: string, itemId: string, remoteItemId: string, remoteUrl: string, expiresAt: string): ShareOperationResult;
 }

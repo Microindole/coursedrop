@@ -8,7 +8,9 @@ export struct CdShareControlCenter {
   @Link currentSession: ShareSession;
   @Prop loading: boolean = false;
   @Prop expireText: string = '';
+  @Prop qrImageUrl: string = '';
   onRevoke: () => void = () => {};
+  onExtend: () => void = () => {};
   onCopy: () => void = () => {};
   onCreate: () => void = () => {};
 
@@ -40,15 +42,6 @@ export struct CdShareControlCenter {
           .layoutWeight(1)
           .alignItems(HorizontalAlign.Start)
 
-          if (this.currentSession.shareUrl.length > 0) {
-            CdButton({
-              label: '撤销分享',
-              variant: 'danger',
-              onTap: () => {
-                this.onRevoke();
-              }
-            })
-          }
         }
         .width('100%')
         .alignItems(VerticalAlign.Center)
@@ -75,6 +68,32 @@ export struct CdShareControlCenter {
         }
 
         if (this.currentSession.shareUrl.length > 0) {
+          Column({ space: AppSpacing.SM }) {
+            Text('扫码下载')
+              .fontSize(11)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(AppColors.TEXT_SECONDARY)
+
+            if (this.qrImageUrl.length > 0) {
+              Image(this.qrImageUrl)
+                .width(160)
+                .height(160)
+                .objectFit(ImageFit.Contain)
+            } else {
+              Text(this.currentSession.shareUrl)
+                .fontSize(AppTypography.CAPTION)
+                .fontColor(AppColors.TEXT_SECONDARY)
+                .textAlign(TextAlign.Center)
+                .maxLines(3)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+            }
+          }
+          .width('100%')
+          .padding(AppSpacing.MD)
+          .backgroundColor(AppColors.SURFACE)
+          .border({ width: 1, color: AppColors.BORDER })
+          .borderRadius(AppRadius.MD)
+
           Row({ space: AppSpacing.SM }) {
             Text(this.currentSession.shareUrl)
               .fontSize(AppTypography.BODY_SMALL)
@@ -95,6 +114,29 @@ export struct CdShareControlCenter {
           .padding(AppSpacing.MD)
           .backgroundColor(AppColors.BACKGROUND)
           .borderRadius(AppRadius.MD)
+
+          Row({ space: AppSpacing.SM }) {
+            CdButton({
+              label: '续期 24 小时',
+              variant: 'tonal',
+              interactive: !this.loading,
+              onTap: () => {
+                this.onExtend();
+              }
+            })
+            .layoutWeight(1)
+
+            CdButton({
+              label: '撤回',
+              variant: 'danger',
+              interactive: !this.loading,
+              onTap: () => {
+                this.onRevoke();
+              }
+            })
+            .layoutWeight(1)
+          }
+          .width('100%')
         } else {
           Text('向草稿中添加文件或图片，然后点击“生成提取链接”，服务器将在安全期内托管您的临时文件。')
             .fontSize(AppTypography.BODY_SMALL)

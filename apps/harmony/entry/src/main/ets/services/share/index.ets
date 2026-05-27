@@ -12,6 +12,7 @@ export type { ShareOperationResult, ShareService, TransferStats } from './ShareS
 export { LocalShareService } from './LocalShareService';
 export type { ShareSessionRepository } from './ShareSessionRepository';
 export { LocalShareSessionRepository } from './ShareSessionRepository';
+export type { CreateRelayShareResponse, RelayShareDownloadResponse, RelayShareItemResponse } from './RelayShareApi';
 export { RelayShareApi } from './RelayShareApi';
 export type { TransferTaskRepository } from './TransferTaskRepository';
 export { LocalTransferTaskRepository } from './TransferTaskRepository';

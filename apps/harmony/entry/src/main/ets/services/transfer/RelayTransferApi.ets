@@ -47,7 +47,7 @@ export class HttpRelayTransferApi implements RelayTransferApi {
     if (!this.apiClient.hasBaseUrl()) {
       throw new Error('未配置中转源');
     }
-    const url = `${this.apiClient.getBaseUrl()}/api/files/${request.itemId}/download`;
+    const url = `${this.apiClient.getBaseUrl()}/api/shares/${request.code}/items/${request.itemId}/download`;
     const httpRequest = http.createHttp();
     try {
       const response = await httpRequest.request(url, {
@@ -60,28 +60,8 @@ export class HttpRelayTransferApi implements RelayTransferApi {
         throw new Error(`HTTP ${response.responseCode}`);
       }
 
-      let displayName = `downloaded-${request.itemId}`;
-      let disposition = '';
-      if (response.header !== undefined) {
-        const headerRecord = JSON.parse(JSON.stringify(response.header)) as Record<string, string>;
-        if (headerRecord['content-disposition'] !== undefined) {
-          disposition = headerRecord['content-disposition'];
-        } else if (headerRecord['Content-Disposition'] !== undefined) {
-          disposition = headerRecord['Content-Disposition'];
-        }
-      }
-
-      if (disposition.length > 0) {
-        const matches = disposition.match(/filename\*=UTF-8''(.+)/i);
-        if (matches && matches[1]) {
-          displayName = decodeURIComponent(matches[1]);
-        } else {
-          const legacyMatches = disposition.match(/filename="(.+?)"/i);
-          if (legacyMatches && legacyMatches[1]) {
-            displayName = legacyMatches[1];
-          }
-        }
-      }
+      const displayName = `downloaded-${request.itemId}`;
+      const contentType = 'application/octet-stream';
 
       const buffer = response.result as ArrayBuffer;
       const sizeBytes = buffer.byteLength;
@@ -99,7 +79,8 @@ export class HttpRelayTransferApi implements RelayTransferApi {
       return {
         localUri: fileUri.getUriFromPath(targetPath),
         displayName: displayName,
-        sizeBytes: sizeBytes
+        sizeBytes: sizeBytes,
+        contentType: contentType
       };
     } finally {
       httpRequest.destroy();

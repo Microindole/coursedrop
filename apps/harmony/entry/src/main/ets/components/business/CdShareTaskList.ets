@@ -1,11 +1,13 @@
 import { AppColors, AppSpacing, AppTypography } from '../../common/Theme';
 import { TransferTask } from '../../models/TransferTask';
 import { CdPanel } from '../common/CdPanel';
+import { CdButton } from '../common/CdButton';
 
 @Component
 export struct CdShareTaskList {
   tasks: TransferTask[] = [];
   onGetItemName: (itemId: string) => string = () => '';
+  onRetry: (itemId: string) => void = () => {};
 
   private taskText(task: TransferTask): string {
     if (task.status === 'RUNNING') return '正在上传';
@@ -49,6 +51,15 @@ export struct CdShareTaskList {
                 Text(task.networkMode)
                   .fontSize(AppTypography.CAPTION)
                   .fontColor(AppColors.TEXT_SECONDARY)
+
+                if (task.errorMessage !== undefined && task.errorMessage.length > 0) {
+                  Text(`· ${task.errorMessage}`)
+                    .fontSize(AppTypography.CAPTION)
+                    .fontColor(AppColors.DANGER)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .layoutWeight(1)
+                }
               }
               .width('100%')
 
@@ -57,6 +68,16 @@ export struct CdShareTaskList {
                 .color(AppColors.PRIMARY)
                 .backgroundColor(AppColors.SURFACE_MUTED)
                 .height(6)
+
+              if (task.status === 'FAILED') {
+                CdButton({
+                  label: '重试上传',
+                  variant: 'tonal',
+                  onTap: () => {
+                    this.onRetry(task.itemId);
+                  }
+                })
+              }
             }
             .width('100%')
             .padding({ top: AppSpacing.MD, bottom: AppSpacing.MD })

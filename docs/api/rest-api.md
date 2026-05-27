@@ -29,6 +29,16 @@ GET /api/health/capabilities
 }
 ```
 
+## 二维码
+
+### 生成通用二维码 SVG
+
+```text
+GET /api/qr?text={url-or-payload}
+```
+
+用于客户端展示分享下载二维码。`text` 最大长度 1024，返回 `image/svg+xml`。
+
 ## 公网分享
 
 ### 创建分享

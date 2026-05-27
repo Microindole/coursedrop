@@ -5,6 +5,8 @@ import { TransferTask } from '../models/TransferTask';
 import { shareService } from '../services/share';
 import { shareDraftWorkflow } from '../services/share';
 import { transferService } from '../services/transfer';
+import { apiClient } from '../services/ApiClient';
+import { clipboardService } from '../services/clipboard';
 
 export class ShareViewModel {
   currentSession: ShareSession = shareService.getCurrentSession();
@@ -41,13 +43,31 @@ export class ShareViewModel {
     return `有效至 ${this.currentSession.expiresAt}`;
   }
 
-  copyShareLink(): string {
+  async copyShareLink(): Promise<string> {
     if (this.currentSession.shareUrl.length === 0) {
       this.lastActionText = '暂无可复制的公网链接';
       return '';
     }
-    this.lastActionText = '分享链接已复制';
+    try {
+      await clipboardService.copyText(this.currentSession.shareUrl);
+      this.lastActionText = '分享链接已复制到剪贴板';
+      this.errorMessage = '';
+    } catch (error) {
+      this.lastActionText = '复制失败';
+      this.errorMessage = String(error);
+    }
     return this.currentSession.shareUrl;
+  }
+
+  getQrPayload(): string {
+    return this.currentSession.shareUrl;
+  }
+
+  getShareQrImageUrl(): string {
+    if (this.currentSession.shareUrl.length === 0 || !apiClient.hasBaseUrl()) {
+      return '';
+    }
+    return `${apiClient.getBaseUrl()}/api/qr?text=${encodeURIComponent(this.currentSession.shareUrl)}`;
   }
 
   async refreshShareCode(): Promise<void> {
@@ -63,10 +83,22 @@ export class ShareViewModel {
     this.loading = false;
   }
 
-  revokeShare(): void {
-    const result = shareService.revokeShare(this.currentSession.id);
+  async revokeShare(): Promise<void> {
+    this.loading = true;
+    const result = await shareService.revokeShare(this.currentSession.id);
     this.currentSession = shareService.getCurrentSession();
     this.lastActionText = result.message;
+    this.errorMessage = result.success ? '' : result.message;
+    this.loading = false;
+  }
+
+  async extendShare(): Promise<void> {
+    this.loading = true;
+    const result = await shareService.extendShare(this.currentSession.id, 24);
+    this.currentSession = shareService.getCurrentSession();
+    this.lastActionText = result.message;
+    this.errorMessage = result.success ? '' : result.message;
+    this.loading = false;
   }
 
   async addLocalItem(type: TransferItemType): Promise<void> {
@@ -76,6 +108,41 @@ export class ShareViewModel {
     this.errorMessage = result.success ? '' : result.message;
   }
 
+  removeDraftItem(itemId: string): void {
+    const result = shareService.removeDraftItem(this.currentSession.id, itemId);
+    this.currentSession = shareService.getCurrentSession();
+    this.lastActionText = result.message;
+    this.errorMessage = result.success ? '' : result.message;
+  }
+
+  clearDraft(): void {
+    const result = shareService.clearDraft(this.currentSession.id);
+    this.currentSession = shareService.getCurrentSession();
+    this.lastActionText = result.message;
+    this.errorMessage = result.success ? '' : result.message;
+  }
+
+  async retryUpload(itemId: string): Promise<void> {
+    this.loading = true;
+    try {
+      await transferService.uploadLocalFile({
+        shareId: this.currentSession.id,
+        localFileId: itemId,
+        encrypted: false,
+        onUploaded: (remoteItemId: string, remoteUrl: string, expiresAt: string) => {
+          shareService.markItemUploaded(this.currentSession.id, itemId, remoteItemId, remoteUrl, expiresAt);
+        }
+      });
+      this.lastActionText = '上传任务已重试';
+      this.errorMessage = '';
+    } catch (error) {
+      this.lastActionText = '上传重试失败';
+      this.errorMessage = String(error);
+    }
+    this.currentSession = shareService.getCurrentSession();
+    this.loading = false;
+  }
+
   private async uploadCurrentItems(): Promise<void> {
     for (let index = 0; index < this.currentSession.items.length; index += 1) {
       const item = this.currentSession.items[index];
@@ -83,7 +150,10 @@ export class ShareViewModel {
         await transferService.uploadLocalFile({
           shareId: this.currentSession.id,
           localFileId: item.id,
-          encrypted: false
+          encrypted: false,
+          onUploaded: (remoteItemId: string, remoteUrl: string, expiresAt: string) => {
+            shareService.markItemUploaded(this.currentSession.id, item.id, remoteItemId, remoteUrl, expiresAt);
+          }
         });
       }
     }

@@ -14,3 +14,10 @@ export interface LocalIdentity {
   deviceName: string;
   accountId: string;
 }
+
+export interface AccountResponse {
+  id: string;
+  username: string;
+  passwordLoginEnabled: boolean;
+  createdAt: string;
+}

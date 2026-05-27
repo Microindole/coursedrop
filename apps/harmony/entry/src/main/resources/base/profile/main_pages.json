@@ -1,6 +1,7 @@
 {
   "src": [
     "pages/HomePage",
-    "pages/RelaySourcePage"
+    "pages/RelaySourcePage",
+    "pages/ShareDownloadPage"
   ]
 }

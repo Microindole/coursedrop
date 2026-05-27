@@ -11,15 +11,9 @@ import {
   CdShareDraftList,
   CdShareTaskList
 } from '../components/index';
-import { TransferItem } from '../models/TransferItem';
 import { TransferTask } from '../models/TransferTask';
 import { ShareSession } from '../models/ShareSession';
 import { ShareViewModel } from '../viewmodels/ShareViewModel';
-
-export interface FileTypeColors {
-  main: string;
-  bg: string;
-}
 
 @Component
 export default struct SharePage {
@@ -71,15 +65,23 @@ export default struct SharePage {
           currentSession: $currentSession,
           loading: this.loading,
           expireText: this.viewModel.getExpireText(),
+          qrImageUrl: this.viewModel.getShareQrImageUrl(),
           onRevoke: () => {
-            this.viewModel.revokeShare();
-            this.syncState();
+            this.loading = true;
+            this.viewModel.revokeShare().then(() => {
+              this.syncState();
+            });
+          },
+          onExtend: () => {
+            this.loading = true;
+            this.viewModel.extendShare().then(() => {
+              this.syncState();
+            });
           },
           onCopy: () => {
-            const link = this.viewModel.copyShareLink();
-            if (link.length > 0) {
+            this.viewModel.copyShareLink().then(() => {
               this.syncState();
-            }
+            });
           },
           onCreate: () => {
             this.loading = true;
@@ -92,10 +94,25 @@ export default struct SharePage {
         // 添加草稿操作区域
         CdPanel() {
           Column({ space: AppSpacing.MD }) {
-            Text('添加内容至分享草稿')
-              .fontSize(AppTypography.BODY)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.TEXT)
+            Row() {
+              Text('添加内容至分享草稿')
+                .fontSize(AppTypography.BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.TEXT)
+                .layoutWeight(1)
+
+              if (this.currentSession.items.length > 0 && this.currentSession.shareUrl.length === 0) {
+                Text('清空')
+                  .fontSize(AppTypography.BODY_SMALL)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(AppColors.DANGER)
+                  .onClick(() => {
+                    this.viewModel.clearDraft();
+                    this.syncState();
+                  })
+              }
+            }
+            .width('100%')
 
             Row({ space: AppSpacing.MD }) {
               CdButton({
@@ -130,7 +147,11 @@ export default struct SharePage {
 
         // 分享草稿列表
         CdShareDraftList({
-          items: this.currentSession.items
+          items: this.currentSession.items,
+          onRemoveItem: (itemId: string) => {
+            this.viewModel.removeDraftItem(itemId);
+            this.syncState();
+          }
         })
 
         // 上传任务进度列表
@@ -138,6 +159,12 @@ export default struct SharePage {
           tasks: this.tasks,
           onGetItemName: (itemId) => {
             return this.viewModel.getItemName(itemId);
+          },
+          onRetry: (itemId: string) => {
+            this.loading = true;
+            this.viewModel.retryUpload(itemId).then(() => {
+              this.syncState();
+            });
           }
         })
       }

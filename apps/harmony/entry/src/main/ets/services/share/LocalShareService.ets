@@ -102,8 +102,18 @@ export class LocalShareService implements ShareService {
     }
   }
 
-  revokeShare(sessionId: string): ShareOperationResult {
+  async revokeShare(sessionId: string): Promise<ShareOperationResult> {
     const session = this.findSession(sessionId);
+    if (session.status === 'ACTIVE') {
+      try {
+        await this.relayShareApi.revokeShare(session.id);
+      } catch (error) {
+        return {
+          success: false,
+          message: `撤回失败：${String(error)}`
+        };
+      }
+    }
     session.status = 'REVOKED';
     session.expireStatus = 'EXPIRED';
     this.sessionRepository.save(session);
@@ -111,6 +121,36 @@ export class LocalShareService implements ShareService {
       success: true,
       message: '分享已撤回'
     };
+  }
+
+  async extendShare(sessionId: string, expireHours: number): Promise<ShareOperationResult> {
+    const session = this.findSession(sessionId);
+    if (session.status !== 'ACTIVE') {
+      return {
+        success: false,
+        message: '只有已创建的公网分享可以续期'
+      };
+    }
+    try {
+      const response = await this.relayShareApi.extendShare(session.id, expireHours);
+      session.expiresAt = response.expiresAt;
+      session.expireStatus = 'ACTIVE';
+      session.downloadPolicy = response.downloadPolicy === 'OWNER_ONLY' ? 'OWNER_ONLY' :
+        response.downloadPolicy === 'PUBLIC' ? 'PUBLIC' : 'LOGIN_REQUIRED';
+      if (response.downloadUrl.length > 0) {
+        session.shareUrl = response.downloadUrl;
+      }
+      this.sessionRepository.save(session);
+      return {
+        success: true,
+        message: '分享已续期'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `续期失败：${String(error)}`
+      };
+    }
   }
 
   addLocalItem(_sessionId: string, _type: TransferItemType): ShareOperationResult {
@@ -145,6 +185,52 @@ export class LocalShareService implements ShareService {
     return {
       success: true,
       message: '已加入分享草稿'
+    };
+  }
+
+  removeDraftItem(sessionId: string, itemId: string): ShareOperationResult {
+    const session = this.findSession(sessionId);
+    const item = session.items.find((next) => next.id === itemId);
+    if (item === undefined) {
+      return {
+        success: false,
+        message: '分享项不存在'
+      };
+    }
+    if (item.remoteItemId !== undefined && item.remoteItemId.length > 0) {
+      return {
+        success: false,
+        message: '已上传的分享项暂不支持从客户端单独删除'
+      };
+    }
+    session.items = session.items.filter((next) => next.id !== itemId);
+    session.itemCount = session.items.length;
+    session.totalSizeBytes = this.sumItemSize(session.items);
+    session.title = session.itemCount === 0 ? '新的 CourseDrop 分享' :
+      session.itemCount === 1 ? session.items[0].displayName : `${session.itemCount} 个文件`;
+    this.sessionRepository.save(session);
+    return {
+      success: true,
+      message: '已从草稿移除'
+    };
+  }
+
+  clearDraft(sessionId: string): ShareOperationResult {
+    const session = this.findSession(sessionId);
+    if (session.status === 'ACTIVE') {
+      return {
+        success: false,
+        message: '已创建的公网分享不能直接清空草稿，请先撤回'
+      };
+    }
+    session.items = [];
+    session.itemCount = 0;
+    session.totalSizeBytes = 0;
+    session.title = '新的 CourseDrop 分享';
+    this.sessionRepository.save(session);
+    return {
+      success: true,
+      message: '分享草稿已清空'
     };
   }
 
@@ -196,5 +282,13 @@ export class LocalShareService implements ShareService {
       expiresAt: '',
       encrypted: file.encrypted
     };
+  }
+
+  private sumItemSize(items: TransferItem[]): number {
+    let total = 0;
+    for (let index = 0; index < items.length; index += 1) {
+      total += items[index].sizeBytes;
+    }
+    return total;
   }
 }

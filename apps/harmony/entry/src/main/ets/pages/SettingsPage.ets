@@ -25,6 +25,9 @@ export default struct SettingsPage {
   @State actionText: string = '连接策略设置';
   @State loginCode: string = '';
   @State scannedText: string = '';
+  @State accountUsername: string = '';
+  @State accountPassword: string = '';
+  @State accountPasswordLoginEnabled: boolean = false;
 
   aboutToAppear() {
     this.syncSettings();
@@ -35,6 +38,7 @@ export default struct SettingsPage {
     this.lanFirstEnabled = this.viewModel.lanFirstEnabled;
     this.expireOption = this.viewModel.defaultExpireHours;
     this.cachePolicy = this.viewModel.cachePolicy;
+    this.accountPasswordLoginEnabled = this.viewModel.passwordLoginEnabled;
     this.actionText = this.viewModel.lastActionText.length > 0 ? this.viewModel.lastActionText : '配置信息已同步';
   }
 
@@ -141,6 +145,62 @@ export default struct SettingsPage {
           .width('100%')
         }
 
+        CdSectionHeader({ title: '账号安全' })
+
+        CdPanel({ hasShadow: true }) {
+          Column({ space: AppSpacing.MD }) {
+            CdInfoRow({
+              title: '账号绑定',
+              value: this.viewModel.localIdentity === undefined || this.viewModel.localIdentity.accountId.length === 0 ?
+                '未创建账号，默认使用本机指纹扫码' : this.viewModel.localIdentity.accountId,
+              mark: 'ACC'
+            })
+
+            CdTextField({
+              label: '账号名',
+              placeholder: '用于可选的网页登录',
+              value: $accountUsername
+            })
+
+            CdTextField({
+              label: '密码',
+              placeholder: '开启账号密码登录时使用',
+              value: $accountPassword
+            })
+
+            CdSwitchRow({
+              title: '允许账号密码登录',
+              description: '默认推荐扫码登录；开启后电脑浏览器可输入账号密码',
+              isOn: $accountPasswordLoginEnabled,
+              onChange: (enabled: boolean) => {
+                this.accountPasswordLoginEnabled = enabled;
+                if (this.viewModel.localIdentity !== undefined && this.viewModel.localIdentity.accountId.length > 0) {
+                  this.viewModel.updateAccountSecurity(enabled).then(() => {
+                    this.syncSettings();
+                  });
+                }
+              }
+            })
+
+            CdButton({
+              label: '创建账号并绑定本机',
+              variant: 'tonal',
+              onTap: () => {
+                this.viewModel.createAccount(
+                  this.accountUsername,
+                  this.accountPassword,
+                  this.accountPasswordLoginEnabled
+                ).then(() => {
+                  this.accountPassword = '';
+                  this.syncSettings();
+                });
+              }
+            })
+            .width('100%')
+          }
+          .width('100%')
+        }
+
         // 扫码调试面板
         CdSectionHeader({ title: '扫码数据解析调试' })
 
@@ -160,6 +220,21 @@ export default struct SettingsPage {
               }
             })
             .width('100%')
+
+            if (this.viewModel.lastScannedShareCode.length > 0) {
+              CdButton({
+                label: '打开识别到的分享',
+                onTap: () => {
+                  router.pushUrl({
+                    url: 'pages/ShareDownloadPage',
+                    params: {
+                      code: this.viewModel.lastScannedShareCode
+                    }
+                  });
+                }
+              })
+              .width('100%')
+            }
           }
           .width('100%')
         }
@@ -193,6 +268,37 @@ export default struct SettingsPage {
           .onClick(() => {
             router.pushUrl({ url: 'pages/RelaySourcePage' });
           })
+        }
+
+        CdSectionHeader({ title: '诊断信息' })
+
+        CdPanel({ hasShadow: false }) {
+          Column({ space: AppSpacing.MD }) {
+            CdInfoRow({
+              title: '本地库目录',
+              value: this.viewModel.getLibraryRoot().length === 0 ? '应用目录尚未初始化' : this.viewModel.getLibraryRoot(),
+              mark: 'LIB'
+            })
+
+            CdInfoRow({
+              title: '下载接收目录',
+              value: this.viewModel.getIncomingRoot().length === 0 ? '应用目录尚未初始化' : this.viewModel.getIncomingRoot(),
+              mark: 'IN'
+            })
+
+            CdInfoRow({
+              title: '索引数量',
+              value: `${this.viewModel.getLocalIndexCount()} 项`,
+              mark: 'DB'
+            })
+
+            CdInfoRow({
+              title: '中转源数量',
+              value: `${this.viewModel.getRelaySourceCount()} 个`,
+              mark: 'SRC'
+            })
+          }
+          .width('100%')
         }
 
         // 安全
