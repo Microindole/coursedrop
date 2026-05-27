@@ -40,8 +40,9 @@
 - `main` 分支命中 `apps/harmony/**` 或相关 CI 文件时自动构建 `dev` 版本
 - `dev` release 每次都会删除旧 release、移动 `dev` tag，并重新上传 HAP
 - tag 推送会按 tag 名创建对应版本 release
-- 需要配置仓库 secret `HARMONY_COMMANDLINE_TOOLS_URL`，值为可下载的 HarmonyOS command-line-tools zip
-- workflow 会从该 zip 中加入 `ohpm`、`hvigorw` 和 SDK 路径，再执行 HAP 构建
+- 默认从本仓库 `harmony-toolchain` release 下载 `harmony-command-line-tools-linux.zip`
+- 如需覆盖下载源，可配置仓库 secret `HARMONY_COMMANDLINE_TOOLS_URL`
+- workflow 会递归查找 zip 中的 `ohpm`、`hvigorw`/`hvigor` 和 SDK 路径，再执行 HAP 构建
 
 ## Composite Actions
 

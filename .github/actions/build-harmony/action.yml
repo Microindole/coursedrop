@@ -1,5 +1,5 @@
 name: Build Harmony Client
-description: Build the HarmonyOS ArkTS client with an existing DevEco/Harmony toolchain.
+description: Build the HarmonyOS ArkTS client with a downloaded DevEco/Harmony command-line toolchain.
 
 inputs:
   working-directory:
@@ -7,9 +7,17 @@ inputs:
     required: false
     default: apps/harmony
   command-line-tools-url:
-    description: URL of a HarmonyOS command-line tools zip. Required on GitHub-hosted runners.
+    description: Optional direct URL of a HarmonyOS command-line tools zip.
     required: false
     default: ''
+  toolchain-release-tag:
+    description: Release tag containing the HarmonyOS command-line tools zip.
+    required: false
+    default: harmony-toolchain
+  toolchain-asset-name:
+    description: Release asset name for the HarmonyOS command-line tools zip.
+    required: false
+    default: harmony-command-line-tools-linux.zip
   build-command:
     description: Command used to build the HAP.
     required: false
@@ -23,35 +31,63 @@ runs:
       with:
         node-version: '20'
 
-    - name: Install Harmony command-line tools
-      if: inputs.command-line-tools-url != ''
+    - name: Download Harmony command-line tools
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$RUNNER_TEMP/harmony-tools" "$RUNNER_TEMP/harmony-tools-download"
+        archive="$RUNNER_TEMP/harmony-tools-download/${{ inputs.toolchain-asset-name }}"
+        if [[ -n "${{ inputs.command-line-tools-url }}" ]]; then
+          curl -fL "${{ inputs.command-line-tools-url }}" -o "$archive"
+        else
+          gh release download "${{ inputs.toolchain-release-tag }}" \
+            --pattern "${{ inputs.toolchain-asset-name }}" \
+            --dir "$RUNNER_TEMP/harmony-tools-download" \
+            --clobber
+        fi
+        unzip -q "$archive" -d "$RUNNER_TEMP/harmony-tools"
+
+    - name: Add Harmony command-line tools to PATH
       shell: bash
       run: |
         set -euo pipefail
-        mkdir -p "$RUNNER_TEMP/harmony-tools"
-        curl -fL "${{ inputs.command-line-tools-url }}" -o "$RUNNER_TEMP/harmony-tools/command-line-tools.zip"
-        unzip -q "$RUNNER_TEMP/harmony-tools/command-line-tools.zip" -d "$RUNNER_TEMP/harmony-tools"
-        tools_dir="$(find "$RUNNER_TEMP/harmony-tools" -type f -path '*/bin/ohpm' -print -quit | sed 's#/bin/ohpm$##')"
-        if [[ -z "$tools_dir" ]]; then
-          echo "The downloaded archive must contain a command-line-tools directory."
+        tools_root="$RUNNER_TEMP/harmony-tools"
+        echo "Extracted toolchain layout:"
+        find "$tools_root" -maxdepth 4 -type f \( -name ohpm -o -name hvigor -o -name hvigorw \) -print | sort
+
+        mapfile -t tool_dirs < <(
+          find "$tools_root" -type f \( -name ohpm -o -name hvigor -o -name hvigorw \) -print \
+            | xargs -r -n 1 dirname \
+            | sort -u
+        )
+        if [[ "${#tool_dirs[@]}" -eq 0 ]]; then
+          echo "No ohpm/hvigor/hvigorw executable found in the command-line tools zip."
           exit 1
         fi
-        echo "$tools_dir/bin" >> "$GITHUB_PATH"
-        echo "$tools_dir/hvigor/bin" >> "$GITHUB_PATH"
-        echo "$tools_dir/ohpm/bin" >> "$GITHUB_PATH"
-        echo "HOS_SDK_HOME=$tools_dir/sdk" >> "$GITHUB_ENV"
-        echo "DEVECO_SDK_HOME=$tools_dir/sdk" >> "$GITHUB_ENV"
+
+        find "$tools_root" -type f \( -name ohpm -o -name hvigor -o -name hvigorw \) -exec chmod +x {} +
+        for dir in "${tool_dirs[@]}"; do
+          echo "$dir" >> "$GITHUB_PATH"
+        done
+
+        sdk_dir="$(find "$tools_root" -type d -name sdk -print -quit)"
+        if [[ -n "$sdk_dir" ]]; then
+          echo "HOS_SDK_HOME=$sdk_dir" >> "$GITHUB_ENV"
+          echo "DEVECO_SDK_HOME=$sdk_dir" >> "$GITHUB_ENV"
+        fi
 
     - name: Require Harmony command-line tools
       shell: bash
       run: |
         set -euo pipefail
         if ! command -v ohpm >/dev/null 2>&1; then
-          echo "Missing ohpm. Provide a command-line tools zip through command-line-tools-url."
+          echo "Missing ohpm after extracting the Harmony command-line tools zip."
           exit 1
         fi
         if ! command -v hvigorw >/dev/null 2>&1 && ! command -v hvigor >/dev/null 2>&1; then
-          echo "Missing hvigorw/hvigor. Provide a command-line tools zip through command-line-tools-url."
+          echo "Missing hvigorw/hvigor after extracting the Harmony command-line tools zip."
           exit 1
         fi
 

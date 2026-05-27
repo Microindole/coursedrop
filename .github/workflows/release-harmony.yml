@@ -54,6 +54,8 @@ jobs:
         with:
           working-directory: apps/harmony
           command-line-tools-url: ${{ secrets.HARMONY_COMMANDLINE_TOOLS_URL }}
+          toolchain-release-tag: harmony-toolchain
+          toolchain-asset-name: harmony-command-line-tools-linux.zip
 
       - name: Stage HAP artifact
         shell: pwsh
