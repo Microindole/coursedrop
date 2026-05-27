@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.coursedrop.server.dto.AccountLoginRequest;
 import com.coursedrop.server.dto.AccountRequest;
 import com.coursedrop.server.dto.AccountResponse;
 import com.coursedrop.server.dto.AccountSecurityRequest;
@@ -42,6 +43,11 @@ public class IdentityController {
     @PostMapping("/accounts")
     public AccountResponse createAccount(@Valid @RequestBody AccountRequest request) {
         return identityService.createAccount(request);
+    }
+
+    @PostMapping("/accounts/login")
+    public AccountResponse loginAccount(@Valid @RequestBody AccountLoginRequest request) {
+        return identityService.loginAccount(request);
     }
 
     @GetMapping("/accounts/{accountId}")

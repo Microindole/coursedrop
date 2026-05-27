@@ -73,6 +73,27 @@ export class IdentityService {
     return response;
   }
 
+  async loginAccount(username: string, password: string): Promise<AccountResponse> {
+    const identity = this.repository.get();
+    if (identity === undefined || identity.fingerprintId.length === 0) {
+      throw new Error('请先注册本机身份');
+    }
+    const body = JSON.stringify({
+      username: username,
+      password: password,
+      fingerprintId: identity.fingerprintId
+    });
+    const responseText = await this.apiClient.postJson('/api/accounts/login', body);
+    const response = JSON.parse(responseText) as AccountResponse;
+    this.repository.save({
+      fingerprint: identity.fingerprint,
+      fingerprintId: identity.fingerprintId,
+      deviceName: identity.deviceName,
+      accountId: response.id
+    });
+    return response;
+  }
+
   async updateAccountSecurity(passwordLoginEnabled: boolean): Promise<AccountResponse> {
     const identity = this.repository.get();
     if (identity === undefined || identity.accountId.length === 0) {

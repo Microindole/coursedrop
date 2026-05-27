@@ -159,6 +159,33 @@ POST /api/accounts
 
 账号创建发生在手机端安全设置中。创建后，当前手机设备指纹绑定到账号。默认仍可继续扫码登录；只有用户允许账号密码登录后，Web 才能使用账号密码登录。
 
+如果账号名已存在，服务端返回 `409 Conflict`。App 不应继续重复创建，而应引导用户走“登录已有账号并绑定本机”。
+
+### 登录已有账号并绑定当前手机指纹
+
+```text
+POST /api/accounts/login
+```
+
+请求体：
+
+```json
+{
+  "username": "alice",
+  "password": "secret",
+  "fingerprintId": "device-fingerprint-id"
+}
+```
+
+该接口只给 CourseDrop App 使用，用于“我已经有账号，现在把这台手机/模拟器绑定进账号”。服务端会校验：
+
+- 账号存在且密码正确。
+- 账号已开启 `passwordLoginEnabled`。
+- `fingerprintId` 已注册。
+- 当前指纹没有绑定到其他账号。
+
+校验通过后，服务端把当前设备指纹绑定到该账号并返回 `AccountResponse`。如果账号未开启账号密码登录，返回 `403 Forbidden`；如果账号或密码错误，返回 `401 Unauthorized`；如果指纹已绑定其他账号，返回 `409 Conflict`。
+
 ### 账号安全设置
 
 ```text

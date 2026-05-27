@@ -150,7 +150,33 @@ export class SettingsViewModel {
       this.passwordLoginEnabled = account.passwordLoginEnabled;
       this.lastActionText = `账号已创建并绑定本机：${account.username}`;
     } catch (error) {
-      this.lastActionText = `创建账号失败：${String(error)}`;
+      const message = String(error);
+      if (message.indexOf('409') >= 0 || message.indexOf('Username already exists') >= 0) {
+        this.lastActionText = '账号已存在，请使用“登录已有账号并绑定本机”';
+        return;
+      }
+      this.lastActionText = `创建账号失败：${message}`;
+    }
+  }
+
+  async loginAccount(username: string, password: string): Promise<void> {
+    const normalizedUsername = username.trim();
+    if (normalizedUsername.length === 0) {
+      this.lastActionText = '请输入账号名';
+      return;
+    }
+    if (password.length === 0) {
+      this.lastActionText = '请输入账号密码';
+      return;
+    }
+    try {
+      const account = await identityService.loginAccount(normalizedUsername, password);
+      this.localIdentity = identityService.getLocalIdentity();
+      this.accountUsername = account.username;
+      this.passwordLoginEnabled = account.passwordLoginEnabled;
+      this.lastActionText = `已登录账号并绑定本机：${account.username}`;
+    } catch (error) {
+      this.lastActionText = `登录账号失败：${String(error)}`;
     }
   }
 

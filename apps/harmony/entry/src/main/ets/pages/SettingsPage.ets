@@ -202,6 +202,20 @@ export default struct SettingsPage {
               }
             })
             .width('100%')
+
+            CdButton({
+              label: '登录已有账号并绑定本机',
+              onTap: () => {
+                this.viewModel.loginAccount(
+                  this.accountUsername,
+                  this.accountPassword
+                ).then(() => {
+                  this.accountPassword = '';
+                  this.syncSettings();
+                });
+              }
+            })
+            .width('100%')
           }
           .width('100%')
         }

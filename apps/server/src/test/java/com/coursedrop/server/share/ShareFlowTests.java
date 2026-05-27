@@ -388,6 +388,118 @@ class ShareFlowTests {
     }
 
     @Test
+    void appCanLoginExistingAccountAndBindCurrentFingerprint() throws Exception {
+        var suffix = Long.toString(System.nanoTime());
+        var primaryFingerprint = "test-device-account-login-primary-" + suffix;
+        var secondaryFingerprint = "test-device-account-login-secondary-" + suffix;
+        var username = "test-account-login-" + suffix;
+
+        var firstFingerprintResult = mockMvc.perform(post("/api/identity/fingerprints")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "fingerprint": "%s",
+                          "deviceName": "Primary Phone",
+                          "platform": "HarmonyOS"
+                        }
+                        """.formatted(primaryFingerprint)))
+                .andExpect(status().isOk())
+                .andReturn();
+        var firstFingerprintId = objectMapper.readTree(firstFingerprintResult.getResponse().getContentAsString())
+                .get("id").asText();
+
+        var accountResult = mockMvc.perform(post("/api/accounts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "username": "%s",
+                          "password": "login-secret",
+                          "fingerprintId": "%s",
+                          "passwordLoginEnabled": false
+                        }
+                        """.formatted(username, firstFingerprintId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        var accountId = objectMapper.readTree(accountResult.getResponse().getContentAsString()).get("id").asText();
+
+        mockMvc.perform(post("/api/accounts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "username": "%s",
+                          "password": "login-secret",
+                          "fingerprintId": "%s",
+                          "passwordLoginEnabled": true
+                        }
+                        """.formatted(username, firstFingerprintId)))
+                .andExpect(status().isConflict());
+
+        var secondFingerprintResult = mockMvc.perform(post("/api/identity/fingerprints")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "fingerprint": "%s",
+                          "deviceName": "Second Phone",
+                          "platform": "HarmonyOS"
+                        }
+                        """.formatted(secondaryFingerprint)))
+                .andExpect(status().isOk())
+                .andReturn();
+        var secondFingerprintId = objectMapper.readTree(secondFingerprintResult.getResponse().getContentAsString())
+                .get("id").asText();
+
+        mockMvc.perform(post("/api/accounts/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "username": "%s",
+                          "password": "login-secret",
+                          "fingerprintId": "%s"
+                        }
+                        """.formatted(username, secondFingerprintId)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/accounts/{accountId}/security", accountId)
+                .header("X-CourseDrop-Fingerprint-Id", firstFingerprintId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "passwordLoginEnabled": true
+                        }
+                        """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/accounts/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "username": "%s",
+                          "password": "wrong-secret",
+                          "fingerprintId": "%s"
+                        }
+                        """.formatted(username, secondFingerprintId)))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/accounts/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "username": "%s",
+                          "password": "login-secret",
+                          "fingerprintId": "%s"
+                        }
+                        """.formatted(username, secondFingerprintId)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(accountId)))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("\"passwordLoginEnabled\":true")));
+
+        mockMvc.perform(get("/api/accounts/{accountId}/fingerprints", accountId)
+                .header("X-CourseDrop-Fingerprint-Id", secondFingerprintId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Second Phone")));
+    }
+
+    @Test
     void shareCanBeExtendedAndItemCanBeDeleted() throws Exception {
         var createResult = mockMvc.perform(post("/api/shares")
                 .contentType(MediaType.APPLICATION_JSON)

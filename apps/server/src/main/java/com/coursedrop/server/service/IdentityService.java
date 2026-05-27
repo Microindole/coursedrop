@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.coursedrop.server.common.ApiException;
+import com.coursedrop.server.dto.AccountLoginRequest;
 import com.coursedrop.server.dto.AccountRequest;
 import com.coursedrop.server.dto.AccountResponse;
 import com.coursedrop.server.dto.AccountSecurityRequest;
@@ -56,7 +57,8 @@ public class IdentityService {
     }
 
     public AccountResponse createAccount(AccountRequest request) {
-        if (identityRepository.usernameExists(request.username())) {
+        var username = request.username().trim();
+        if (identityRepository.usernameExists(username)) {
             throw new ApiException(HttpStatus.CONFLICT, "Username already exists");
         }
         identityRepository.findFingerprintById(request.fingerprintId())
@@ -65,13 +67,39 @@ public class IdentityService {
         var now = Instant.now();
         var account = new AccountResponse(
                 UUID.randomUUID().toString(),
-                request.username().trim(),
+                username,
                 request.passwordLoginEnabled(),
                 now);
         var passwordHash = passwordHasher.hash(request.password());
         identityRepository.saveAccount(account, passwordHash.hash(), passwordHash.salt(), passwordHash.algorithm());
         identityRepository.bindFingerprint(request.fingerprintId(), account.id());
         return account;
+    }
+
+    public AccountResponse loginAccount(AccountLoginRequest request) {
+        var fingerprint = identityRepository.findFingerprintById(request.fingerprintId())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Device fingerprint not found"));
+        var account = identityRepository.findAccountByUsername(request.username().trim())
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
+        if (account.getPasswordLoginEnabled() == null || account.getPasswordLoginEnabled() != 1) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Account password login is disabled");
+        }
+        if (!passwordHasher.verify(
+                request.password(),
+                account.getPasswordHash(),
+                account.getPasswordSalt(),
+                account.getPasswordAlgorithm())) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+        }
+        if (fingerprint.accountId() != null && !fingerprint.accountId().equals(account.getId())) {
+            throw new ApiException(HttpStatus.CONFLICT, "Device fingerprint is already bound to another account");
+        }
+        identityRepository.bindFingerprint(request.fingerprintId(), account.getId());
+        return new AccountResponse(
+                account.getId(),
+                account.getUsername(),
+                true,
+                Instant.parse(account.getCreatedAt()));
     }
 
     public AccountResponse getAccount(String accountId, String fingerprintId, String actorAccountId) {
