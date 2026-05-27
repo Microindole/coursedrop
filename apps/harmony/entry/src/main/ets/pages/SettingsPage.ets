@@ -73,6 +73,11 @@ export default struct SettingsPage {
     this.syncSettings();
   }
 
+  private async openCameraScanner() {
+    await this.viewModel.openCameraScanner();
+    this.syncSettings();
+  }
+
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
       CdScrollContainer({ showScrollBar: true }) {
@@ -202,10 +207,22 @@ export default struct SettingsPage {
         }
 
         // 扫码调试面板
-        CdSectionHeader({ title: '扫码数据解析调试' })
+        CdSectionHeader({ title: '扫码与解析' })
 
         CdPanel({ hasShadow: true }) {
           Column({ space: AppSpacing.MD }) {
+            CdButton({
+              label: '打开系统相机扫码',
+              onTap: () => {
+                this.openCameraScanner();
+              }
+            })
+            .width('100%')
+
+            Divider()
+              .color(AppColors.BORDER)
+              .strokeWidth(0.5)
+
             CdTextField({
               label: '解析内容粘贴',
               placeholder: '粘贴 login:/share: 等协议前缀的调试字符串',
@@ -228,7 +245,8 @@ export default struct SettingsPage {
                   router.pushUrl({
                     url: 'pages/ShareDownloadPage',
                     params: {
-                      code: this.viewModel.lastScannedShareCode
+                      code: this.viewModel.lastScannedShareText.length > 0 ?
+                        this.viewModel.lastScannedShareText : this.viewModel.lastScannedShareCode
                     }
                   });
                 }

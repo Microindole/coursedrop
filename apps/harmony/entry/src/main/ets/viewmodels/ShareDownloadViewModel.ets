@@ -7,6 +7,7 @@ import { TransferTask } from '../models/TransferTask';
 export class ShareDownloadViewModel {
   private relayShareApi: RelayShareApi = new RelayShareApi(apiClient);
   code: string = '';
+  private e2eeKeys: E2eeItemKey[] = [];
   share: RelayShareDownloadResponse | undefined = undefined;
   tasks: TransferTask[] = [];
   loading: boolean = false;
@@ -14,7 +15,8 @@ export class ShareDownloadViewModel {
   errorMessage: string = '';
 
   async load(code: string): Promise<void> {
-    const normalizedCode = code.trim();
+    this.e2eeKeys = this.parseE2eeKeys(code);
+    const normalizedCode = this.extractCode(code.trim());
     if (normalizedCode.length === 0) {
       this.errorMessage = '请输入分享码';
       this.lastActionText = '分享码为空';
@@ -44,7 +46,10 @@ export class ShareDownloadViewModel {
       const task = await transferService.downloadShareItem({
         code: this.code,
         itemId: item.id,
-        fingerprintId: identity === undefined ? undefined : identity.fingerprintId
+        fingerprintId: identity === undefined ? undefined : identity.fingerprintId,
+        e2eeKeyMaterial: this.findKey(item.id).keyMaterial,
+        e2eeNonce: this.findKey(item.id).nonce,
+        e2eeAuthTag: this.findKey(item.id).authTag
       });
       this.tasks = transferService.listTasks();
       this.lastActionText = task.status === 'COMPLETED' ? '文件已下载并写入本地库' : '下载任务已结束';
@@ -62,4 +67,68 @@ export class ShareDownloadViewModel {
     }
     return this.share.items;
   }
+
+  private extractCode(rawText: string): string {
+    const marker = '/s/';
+    const markerIndex = rawText.indexOf(marker);
+    let code = rawText;
+    if (markerIndex >= 0) {
+      code = rawText.substring(markerIndex + marker.length);
+    }
+    const queryIndex = code.indexOf('?');
+    const hashIndex = code.indexOf('#');
+    let end = code.length;
+    if (queryIndex >= 0 && queryIndex < end) {
+      end = queryIndex;
+    }
+    if (hashIndex >= 0 && hashIndex < end) {
+      end = hashIndex;
+    }
+    return code.substring(0, end).trim();
+  }
+
+  private parseE2eeKeys(rawText: string): E2eeItemKey[] {
+    const marker = '#cdkey=';
+    const markerIndex = rawText.indexOf(marker);
+    const keys: E2eeItemKey[] = [];
+    if (markerIndex < 0) {
+      return keys;
+    }
+    const encoded = rawText.substring(markerIndex + marker.length);
+    const decoded = decodeURIComponent(encoded);
+    const entries = decoded.split(',');
+    for (let index = 0; index < entries.length; index += 1) {
+      const parts = entries[index].split(':');
+      if (parts.length === 4) {
+        keys.push({
+          itemId: parts[0],
+          keyMaterial: parts[1],
+          nonce: parts[2],
+          authTag: parts[3]
+        });
+      }
+    }
+    return keys;
+  }
+
+  private findKey(itemId: string): E2eeItemKey {
+    for (let index = 0; index < this.e2eeKeys.length; index += 1) {
+      if (this.e2eeKeys[index].itemId === itemId) {
+        return this.e2eeKeys[index];
+      }
+    }
+    return {
+      itemId: itemId,
+      keyMaterial: '',
+      nonce: '',
+      authTag: ''
+    };
+  }
+}
+
+interface E2eeItemKey {
+  itemId: string;
+  keyMaterial: string;
+  nonce: string;
+  authTag: string;
 }

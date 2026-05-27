@@ -1,3 +1,4 @@
+import cryptoFramework from '@ohos.security.cryptoFramework';
 import { fileIo, fileUri } from '@kit.CoreFileKit';
 import { DecryptionPlan, DecryptionResult, EncryptionPlan, EncryptionResult } from './CryptoModels';
 
@@ -9,45 +10,39 @@ export interface EncryptionService {
 export class CourseDropEncryptionService implements EncryptionService {
   async encryptFile(plan: EncryptionPlan): Promise<EncryptionResult> {
     try {
-      const sourceFile = fileIo.openSync(plan.sourceUri, fileIo.OpenMode.READ_ONLY);
-      const stat = fileIo.statSync(sourceFile.fd);
-      const buffer = new ArrayBuffer(stat.size);
-      fileIo.readSync(sourceFile.fd, buffer);
-      fileIo.closeSync(sourceFile.fd);
+      const plainData = this.readFile(plan.sourceUri);
+      const random = cryptoFramework.createRandom();
+      const nonce = random.generateRandomSync(12);
+      const aad = this.toBytes('coursedrop:file:v1');
+      const authTag: cryptoFramework.DataBlob = { data: new Uint8Array(16) };
+      const aadBlob: cryptoFramework.DataBlob = { data: aad };
+      const params: cryptoFramework.GcmParamsSpec = {
+        algName: 'GcmParamsSpec',
+        iv: nonce,
+        aad: aadBlob,
+        authTag: authTag
+      };
+      const keyGenerator = cryptoFramework.createSymKeyGenerator('AES256');
+      const key = await keyGenerator.generateSymKey();
+      const cipher = cryptoFramework.createCipher('AES256|GCM|NoPadding');
+      await cipher.init(cryptoFramework.CryptoMode.ENCRYPT_MODE, key, params);
+      const input: cryptoFramework.DataBlob = { data: plainData };
+      const output = await cipher.doFinal(input);
 
-      // 生成随机 Salt 和 Nonce 用于 KDF / 掩码
-      const kdfSalt = `salt_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      const nonce = `nonce_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-
-      // 简易的异或对称流式加密
-      let key = 0;
-      for (let i = 0; i < nonce.length; i++) {
-        key += nonce.charCodeAt(i);
-      }
-      key = (key % 254) + 1; // 确保不为 0
-
-      const dataView = new Uint8Array(buffer);
-      for (let index = 0; index < dataView.length; index++) {
-        dataView[index] = dataView[index] ^ key;
-      }
-
-      // 获取加密文件的写出目标路径 (加上 .enc 后缀)
-      const plainPath = plan.sourceUri.replace(/^file:\/\//, '');
-      const encryptedPath = `${plainPath}.enc`;
-
-      // 写入加密密文
-      const encryptedFile = fileIo.openSync(encryptedPath, fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE);
-      fileIo.writeSync(encryptedFile.fd, buffer);
-      fileIo.closeSync(encryptedFile.fd);
+      const plainPath = this.uriToPath(plan.sourceUri);
+      const encryptedPath = `${plainPath}.cdenc`;
+      this.writeFile(encryptedPath, this.toArrayBuffer(output.data));
 
       return {
         encryptedUri: fileUri.getUriFromPath(encryptedPath),
-        algorithm: plan.algorithm.length > 0 ? plan.algorithm : 'XOR-KDF',
-        kdfAlgorithm: plan.kdfAlgorithm.length > 0 ? plan.kdfAlgorithm : 'PBKDF2-SHA256',
-        kdfSalt: kdfSalt,
-        nonce: nonce,
-        plainSizeBytes: stat.size,
-        sha256: `sha256_mock_${Date.now()}`
+        algorithm: 'AES-256-GCM',
+        kdfAlgorithm: 'NONE-RAW-KEY',
+        kdfSalt: '',
+        nonce: this.toHex(nonce.data),
+        keyMaterial: this.toHex(key.getEncoded().data),
+        authTag: this.toHex(params.authTag.data),
+        plainSizeBytes: plan.plainSizeBytes,
+        sha256: await this.sha256(plainData)
       };
     } catch (error) {
       throw new Error(`加密失败：${String(error)}`);
@@ -56,49 +51,106 @@ export class CourseDropEncryptionService implements EncryptionService {
 
   async decryptFile(plan: DecryptionPlan): Promise<DecryptionResult> {
     try {
-      const encryptedFile = fileIo.openSync(plan.encryptedUri, fileIo.OpenMode.READ_ONLY);
-      const stat = fileIo.statSync(encryptedFile.fd);
-      const buffer = new ArrayBuffer(stat.size);
-      fileIo.readSync(encryptedFile.fd, buffer);
-      fileIo.closeSync(encryptedFile.fd);
+      const encryptedData = this.readFile(plan.encryptedUri);
+      const keyData: cryptoFramework.DataBlob = { data: this.fromHex(plan.keyMaterial) };
+      const keyGenerator = cryptoFramework.createSymKeyGenerator('AES256');
+      const key = await keyGenerator.convertKey(keyData);
+      const nonceBlob: cryptoFramework.DataBlob = { data: this.fromHex(plan.nonce) };
+      const aadBlob: cryptoFramework.DataBlob = { data: this.toBytes('coursedrop:file:v1') };
+      const authTagBlob: cryptoFramework.DataBlob = { data: this.fromHex(plan.authTag) };
+      const params: cryptoFramework.GcmParamsSpec = {
+        algName: 'GcmParamsSpec',
+        iv: nonceBlob,
+        aad: aadBlob,
+        authTag: authTagBlob
+      };
+      const cipher = cryptoFramework.createCipher('AES256|GCM|NoPadding');
+      await cipher.init(cryptoFramework.CryptoMode.DECRYPT_MODE, key, params);
+      const input: cryptoFramework.DataBlob = { data: encryptedData };
+      const output = await cipher.doFinal(input);
 
-      // 根据传入的 nonce 还原异或密钥
-      let key = 0;
-      for (let i = 0; i < plan.nonce.length; i++) {
-        key += plan.nonce.charCodeAt(i);
-      }
-      key = (key % 254) + 1;
-
-      const dataView = new Uint8Array(buffer);
-      for (let index = 0; index < dataView.length; index++) {
-        dataView[index] = dataView[index] ^ key;
-      }
-
-      // 输出解密后的明文路径
-      let targetPath = '';
-      if (plan.targetDirectory.length > 0) {
-        // 如果指定了目标目录，在此目录下输出
-        const parts = plan.encryptedUri.replace(/^file:\/\//, '').split('/');
-        let filename = parts[parts.length - 1].replace(/\.enc$/, '');
-        if (!filename.includes('decrypted-')) {
-          filename = `decrypted-${filename}`;
-        }
-        targetPath = `${plan.targetDirectory.replace(/\/$/, '')}/${filename}`;
-      } else {
-        // 默认保存在加密文件的同级
-        targetPath = plan.encryptedUri.replace(/^file:\/\//, '').replace(/\.enc$/, '-decrypted');
-      }
-
-      const plainFile = fileIo.openSync(targetPath, fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE);
-      fileIo.writeSync(plainFile.fd, buffer);
-      fileIo.closeSync(plainFile.fd);
-
+      const encryptedName = this.fileNameFromUri(plan.encryptedUri).replace(/\.cdenc$/, '');
+      const targetPath = `${plan.targetDirectory.replace(/\/$/, '')}/decrypted-${encryptedName}`;
+      this.writeFile(targetPath, this.toArrayBuffer(output.data));
       return {
         plainUri: fileUri.getUriFromPath(targetPath),
-        plainSizeBytes: stat.size
+        plainSizeBytes: output.data.byteLength
       };
     } catch (error) {
       throw new Error(`解密失败：${String(error)}`);
     }
+  }
+
+  private readFile(uri: string): Uint8Array {
+    const file = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
+    try {
+      const stat = fileIo.statSync(file.fd);
+      const buffer = new ArrayBuffer(stat.size);
+      fileIo.readSync(file.fd, buffer);
+      return new Uint8Array(buffer);
+    } finally {
+      fileIo.closeSync(file.fd);
+    }
+  }
+
+  private writeFile(path: string, data: ArrayBuffer): void {
+    const file = fileIo.openSync(path, fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC | fileIo.OpenMode.READ_WRITE);
+    try {
+      fileIo.writeSync(file.fd, data);
+    } finally {
+      fileIo.closeSync(file.fd);
+    }
+  }
+
+  private async sha256(data: Uint8Array): Promise<string> {
+    const md = cryptoFramework.createMd('SHA256');
+    const input: cryptoFramework.DataBlob = { data: data };
+    await md.update(input);
+    const digest = await md.digest();
+    return this.toHex(digest.data);
+  }
+
+  private uriToPath(uri: string): string {
+    return uri.replace(/^file:\/\//, '');
+  }
+
+  private fileNameFromUri(uri: string): string {
+    const path = this.uriToPath(uri);
+    const parts = path.split('/');
+    return parts[parts.length - 1];
+  }
+
+  private toBytes(text: string): Uint8Array {
+    const bytes = new Uint8Array(text.length);
+    for (let index = 0; index < text.length; index += 1) {
+      bytes[index] = text.charCodeAt(index);
+    }
+    return bytes;
+  }
+
+  private toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+    const buffer = new ArrayBuffer(bytes.byteLength);
+    const target = new Uint8Array(buffer);
+    target.set(bytes);
+    return buffer;
+  }
+
+  private toHex(data: Uint8Array): string {
+    let output = '';
+    for (let index = 0; index < data.length; index += 1) {
+      const next = data[index].toString(16);
+      output += next.length === 1 ? `0${next}` : next;
+    }
+    return output;
+  }
+
+  private fromHex(hex: string): Uint8Array {
+    const length = Math.floor(hex.length / 2);
+    const bytes = new Uint8Array(length);
+    for (let index = 0; index < length; index += 1) {
+      const offset = index * 2;
+      bytes[index] = Number.parseInt(hex.substring(offset, offset + 2), 16);
+    }
+    return bytes;
   }
 }

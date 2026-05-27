@@ -81,13 +81,13 @@ CourseDrop 客户端不做另一个系统文件传输工具。
 - 撤回分享已调用服务端 `DELETE /api/shares/{shareId}`，失败时保留错误提示。
 - 续期已调用服务端 `POST /api/shares/{shareId}/expiry`。
 - App 下载服务已改为 `/api/shares/{code}/items/{itemId}/download`，下载成功后会写入 `incoming/` 并建立本地库索引。
+- App 下载请求已携带本机指纹或账号鉴权头，可走受限下载接口，不再只能依赖浏览器扫码登录路径。
 - 分享链接复制已接系统剪贴板。
 - 分享二维码改为调用服务端 `/api/qr?text=...` 生成 SVG，客户端直接展示。
 
 仍待完成：
 
 - 服务端单项删除接口还没有接到客户端，已上传项暂不允许从草稿中单独删除。
-- App 下载鉴权头还需要用 ArkTS 兼容方式封装后接入。
 
 ### 3. 二维码、扫码和浏览器下载
 
@@ -135,11 +135,12 @@ CourseDrop 客户端不做另一个系统文件传输工具。
 - 新增 `ShareDownloadPage`，可输入分享码读取分享文件列表。
 - 扫码调试识别到分享码后，可以跳转到接收分享页。
 - App 下载成功后写入 `incoming/`，并保存到本地库索引。
+- 设置页新增系统相机入口，扫码入口从“纯文本调试”中拆出为独立服务边界。
+- 扫到包含 `#cdkey=` fragment 的分享链接时，App 接收页会保留 fragment，用于后续 E2EE 解密。
 
 仍待完成：
 
-- 真实相机扫码入口仍需接系统扫码/相机能力。
-- 下载鉴权头仍需在 ArkTS HTTP header 兼容方案确认后接入。
+- 当前 SDK 没有通用二维码解码 API，`CameraScanService` 只能打开系统相机并返回拍摄 URI；需要后续接厂商 Scan Kit 或图像解码库，才能从照片/预览帧自动识别二维码文本。
 
 ### 5. 端到端加密
 
@@ -156,6 +157,18 @@ CourseDrop 客户端不做另一个系统文件传输工具。
 - 浏览器下载端使用 WebCrypto 解密。
 - App 下载端使用客户端 `EncryptionService` 解密。
 - 本地库要显示加密状态：未加密、待加密、已加密、解密失败。
+
+当前实现进展：
+
+- 客户端已用 `cryptoFramework` 替换 XOR 占位加密，上传前生成独立 AES-256-GCM content key。
+- multipart 上传的是 `.cdenc` 密文文件，服务端只保存算法、nonce/authTag、明文大小和 SHA-256 等元数据。
+- content key 不放进 multipart 表单，也不上传给服务端，而是写入分享 URL 的 `#cdkey=` fragment。
+- App 接收页会解析 fragment，下载密文后调用 `EncryptionService.decryptFile` 本地解密，再写入 `incoming/` 和本地库索引。
+
+仍待完成：
+
+- 浏览器下载端的 WebCrypto 解密页面还需要继续实现。
+- E2EE key fragment 当前是第一版文本格式，后续应改成版本化 JSON + Base64URL，并支持多文件 key map 的完整性校验。
 
 验收：
 
@@ -205,6 +218,17 @@ CourseDrop 客户端不做另一个系统文件传输工具。
   - 直连失败后提示切换公网中转。
   - 用户可在设置中关闭局域网优先。
 - 直传任务和公网上传/下载共用传输任务模型。
+
+当前实现进展：
+
+- 设备发现服务已改为异步接口。
+- 设备页点击扫描会调用 `LanDeviceDiscoveryService.refresh()`，不再通过页面 `setTimeout` 模拟扫描。
+- `LanDeviceDiscoveryService` 已基于 UDP 广播发送 `coursedrop.lan.v1` 发现报文，并把收到的同协议节点写入 `DeviceRegistry`。
+
+仍待完成：
+
+- 当前只完成发现层，真正 TCP/UDP 文件直传服务、监听端、握手协议和断点/进度回调还未完成。
+- 需要至少两台运行 CourseDrop 局域网协议的设备才能验证发现结果；单模拟器环境可能只能看到空状态。
 
 验收：
 

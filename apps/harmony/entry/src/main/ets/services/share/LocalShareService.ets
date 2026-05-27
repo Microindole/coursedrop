@@ -259,6 +259,16 @@ export class LocalShareService implements ShareService {
     };
   }
 
+  updateShareUrl(sessionId: string, shareUrl: string): ShareOperationResult {
+    const session = this.findSession(sessionId);
+    session.shareUrl = shareUrl;
+    this.sessionRepository.save(session);
+    return {
+      success: true,
+      message: '分享链接已更新'
+    };
+  }
+
   private findSession(sessionId: string): ShareSession {
     const session = this.sessionRepository.list().find((next) => next.id === sessionId);
     if (session === undefined) {

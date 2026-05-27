@@ -42,7 +42,8 @@
 - tag 推送会按 tag 名创建对应版本 release
 - 默认从本仓库 `harmony-toolchain` release 下载 `harmony-command-line-tools-linux.zip`
 - 如需覆盖下载源，可配置仓库 secret `HARMONY_COMMANDLINE_TOOLS_URL`
-- workflow 会递归查找 zip 中的 `ohpm`、`hvigorw`/`hvigor` 和 SDK 路径，再执行 HAP 构建
+- zip 不能只有命令行工具，还必须包含匹配项目 API 版本的 SDK 组件
+- workflow 会递归查找 zip 中的 `ohpm`、`hvigorw`/`hvigor`、`sdkmgr` 和 SDK 路径，再执行 HAP 构建
 
 ## Composite Actions
 

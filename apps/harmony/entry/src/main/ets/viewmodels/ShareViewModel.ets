@@ -7,12 +7,14 @@ import { shareDraftWorkflow } from '../services/share';
 import { transferService } from '../services/transfer';
 import { apiClient } from '../services/ApiClient';
 import { clipboardService } from '../services/clipboard';
+import { settingsService } from '../services/settings';
 
 export class ShareViewModel {
   currentSession: ShareSession = shareService.getCurrentSession();
   loading: boolean = false;
   errorMessage: string = '';
   lastActionText: string = '';
+  private e2eeKeyFragments: string[] = [];
 
   getItems(): TransferItem[] {
     return this.currentSession.items;
@@ -128,9 +130,17 @@ export class ShareViewModel {
       await transferService.uploadLocalFile({
         shareId: this.currentSession.id,
         localFileId: itemId,
-        encrypted: false,
-        onUploaded: (remoteItemId: string, remoteUrl: string, expiresAt: string) => {
+        encrypted: settingsService.getSettings().e2eeEnabled,
+        onUploaded: (
+          remoteItemId: string,
+          remoteUrl: string,
+          expiresAt: string,
+          e2eeKeyMaterial: string,
+          e2eeNonce: string,
+          e2eeAuthTag: string
+        ) => {
           shareService.markItemUploaded(this.currentSession.id, itemId, remoteItemId, remoteUrl, expiresAt);
+          this.rememberE2eeKey(remoteItemId, e2eeKeyMaterial, e2eeNonce, e2eeAuthTag);
         }
       });
       this.lastActionText = '上传任务已重试';
@@ -150,12 +160,32 @@ export class ShareViewModel {
         await transferService.uploadLocalFile({
           shareId: this.currentSession.id,
           localFileId: item.id,
-          encrypted: false,
-          onUploaded: (remoteItemId: string, remoteUrl: string, expiresAt: string) => {
+          encrypted: settingsService.getSettings().e2eeEnabled,
+          onUploaded: (
+            remoteItemId: string,
+            remoteUrl: string,
+            expiresAt: string,
+            e2eeKeyMaterial: string,
+            e2eeNonce: string,
+            e2eeAuthTag: string
+          ) => {
             shareService.markItemUploaded(this.currentSession.id, item.id, remoteItemId, remoteUrl, expiresAt);
+            this.rememberE2eeKey(remoteItemId, e2eeKeyMaterial, e2eeNonce, e2eeAuthTag);
           }
         });
       }
     }
+  }
+
+  private rememberE2eeKey(remoteItemId: string, keyMaterial: string, nonce: string, authTag: string): void {
+    if (keyMaterial.length === 0) {
+      return;
+    }
+    this.e2eeKeyFragments.push(`${remoteItemId}:${keyMaterial}:${nonce}:${authTag}`);
+    const baseUrl = this.currentSession.shareUrl.split('#')[0];
+    const fragment = encodeURIComponent(this.e2eeKeyFragments.join(','));
+    const nextUrl = `${baseUrl}#cdkey=${fragment}`;
+    shareService.updateShareUrl(this.currentSession.id, nextUrl);
+    this.currentSession = shareService.getCurrentSession();
   }
 }

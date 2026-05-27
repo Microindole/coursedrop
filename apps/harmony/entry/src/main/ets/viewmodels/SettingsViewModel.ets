@@ -5,6 +5,7 @@ import { LocalIdentity } from '../services/identity';
 import { relaySourceService } from '../services/relay';
 import { relayHealthService } from '../services/relay';
 import { scanDispatchService } from '../services/scan';
+import { cameraScanService } from '../services/scan';
 import { settingsService } from '../services/settings';
 import { courseDropFileStore, localFileIndexRepository } from '../services/local';
 import type { CachePolicy } from '../services/settings';
@@ -21,6 +22,7 @@ export class SettingsViewModel {
   lastActionText: string = '';
   localIdentity: LocalIdentity | undefined = identityService.getLocalIdentity();
   lastScannedShareCode: string = '';
+  lastScannedShareText: string = '';
   accountUsername: string = '';
   passwordLoginEnabled: boolean = false;
 
@@ -184,9 +186,23 @@ export class SettingsViewModel {
       this.lastActionText = result.message;
       if (result.payload.type === 'SHARE') {
         this.lastScannedShareCode = result.payload.code;
+        this.lastScannedShareText = result.payload.rawText;
       }
     } catch (error) {
       this.lastActionText = `扫码处理失败：${String(error)}`;
+    }
+  }
+
+  async openCameraScanner(): Promise<void> {
+    try {
+      const result = await cameraScanService.openCamera();
+      this.lastActionText = result.capturedUri.length > 0 ?
+        `${result.message}：${result.capturedUri}` : result.message;
+      if (result.rawText.length > 0) {
+        await this.handleScannedText(result.rawText);
+      }
+    } catch (error) {
+      this.lastActionText = `打开相机失败：${String(error)}`;
     }
   }
 

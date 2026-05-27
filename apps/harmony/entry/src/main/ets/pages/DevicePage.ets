@@ -43,8 +43,7 @@ export default struct DevicePage {
             router.back();
           },
           onTrailingTap: () => {
-            this.viewModel.refreshDevices();
-            this.syncDevices();
+            this.scanDevices();
           }
         })
 
@@ -59,14 +58,7 @@ export default struct DevicePage {
           scanning: this.scanning,
           lanDeviceCount: this.viewModel.getLanDevices().length,
           onStartScan: () => {
-            this.viewModel.refreshDevices();
-            this.syncDevices();
-            
-            // 模拟扫描 3 秒后结束
-            setTimeout(() => {
-              this.viewModel.scanning = false;
-              this.syncDevices();
-            }, 3000);
+            this.scanDevices();
           }
         })
 
@@ -83,5 +75,12 @@ export default struct DevicePage {
     }
     .width('100%')
     .height('100%')
+  }
+
+  private async scanDevices(): Promise<void> {
+    this.viewModel.scanning = true;
+    this.syncDevices();
+    await this.viewModel.refreshDevices();
+    this.syncDevices();
   }
 }

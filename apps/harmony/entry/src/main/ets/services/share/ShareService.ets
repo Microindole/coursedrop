@@ -28,4 +28,5 @@ export interface ShareService {
   removeDraftItem(sessionId: string, itemId: string): ShareOperationResult;
   clearDraft(sessionId: string): ShareOperationResult;
   markItemUploaded(sessionId: string, itemId: string, remoteItemId: string, remoteUrl: string, expiresAt: string): ShareOperationResult;
+  updateShareUrl(sessionId: string, shareUrl: string): ShareOperationResult;
 }

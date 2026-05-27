@@ -25,5 +25,5 @@ export { encryptionService, CourseDropEncryptionService } from './crypto';
 export type { DecryptionPlan, DecryptionResult, EncryptionPlan, EncryptionResult, EncryptionService } from './crypto';
 export { settingsService, SettingsService } from './settings';
 export type { AppSettings, CachePolicy, SettingsRepository } from './settings';
-export { qrPayloadParser, scanDispatchService, QrPayloadParser, ScanDispatchService } from './scan';
-export type { QrPayload, QrPayloadType, ScanDispatchResult } from './scan';
+export { cameraScanService, CameraScanService, qrPayloadParser, scanDispatchService, QrPayloadParser, ScanDispatchService } from './scan';
+export type { CameraScanResult, QrPayload, QrPayloadType, ScanDispatchResult } from './scan';

@@ -11,6 +11,8 @@ export interface EncryptionResult {
   kdfAlgorithm: string;
   kdfSalt: string;
   nonce: string;
+  keyMaterial: string;
+  authTag: string;
   plainSizeBytes: number;
   sha256: string;
 }
@@ -22,6 +24,8 @@ export interface DecryptionPlan {
   kdfAlgorithm: string;
   kdfSalt: string;
   nonce: string;
+  keyMaterial: string;
+  authTag: string;
 }
 
 export interface DecryptionResult {

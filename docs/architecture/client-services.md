@@ -103,6 +103,7 @@ services/
   scan/
     QrPayloadParser.ets        二维码内容解析
     ScanDispatchService.ets    扫码结果分发到登录/分享流程
+    CameraScanService.ets      系统相机入口边界
 ```
 
 ## 替换路线
@@ -122,8 +123,11 @@ services/
 13. `FileImportService` 负责读取文件元数据、复制到 `CourseDrop/library`，并把本地副本写入 RDB 索引。
 14. `ShareService` 已提供 `attachLocalFile` 和 `markItemUploaded`。本地草稿项保留本地 id，上传成功后单独记录 `remoteItemId/remoteUrl/expiresAt`，避免上传任务、本地索引和远端项互相覆盖。
 15. `TransferTaskService` 已提供传输任务状态机：创建、开始、进度、完成、失败、取消。
-16. `RelayTransferApi` 已实现基础 multipart 上传到 `/api/shares/{shareId}/items`，下载保存仍待接入。
+16. `RelayTransferApi` 已实现 multipart 上传到 `/api/shares/{shareId}/items`，App 下载会携带本机指纹或账号鉴权头。
 17. `ShareViewModel` 创建公网分享后会遍历草稿项发起上传任务，上传状态由 `TransferTaskService` 管理。
 18. `QrPayloadParser` 可识别网页登录二维码 `/m/login/{code}`、分享链接 `/s/{code}`、`login:` 和 `share:` 前缀；`ScanDispatchService` 已能分发网页登录确认。
-19. `EncryptionService` 是端到端加密边界；真实 AES-GCM/密钥派生接入前不能伪造已加密结果。
-20. `DeviceDiscoveryService` 接局域网发现和公网在线状态。
+19. `EncryptionService` 已替换早期占位逻辑，使用 `cryptoFramework` 做 AES-256-GCM 加密、解密和 SHA-256 摘要。
+20. E2EE 上传不会把 content key 上传给服务器。服务器只保存密文和 nonce/authTag 等元数据；分享二维码链接通过 URL fragment 携带 `cdkey`，浏览器请求不会把 fragment 发送到服务器。
+21. App 内下载会解析分享链接中的 `#cdkey=`，下载密文后在本地解密，再写入 `incoming/` 并建立本地库索引。
+22. `CameraScanService` 已提供系统相机入口。当前 OpenHarmony SDK 未提供通用二维码解码 API，因此相机入口只负责打开系统相机并返回拍摄 URI；二维码文本解析仍由 `ScanDispatchService` 处理，后续可替换为厂商 Scan Kit 或自研图像解码实现。
+23. `DeviceDiscoveryService` 已改为异步局域网发现边界，`LanDeviceDiscoveryService` 使用 UDP 广播发送 CourseDrop 发现报文并收集同协议节点，不再在页面中制造假设备或 setTimeout 假扫描。

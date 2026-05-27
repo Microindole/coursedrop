@@ -11,7 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "课递"
+    },
+    {
+      "name": "camera_permission_reason",
+      "value": "用于扫描 CourseDrop 登录或分享二维码"
     }
   ]
 }
-

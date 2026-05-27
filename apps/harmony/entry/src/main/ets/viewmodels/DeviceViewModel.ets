@@ -15,10 +15,17 @@ export class DeviceViewModel {
     return this.devices.filter((device) => device.networkMode === 'LAN');
   }
 
-  refreshDevices(): void {
+  async refreshDevices(): Promise<void> {
     this.scanning = true;
-    this.devices = deviceDiscoveryService.refresh();
-    this.scanning = false;
-    this.lastActionText = '设备列表已刷新';
+    this.errorMessage = '';
+    try {
+      this.devices = await deviceDiscoveryService.refresh();
+      this.lastActionText = this.devices.length > 0 ? '局域网发现完成' : '未发现同局域网节点';
+    } catch (error) {
+      this.errorMessage = `局域网发现失败：${String(error)}`;
+      this.lastActionText = '局域网发现失败';
+    } finally {
+      this.scanning = false;
+    }
   }
 }

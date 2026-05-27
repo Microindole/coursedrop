@@ -48,10 +48,31 @@ export class HttpRelayTransferApi implements RelayTransferApi {
       throw new Error('未配置中转源');
     }
     const url = `${this.apiClient.getBaseUrl()}/api/shares/${request.code}/items/${request.itemId}/download`;
+    if (request.accountId !== undefined && request.accountId.length > 0) {
+      const headers: AccountDownloadHeader = {
+        'X-CourseDrop-Account-Id': request.accountId
+      };
+      return await this.requestDownload(url, request, headers);
+    }
+    if (request.fingerprintId !== undefined && request.fingerprintId.length > 0) {
+      const headers: FingerprintDownloadHeader = {
+        'X-CourseDrop-Fingerprint-Id': request.fingerprintId
+      };
+      return await this.requestDownload(url, request, headers);
+    }
+    return await this.requestDownload(url, request);
+  }
+
+  private async requestDownload(
+    url: string,
+    request: RelayDownloadRequest,
+    headers?: Object
+  ): Promise<RelayDownloadResult> {
     const httpRequest = http.createHttp();
     try {
       const response = await httpRequest.request(url, {
         method: http.RequestMethod.GET,
+        header: headers,
         expectDataType: http.HttpDataType.ARRAY_BUFFER,
         connectTimeout: 15000,
         readTimeout: 60000
@@ -166,4 +187,12 @@ class MultipartHeader {
   constructor(boundary: string) {
     this.contentType = `multipart/form-data; boundary=${boundary}`;
   }
+}
+
+interface FingerprintDownloadHeader {
+  'X-CourseDrop-Fingerprint-Id': string;
+}
+
+interface AccountDownloadHeader {
+  'X-CourseDrop-Account-Id': string;
 }

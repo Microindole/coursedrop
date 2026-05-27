@@ -58,21 +58,21 @@ runs:
         find "$tools_root" -maxdepth 4 -type f \( -name ohpm -o -name hvigor -o -name hvigorw \) -print | sort
 
         mapfile -t tool_dirs < <(
-          find "$tools_root" -type f \( -name ohpm -o -name hvigor -o -name hvigorw \) -print \
+          find "$tools_root" -type f \( -name ohpm -o -name hvigor -o -name hvigorw -o -name sdkmgr \) -print \
             | xargs -r -n 1 dirname \
             | sort -u
         )
         if [[ "${#tool_dirs[@]}" -eq 0 ]]; then
-          echo "No ohpm/hvigor/hvigorw executable found in the command-line tools zip."
+          echo "No ohpm/hvigor/hvigorw/sdkmgr executable found in the command-line tools zip."
           exit 1
         fi
 
-        find "$tools_root" -type f \( -name ohpm -o -name hvigor -o -name hvigorw \) -exec chmod +x {} +
+        find "$tools_root" -type f \( -name ohpm -o -name hvigor -o -name hvigorw -o -name sdkmgr \) -exec chmod +x {} +
         for dir in "${tool_dirs[@]}"; do
           echo "$dir" >> "$GITHUB_PATH"
         done
 
-        sdk_dir="$(find "$tools_root" -type d -name sdk -print -quit)"
+        sdk_dir="$(find "$tools_root" -type d -path '*/sdk' -print -quit)"
         if [[ -n "$sdk_dir" ]]; then
           echo "HOS_SDK_HOME=$sdk_dir" >> "$GITHUB_ENV"
           echo "DEVECO_SDK_HOME=$sdk_dir" >> "$GITHUB_ENV"
@@ -90,6 +90,58 @@ runs:
           echo "Missing hvigorw/hvigor after extracting the Harmony command-line tools zip."
           exit 1
         fi
+
+    - name: Check Harmony SDK components
+      shell: bash
+      run: |
+        set -euo pipefail
+        sdk_root="${HOS_SDK_HOME:-${DEVECO_SDK_HOME:-}}"
+        if [[ -z "$sdk_root" || ! -d "$sdk_root" ]]; then
+          echo "Missing Harmony SDK directory in the toolchain archive."
+          echo "The archive must include SDK components, not only command-line-tools/bin, hvigor, and ohpm."
+          echo "Expected either command-line-tools/sdk/default or command-line-tools/sdk with OpenHarmony/HarmonyOS SDK content."
+          exit 1
+        fi
+
+        echo "Using Harmony SDK root: $sdk_root"
+        echo "SDK layout:"
+        find "$sdk_root" -maxdepth 3 -type d | sort | head -n 80
+        echo "SDK tool files:"
+        find "$sdk_root" -maxdepth 5 -type f \( -name ark_disasm -o -name ark_disasm.exe -o -name es2abc -o -name es2abc.exe -o -name syscap_tool -o -name syscap_tool.exe \) -print | sort
+
+        if ! find "$sdk_root" -type d -path '*/openharmony/toolchains' -print -quit | grep -q .; then
+          echo "Missing OpenHarmony toolchains SDK component."
+          exit 1
+        fi
+        if ! find "$sdk_root" -type d -path '*/openharmony/ets' -print -quit | grep -q .; then
+          echo "Missing OpenHarmony ets SDK component."
+          exit 1
+        fi
+
+        if find "$sdk_root" -type f -path '*/openharmony/toolchains/*.exe' -print -quit | grep -q . &&
+          ! find "$sdk_root" -type f -path '*/openharmony/toolchains/*' ! -name '*.exe' -print -quit | grep -q .; then
+          echo "The SDK appears to contain Windows toolchain binaries only. ubuntu-latest requires Linux SDK components."
+          exit 1
+        fi
+
+        find "$sdk_root" -type f -path '*/openharmony/toolchains/*' -exec chmod +x {} + || true
+
+    - name: Write Harmony SDK local properties
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+        sdk_root="${HOS_SDK_HOME:-${DEVECO_SDK_HOME:-}}"
+        if [[ -z "$sdk_root" ]]; then
+          echo "HOS_SDK_HOME/DEVECO_SDK_HOME is not set."
+          exit 1
+        fi
+        {
+          echo "sdk.dir=$sdk_root"
+          echo "nodejs.dir=$(dirname "$(dirname "$(command -v node)")")"
+        } > local.properties
+        echo "Wrote local.properties:"
+        sed 's#=.*#=<set>#' local.properties
 
     - name: Show tool versions
       shell: bash
