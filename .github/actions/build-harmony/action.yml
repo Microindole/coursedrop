@@ -1,0 +1,83 @@
+name: Build Harmony Client
+description: Build the HarmonyOS ArkTS client with an existing DevEco/Harmony toolchain.
+
+inputs:
+  working-directory:
+    description: Directory containing the HarmonyOS project.
+    required: false
+    default: apps/harmony
+  command-line-tools-url:
+    description: URL of a HarmonyOS command-line tools zip. Required on GitHub-hosted runners.
+    required: false
+    default: ''
+  build-command:
+    description: Command used to build the HAP.
+    required: false
+    default: if command -v hvigorw >/dev/null 2>&1; then hvigorw --mode module -p module=entry@default -p product=default -p requiredDeviceType=phone assembleHap --parallel --incremental --daemon; else hvigor --mode module -p module=entry@default -p product=default -p requiredDeviceType=phone assembleHap --parallel --incremental --daemon; fi
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Harmony command-line tools
+      if: inputs.command-line-tools-url != ''
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "$RUNNER_TEMP/harmony-tools"
+        curl -fL "${{ inputs.command-line-tools-url }}" -o "$RUNNER_TEMP/harmony-tools/command-line-tools.zip"
+        unzip -q "$RUNNER_TEMP/harmony-tools/command-line-tools.zip" -d "$RUNNER_TEMP/harmony-tools"
+        tools_dir="$(find "$RUNNER_TEMP/harmony-tools" -type f -path '*/bin/ohpm' -print -quit | sed 's#/bin/ohpm$##')"
+        if [[ -z "$tools_dir" ]]; then
+          echo "The downloaded archive must contain a command-line-tools directory."
+          exit 1
+        fi
+        echo "$tools_dir/bin" >> "$GITHUB_PATH"
+        echo "$tools_dir/hvigor/bin" >> "$GITHUB_PATH"
+        echo "$tools_dir/ohpm/bin" >> "$GITHUB_PATH"
+        echo "HOS_SDK_HOME=$tools_dir/sdk" >> "$GITHUB_ENV"
+        echo "DEVECO_SDK_HOME=$tools_dir/sdk" >> "$GITHUB_ENV"
+
+    - name: Require Harmony command-line tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        if ! command -v ohpm >/dev/null 2>&1; then
+          echo "Missing ohpm. Provide a command-line tools zip through command-line-tools-url."
+          exit 1
+        fi
+        if ! command -v hvigorw >/dev/null 2>&1 && ! command -v hvigor >/dev/null 2>&1; then
+          echo "Missing hvigorw/hvigor. Provide a command-line tools zip through command-line-tools-url."
+          exit 1
+        fi
+
+    - name: Show tool versions
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+        node --version
+        ohpm --version
+        if command -v hvigorw >/dev/null 2>&1; then
+          hvigorw --version
+        else
+          hvigor --version
+        fi
+
+    - name: Install Harmony dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+        ohpm install
+
+    - name: Build HAP
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+        ${{ inputs.build-command }}

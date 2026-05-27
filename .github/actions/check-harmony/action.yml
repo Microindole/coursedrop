@@ -11,11 +11,11 @@ runs:
   using: composite
   steps:
     - name: Check project files
-      shell: bash
+      shell: pwsh
       working-directory: ${{ inputs.working-directory }}
       run: |
-        set -euo pipefail
-        required_files=(
+        $ErrorActionPreference = 'Stop'
+        $requiredFiles = @(
           "oh-package.json5"
           "build-profile.json5"
           "hvigorfile.ts"
@@ -29,9 +29,9 @@ runs:
           "entry/src/main/ets/common/AppRuntimeContext.ets"
           "entry/src/main/ets/components/README.md"
           "entry/src/main/ets/components/index.ets"
-          "entry/src/main/ets/components/actions/CdButton.ets"
-          "entry/src/main/ets/components/inputs/CdTextField.ets"
-          "entry/src/main/ets/components/feedback/CdStatusPill.ets"
+          "entry/src/main/ets/components/common/CdButton.ets"
+          "entry/src/main/ets/components/common/CdTextField.ets"
+          "entry/src/main/ets/components/common/CdBottomTabs.ets"
           "entry/src/main/ets/models/CommonTypes.ets"
           "entry/src/main/ets/models/ShareSession.ets"
           "entry/src/main/ets/models/Device.ets"
@@ -68,55 +68,61 @@ runs:
           "entry/src/main/ets/services/device/DeviceRegistry.ets"
           "entry/src/main/ets/services/device/LanDeviceDiscoveryService.ets"
           "entry/src/main/ets/services/device/index.ets"
+          "entry/src/main/ets/services/identity/IdentityService.ets"
+          "entry/src/main/ets/services/settings/SettingsService.ets"
+          "entry/src/main/ets/services/transfer/TransferService.ets"
           "entry/src/main/ets/pages/HomePage.ets"
           "entry/src/main/ets/pages/SharePage.ets"
+          "entry/src/main/ets/pages/ShareDownloadPage.ets"
           "entry/src/main/ets/pages/LocalLibraryPage.ets"
           "entry/src/main/ets/pages/DevicePage.ets"
           "entry/src/main/ets/pages/SettingsPage.ets"
           "entry/src/main/ets/pages/RelaySourcePage.ets"
           "entry/src/main/resources/base/profile/main_pages.json"
-          "entry/src/main/ets/components/business/CdFileList.ets"
-          "entry/src/main/ets/components/business/CdDeviceList.ets"
-          "entry/src/main/ets/components/business/CdRelaySourceList.ets"
-          "entry/src/main/ets/components/navigation/CdBottomTabs.ets"
+          "entry/src/main/ets/components/business/CdLocalFileCard.ets"
+          "entry/src/main/ets/components/business/CdLanDeviceList.ets"
+          "entry/src/main/ets/components/business/CdShareTaskList.ets"
         )
 
-        for file in "${required_files[@]}"; do
-          if [[ ! -s "$file" ]]; then
-            echo "Missing or empty HarmonyOS project file: $file"
-            exit 1
-          fi
-        done
+        foreach ($file in $requiredFiles) {
+          if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
+            throw "Missing HarmonyOS project file: $file"
+          }
+          if ((Get-Item -LiteralPath $file).Length -le 0) {
+            throw "Empty HarmonyOS project file: $file"
+          }
+        }
 
     - name: Check expected source layers
-      shell: bash
+      shell: pwsh
       working-directory: ${{ inputs.working-directory }}
       run: |
-        set -euo pipefail
-        required_dirs=(
+        $ErrorActionPreference = 'Stop'
+        $requiredDirs = @(
           "entry/src/main/ets/common"
           "entry/src/main/ets/components"
-          "entry/src/main/ets/components/actions"
           "entry/src/main/ets/components/business"
-          "entry/src/main/ets/components/display"
-          "entry/src/main/ets/components/feedback"
-          "entry/src/main/ets/components/inputs"
-          "entry/src/main/ets/components/layout"
-          "entry/src/main/ets/components/navigation"
+          "entry/src/main/ets/components/common"
           "entry/src/main/ets/entryability"
           "entry/src/main/ets/models"
           "entry/src/main/ets/pages"
           "entry/src/main/ets/services"
+          "entry/src/main/ets/services/clipboard"
+          "entry/src/main/ets/services/crypto"
           "entry/src/main/ets/services/device"
+          "entry/src/main/ets/services/file"
+          "entry/src/main/ets/services/identity"
           "entry/src/main/ets/services/local"
           "entry/src/main/ets/services/relay"
+          "entry/src/main/ets/services/scan"
+          "entry/src/main/ets/services/settings"
           "entry/src/main/ets/services/share"
+          "entry/src/main/ets/services/transfer"
           "entry/src/main/ets/viewmodels"
         )
 
-        for dir in "${required_dirs[@]}"; do
-          if [[ ! -d "$dir" ]]; then
-            echo "Missing HarmonyOS source layer: $dir"
-            exit 1
-          fi
-        done
+        foreach ($dir in $requiredDirs) {
+          if (-not (Test-Path -LiteralPath $dir -PathType Container)) {
+            throw "Missing HarmonyOS source layer: $dir"
+          }
+        }

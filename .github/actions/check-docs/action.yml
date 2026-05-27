@@ -43,3 +43,7 @@ runs:
         grep -q "docs/agent/ci.md" README.md
         grep -q "apps/harmony/README.md" README.md
         grep -q "apps/server/README.md" README.md
+
+    - name: Check local Markdown links
+      shell: bash
+      run: python3 scripts/ci/check_markdown_links.py

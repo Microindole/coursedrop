@@ -1,0 +1,97 @@
+name: Release Harmony client
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+    paths:
+      - 'apps/harmony/**'
+      - '.github/actions/build-harmony/**'
+      - '.github/actions/check-harmony/**'
+      - '.github/workflows/release-harmony.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: harmony-release-${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and publish HAP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine release version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ('${{ github.ref_type }}' -eq 'tag') {
+            "RELEASE_VERSION=${{ github.ref_name }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "RELEASE_TAG=${{ github.ref_name }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "IS_DEV_RELEASE=false" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            "RELEASE_VERSION=dev" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "RELEASE_TAG=dev" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "IS_DEV_RELEASE=true" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
+      - name: Check HarmonyOS client structure
+        uses: ./.github/actions/check-harmony
+        with:
+          working-directory: apps/harmony
+
+      - name: Build HarmonyOS HAP
+        uses: ./.github/actions/build-harmony
+        with:
+          working-directory: apps/harmony
+          command-line-tools-url: ${{ secrets.HARMONY_COMMANDLINE_TOOLS_URL }}
+
+      - name: Stage HAP artifact
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path dist/harmony | Out-Null
+          $candidates = Get-ChildItem -Path apps/harmony/entry/build -Recurse -File -Filter *.hap |
+            Sort-Object @{ Expression = { $_.Name -notmatch 'signed' } }, LastWriteTime -Descending
+          if ($candidates.Count -eq 0) {
+            throw 'No HAP artifact found under apps/harmony/entry/build.'
+          }
+          $source = $candidates[0]
+          $target = "dist/harmony/coursedrop-harmony-$env:RELEASE_VERSION.hap"
+          Copy-Item -LiteralPath $source.FullName -Destination $target -Force
+          "HAP_PATH=$target" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coursedrop-harmony-${{ env.RELEASE_VERSION }}
+          path: ${{ env.HAP_PATH }}
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          title="CourseDrop Harmony ${RELEASE_VERSION}"
+          notes="Automated HarmonyOS ArkTS client build for ${RELEASE_VERSION}."
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release delete "${RELEASE_TAG}" --yes
+          fi
+          if [[ "${IS_DEV_RELEASE}" == "true" ]]; then
+            git tag -f dev "$GITHUB_SHA"
+            git push origin refs/tags/dev --force
+            gh release create "${RELEASE_TAG}" "${HAP_PATH}" --title "${title}" --notes "${notes}" --prerelease
+          else
+            gh release create "${RELEASE_TAG}" "${HAP_PATH}" --title "${title}" --notes "${notes}"
+          fi

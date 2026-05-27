@@ -1,0 +1,9 @@
+name: Check Text Format
+description: Verify tracked text files follow repository formatting rules.
+
+runs:
+  using: composite
+  steps:
+    - name: Check text formatting
+      shell: bash
+      run: python3 scripts/ci/check_text_format.py .github scripts README.md .editorconfig .gitattributes .gitignore

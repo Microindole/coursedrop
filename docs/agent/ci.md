@@ -7,19 +7,21 @@
 - workflow 只负责编排
 - 具体检查封装成 `.github/actions` 下的 composite action
 - 服务端、鸿蒙客户端、文档检查互相独立
-- 鸿蒙端先做结构校验，等 CI 环境具备 HarmonyOS 构建工具后再接入 HAP 构建
+- 鸿蒙端结构校验在通用 CI 中执行，HAP 构建在 GitHub 托管 runner 上临时安装 Harmony 命令行工具后执行
 
 ## 当前 Workflow
 
 ```text
 .github/workflows/ci.yml
 .github/workflows/deploy-server.yml
+.github/workflows/release-harmony.yml
 ```
 
-`ci.yml` 包含三个 job：
+`ci.yml` 包含四个 job：
 
-- `docs`：检查关键文档是否存在，并确认根 README 指向重要入口
-- `server`：设置 Java 17，执行服务端 `mvn test`
+- `format`：检查受 Git 跟踪的文本文件是否符合 `.editorconfig` 的基础规则
+- `docs`：检查关键文档是否存在，确认根 README 指向重要入口，并校验 Markdown 链接
+- `server`：设置 Java 17，执行服务端 `mvn verify`
 - `harmony`：检查鸿蒙原生工程的标准目录和关键文件
 
 `deploy-server.yml` 是服务器发布工作流：
@@ -33,12 +35,22 @@
 
 部署说明见 `docs/deploy/server-debian.md`。
 
+`release-harmony.yml` 是鸿蒙 ArkTS 客户端发布工作流：
+
+- `main` 分支命中 `apps/harmony/**` 或相关 CI 文件时自动构建 `dev` 版本
+- `dev` release 每次都会删除旧 release、移动 `dev` tag，并重新上传 HAP
+- tag 推送会按 tag 名创建对应版本 release
+- 需要配置仓库 secret `HARMONY_COMMANDLINE_TOOLS_URL`，值为可下载的 HarmonyOS command-line-tools zip
+- workflow 会从该 zip 中加入 `ohpm`、`hvigorw` 和 SDK 路径，再执行 HAP 构建
+
 ## Composite Actions
 
 ```text
 .github/actions/check-docs
+.github/actions/check-format
 .github/actions/build-server
 .github/actions/check-harmony
+.github/actions/build-harmony
 ```
 
 后续如果要增加 Docker 镜像或多环境部署，只需要新增 action 或 job，不要把所有脚本堆进一个 workflow。

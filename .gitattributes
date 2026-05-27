@@ -1,1 +1,5 @@
-*.ets linguist-language=TypeScript
+*.ets linguist-language=TypeScript text eol=lf
+.gitattributes text eol=lf
+.github/** text eol=lf
+scripts/** text eol=lf
+docs/agent/ci.md text eol=lf

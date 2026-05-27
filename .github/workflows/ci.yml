@@ -11,8 +11,18 @@ permissions:
   contents: read
 
 jobs:
+  format:
+    name: Format guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check text formatting
+        uses: ./.github/actions/check-format
+
   docs:
-    name: Docs and repository checks
+    name: Docs and links
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,6 +30,17 @@ jobs:
 
       - name: Check repository docs
         uses: ./.github/actions/check-docs
+
+      - name: Check external Markdown links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --exclude-loopback
+            --exclude '^https?://\{server\}'
+            --exclude '^https?://server/'
+            --accept 200,204,206,301,302,429
+            './**/*.md'
 
   server:
     name: Java server
