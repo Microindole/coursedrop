@@ -1,4 +1,5 @@
 import http from '@ohos.net.http';
+import { fileIo, fileUri } from '@kit.CoreFileKit';
 import { ApiClient } from '../ApiClient';
 import { FileSystemService } from '../file';
 import { RelayDownloadRequest, RelayDownloadResult, RelayUploadRequest, RelayUploadResponse } from './TransferModels';
@@ -43,7 +44,66 @@ export class HttpRelayTransferApi implements RelayTransferApi {
   }
 
   async downloadShareItem(request: RelayDownloadRequest): Promise<RelayDownloadResult> {
-    throw new Error(`文件下载保存尚未接入：${request.code}/${request.itemId}`);
+    if (!this.apiClient.hasBaseUrl()) {
+      throw new Error('未配置中转源');
+    }
+    const url = `${this.apiClient.getBaseUrl()}/api/files/${request.itemId}/download`;
+    const httpRequest = http.createHttp();
+    try {
+      const response = await httpRequest.request(url, {
+        method: http.RequestMethod.GET,
+        expectDataType: http.HttpDataType.ARRAY_BUFFER,
+        connectTimeout: 15000,
+        readTimeout: 60000
+      });
+      if (response.responseCode < 200 || response.responseCode >= 300) {
+        throw new Error(`HTTP ${response.responseCode}`);
+      }
+
+      let displayName = `downloaded-${request.itemId}`;
+      let disposition = '';
+      if (response.header !== undefined) {
+        const headerRecord = JSON.parse(JSON.stringify(response.header)) as Record<string, string>;
+        if (headerRecord['content-disposition'] !== undefined) {
+          disposition = headerRecord['content-disposition'];
+        } else if (headerRecord['Content-Disposition'] !== undefined) {
+          disposition = headerRecord['Content-Disposition'];
+        }
+      }
+
+      if (disposition.length > 0) {
+        const matches = disposition.match(/filename\*=UTF-8''(.+)/i);
+        if (matches && matches[1]) {
+          displayName = decodeURIComponent(matches[1]);
+        } else {
+          const legacyMatches = disposition.match(/filename="(.+?)"/i);
+          if (legacyMatches && legacyMatches[1]) {
+            displayName = legacyMatches[1];
+          }
+        }
+      }
+
+      const buffer = response.result as ArrayBuffer;
+      const sizeBytes = buffer.byteLength;
+
+      this.fileSystemService.ensureDirectory(request.targetDirectory);
+      const targetPath = `${request.targetDirectory}/${Date.now()}-${displayName}`;
+
+      const file = fileIo.openSync(targetPath, fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE);
+      try {
+        fileIo.writeSync(file.fd, buffer);
+      } finally {
+        fileIo.closeSync(file.fd);
+      }
+
+      return {
+        localUri: fileUri.getUriFromPath(targetPath),
+        displayName: displayName,
+        sizeBytes: sizeBytes
+      };
+    } finally {
+      httpRequest.destroy();
+    }
   }
 
   private buildMultipartBody(request: RelayUploadRequest, boundary: string): ArrayBuffer {

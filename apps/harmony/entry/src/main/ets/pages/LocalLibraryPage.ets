@@ -1,304 +1,192 @@
 import router from '@ohos.router';
-import { AppColors, AppRadius, AppSize, AppSpacing, AppTypography } from '../common/Theme';
+import { AppColors, AppSpacing, AppTypography } from '../common/Theme';
 import {
   CdBanner,
   CdButton,
-  CdIconButton,
-  CdPanel,
-  CdPagination,
-  CdScrollContainer,
   CdSearchField,
   CdSegmentedControl,
   CdSectionHeader,
-  CdTopBar
+  CdTopBar,
+  CdLocalFileCard,
+  CdLocalLibraryActions,
+  CdLocalFileDetailDrawer,
+  CdLocalFileActionBar,
+  CdScrollContainer
 } from '../components/index';
 import { LocalFileEntry } from '../models/LocalFileEntry';
-import { LocalLibraryViewModel } from '../viewmodels/LocalLibraryViewModel';
+import { LocalLibraryViewModel, LocalLibraryFilter } from '../viewmodels/LocalLibraryViewModel';
 
 @Component
 export default struct LocalLibraryPage {
   showBack: boolean = true;
   private viewModel: LocalLibraryViewModel = new LocalLibraryViewModel();
+
+  @State files: LocalFileEntry[] = [];
+  @State selectedIds: string[] = [];
+  @State isEditMode: boolean = false;
+  @State filter: LocalLibraryFilter = 'ALL';
   @State keyword: string = '';
+  @State selectedFile: LocalFileEntry | null = null;
+  @State bannerText: string = '本地文件库充当内容缓存，可以在多选模式下快速完成批量归档与撤销';
+  @State isBannerError: boolean = false;
   @State segmentIndex: number = 0;
-  @State page: number = 1;
-  @State revision: number = 0;
+  @State currentPage: number = 1;
+  private pageSize: number = 5;
 
-  private refreshView(): void {
-    this.revision += 1;
-    const totalPages = this.viewModel.getTotalPages();
-    if (this.page > totalPages) {
-      this.page = totalPages;
+  aboutToAppear() {
+    this.refreshFiles();
+  }
+
+  private refreshFiles() {
+    this.files = this.viewModel.loadFiles();
+  }
+
+  private getFilteredFiles(): LocalFileEntry[] {
+    return this.viewModel.getFilteredFiles(this.files, this.filter, this.keyword);
+  }
+
+  private getTotalPages(): number {
+    const totalCount = this.getFilteredFiles().length;
+    if (totalCount === 0) {
+      return 1;
+    }
+    return Math.ceil(totalCount / this.pageSize);
+  }
+
+  private getPagedFiles(): LocalFileEntry[] {
+    const safePage = Math.min(Math.max(this.currentPage, 1), this.getTotalPages());
+    const startIndex = (safePage - 1) * this.pageSize;
+    return this.getFilteredFiles().slice(startIndex, startIndex + this.pageSize);
+  }
+
+  private resetPage(): void {
+    this.currentPage = 1;
+  }
+
+  private clampPage(): void {
+    const totalPages = this.getTotalPages();
+    if (this.currentPage > totalPages) {
+      this.currentPage = totalPages;
+    }
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
     }
   }
 
-  private applyFilter(index: number): void {
-    this.page = 1;
-    if (index === 1) {
-      this.viewModel.filter = 'FILE';
-    } else if (index === 2) {
-      this.viewModel.filter = 'IMAGE';
-    } else if (index === 3) {
-      this.viewModel.filter = 'TEXT';
-    } else if (index === 4) {
-      this.viewModel.filter = 'LINK';
+  private isAllSelected(): boolean {
+    const filtered = this.getFilteredFiles();
+    if (filtered.length === 0) return false;
+    return filtered.every(file => this.selectedIds.includes(file.id));
+  }
+
+  private toggleSelectAll() {
+    if (this.isAllSelected()) {
+      this.selectedIds = [];
     } else {
-      this.viewModel.filter = 'ALL';
+      this.selectedIds = this.getFilteredFiles().map(file => file.id);
     }
-    this.refreshView();
-  }
-
-  private syncSearch(): void {
-    this.viewModel.searchKeyword = this.keyword;
-    this.page = 1;
-    this.refreshView();
-  }
-
-  private formatSize(sizeBytes: number): string {
-    if (sizeBytes < 1024) {
-      return `${sizeBytes} B`;
-    }
-    if (sizeBytes < 1024 * 1024) {
-      return `${Math.round(sizeBytes / 1024)} KB`;
-    }
-    return `${Math.round(sizeBytes / 1024 / 1024)} MB`;
-  }
-
-  private typeText(file: LocalFileEntry): string {
-    if (file.type === 'IMAGE') {
-      return '图片';
-    }
-    if (file.type === 'TEXT') {
-      return '文本';
-    }
-    if (file.type === 'LINK') {
-      return '链接';
-    }
-    return '文件';
-  }
-
-  private typeIcon(file: LocalFileEntry): Resource {
-    if (file.type === 'IMAGE') {
-      return $r('app.media.cd_icon_image');
-    }
-    if (file.type === 'TEXT') {
-      return $r('app.media.cd_icon_text');
-    }
-    if (file.type === 'LINK') {
-      return $r('app.media.cd_icon_link');
-    }
-    return $r('app.media.cd_icon_file');
   }
 
   @Builder
-  FileRow(file: LocalFileEntry) {
-    CdPanel() {
+  PaginationBar() {
+    if (this.getTotalPages() > 1) {
       Row({ space: AppSpacing.MD }) {
-        Stack() {
-          Image(this.typeIcon(file))
-            .width(AppSize.ICON_MD)
-            .height(AppSize.ICON_MD)
-            .fillColor(AppColors.PRIMARY_SELECTED)
-        }
-        .width(44)
-        .height(44)
-        .backgroundColor(AppColors.PRIMARY_SOFT)
-        .borderRadius(AppRadius.MD)
-
-        Column({ space: AppSpacing.XS }) {
-          Text(file.displayName)
-            .fontSize(AppTypography.BODY)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.TEXT)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-
-          Text(`${this.typeText(file)} · ${this.formatSize(file.sizeBytes)} · ${file.encrypted ? '已加密' : '未加密'}`)
-            .fontSize(AppTypography.CAPTION)
-            .fontColor(AppColors.TEXT_SECONDARY)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-        }
+        CdButton({
+          label: '上一页',
+          variant: 'tonal',
+          interactive: this.currentPage > 1,
+          onTap: () => {
+            if (this.currentPage > 1) {
+              this.currentPage -= 1;
+            }
+          }
+        })
         .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start)
 
-        if (this.viewModel.isSelected(file.id)) {
-          Image($r('app.media.cd_icon_done'))
-            .width(AppSize.ICON_MD)
-            .height(AppSize.ICON_MD)
-            .fillColor(AppColors.SUCCESS)
-        }
+        Text(`${this.currentPage} / ${this.getTotalPages()}`)
+          .fontSize(AppTypography.BODY_SMALL)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(AppColors.TEXT)
+          .textAlign(TextAlign.Center)
+          .layoutWeight(1)
+
+        CdButton({
+          label: '下一页',
+          variant: 'tonal',
+          interactive: this.currentPage < this.getTotalPages(),
+          onTap: () => {
+            if (this.currentPage < this.getTotalPages()) {
+              this.currentPage += 1;
+            }
+          }
+        })
+        .layoutWeight(1)
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
-      .onClick(() => {
-        this.viewModel.toggleSelected(file.id);
-        this.refreshView();
-      })
-    }
-  }
-
-  @Builder
-  ActionPanel() {
-    CdPanel() {
-      Column({ space: AppSpacing.MD }) {
-        Text('本地库只管理 CourseDrop 应用目录和索引')
-          .fontSize(AppTypography.BODY_SMALL)
-          .fontColor(AppColors.TEXT_SECONDARY)
-
-        Row({ space: AppSpacing.SM }) {
-          CdButton({
-            label: '生成测试文件',
-            variant: 'tonal',
-            onTap: () => {
-              this.viewModel.createDebugTextFile();
-              this.refreshView();
-            }
-          })
-          .layoutWeight(1)
-
-          CdButton({
-            label: '导入文件',
-            onTap: () => {
-              this.viewModel.importFiles('FILE').then(() => {
-                this.refreshView();
-              });
-            }
-          })
-          .layoutWeight(1)
-        }
-        .width('100%')
-
-        CdButton({
-          label: '导入图片',
-          variant: 'tonal',
-          onTap: () => {
-            this.viewModel.importFiles('IMAGE').then(() => {
-              this.refreshView();
-            });
-          }
-        })
-      }
-      .width('100%')
-      .alignItems(HorizontalAlign.Start)
-    }
-  }
-
-  @Builder
-  SelectionPanel() {
-    if (this.viewModel.selectedIds.length > 0) {
-      CdPanel() {
-        Row({ space: AppSpacing.SM }) {
-          Text(`已选择 ${this.viewModel.selectedIds.length} 项`)
-            .fontSize(AppTypography.BODY_SMALL)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.TEXT)
-            .layoutWeight(1)
-
-          CdIconButton({
-            icon: $r('app.media.cd_icon_close'),
-            onTap: () => {
-              this.viewModel.clearSelection();
-              this.refreshView();
-            }
-          })
-
-          CdIconButton({
-            icon: $r('app.media.cd_icon_share'),
-            variant: 'tonal',
-            onTap: () => {
-              this.viewModel.shareSelected();
-              this.refreshView();
-            }
-          })
-
-          CdIconButton({
-            icon: $r('app.media.cd_icon_trash'),
-            variant: 'danger',
-            onTap: () => {
-              this.viewModel.deleteSelected();
-              this.refreshView();
-            }
-          })
-        }
-        .width('100%')
-      }
-    }
-  }
-
-  @Builder
-  FileList() {
-    if (this.viewModel.getPagedFiles(this.page).length === 0) {
-      CdPanel() {
-        Column({ space: AppSpacing.SM }) {
-          Image($r('app.media.cd_icon_library'))
-            .width(36)
-            .height(36)
-            .fillColor(AppColors.TEXT_SECONDARY)
-          Text('本地库暂无内容')
-            .fontSize(AppTypography.BODY)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.TEXT)
-          Text('可以先生成测试文件，或者从系统文件选择器导入。')
-            .fontSize(AppTypography.BODY_SMALL)
-            .fontColor(AppColors.TEXT_SECONDARY)
-            .textAlign(TextAlign.Center)
-        }
-        .width('100%')
-        .alignItems(HorizontalAlign.Center)
-        .padding({ top: AppSpacing.LG, bottom: AppSpacing.LG })
-      }
-    } else {
-      ForEach(this.viewModel.getPagedFiles(this.page), (file: LocalFileEntry) => {
-        this.FileRow(file);
-      }, (file: LocalFileEntry) => file.id)
-
-      if (this.viewModel.getTotalPages() > 1) {
-        CdPagination({
-          totalPages: this.viewModel.getTotalPages(),
-          currentPage: $page,
-          onChange: (nextPage: number) => {
-            this.page = nextPage;
-            this.refreshView();
-          }
-        })
-      }
     }
   }
 
   build() {
-    Stack({ alignContent: Alignment.TopStart }) {
+    Stack({ alignContent: Alignment.BottomStart }) {
       CdScrollContainer({ showScrollBar: true }) {
-        if (this.revision < 0) {
-          Blank()
-        }
-
         CdTopBar({
-          title: '本地库',
-          subtitle: `${this.viewModel.getTotalCount()} 项内容`,
+          title: '本地文件库',
+          subtitle: `管理本机已索引的 ${this.getFilteredFiles().length} 项内容`,
           leadingText: this.showBack ? '返回' : '',
+          trailingText: this.isEditMode ? '取消' : '批量管理',
           onLeadingTap: () => {
             router.back();
+          },
+          onTrailingTap: () => {
+            animateTo({ duration: 200 }, () => {
+              this.isEditMode = !this.isEditMode;
+              if (!this.isEditMode) {
+                this.selectedIds = [];
+              }
+            });
           }
         })
 
         CdBanner({
-          title: this.viewModel.getVisibleActionText(),
-          description: '文件先进入本机索引，再由分享页创建公网链接或后续局域网传输。',
-          tone: 'info'
+          title: this.bannerText,
+          description: '本地文件由应用专属目录管理，仅在您发起分享时才占用公网传输带宽。',
+          tone: this.isBannerError ? 'danger' : 'info'
         })
 
-        this.ActionPanel();
+        CdLocalLibraryActions({
+          isEditMode: this.isEditMode,
+          onImportFile: () => {
+            this.viewModel.importFiles('FILE').then((msg) => {
+              this.bannerText = msg;
+              this.isBannerError = false;
+              this.refreshFiles();
+              this.clampPage();
+            });
+          },
+          onImportMedia: () => {
+            this.viewModel.importFiles('IMAGE').then((msg) => {
+              this.bannerText = msg;
+              this.isBannerError = false;
+              this.refreshFiles();
+              this.clampPage();
+            });
+          },
+          onCreateDebug: () => {
+            const msg = this.viewModel.createDebugTextFile();
+            this.bannerText = msg;
+            this.isBannerError = false;
+            this.refreshFiles();
+            this.clampPage();
+          }
+        })
 
         CdSearchField({
-          placeholder: '搜索本地库',
+          placeholder: '搜索本地库文件名',
           value: $keyword,
           onChangeValue: (value: string) => {
             this.keyword = value;
-            this.syncSearch();
-          },
-          onSubmit: () => {
-            this.syncSearch();
+            this.resetPage();
           }
         })
 
@@ -306,22 +194,111 @@ export default struct LocalLibraryPage {
           options: ['全部', '文件', '图片', '文本', '链接'],
           selectedIndex: $segmentIndex,
           onChange: (index: number) => {
-            this.applyFilter(index);
+            if (index === 1) this.filter = 'FILE';
+            else if (index === 2) this.filter = 'IMAGE';
+            else if (index === 3) this.filter = 'TEXT';
+            else if (index === 4) this.filter = 'LINK';
+            else this.filter = 'ALL';
+            this.resetPage();
           }
         })
-
-        this.SelectionPanel();
 
         CdSectionHeader({
-          title: '文件',
-          actionText: this.viewModel.getFilteredFiles().length > 0 ? '全选' : '',
+          title: this.isEditMode ? '选择文件内容' : '全部文件列表',
+          actionText: this.isEditMode ? (this.isAllSelected() ? '取消全选' : '全选') : '',
           onAction: () => {
-            this.viewModel.selectFiltered();
-            this.refreshView();
+            if (this.isEditMode) {
+              this.toggleSelectAll();
+            }
           }
         })
 
-        this.FileList();
+        // 文件卡片列表
+        Column({ space: AppSpacing.MD }) {
+          if (this.getFilteredFiles().length === 0) {
+            Column({ space: AppSpacing.MD }) {
+              Image($r('app.media.cd_icon_library'))
+                .width(44)
+                .height(44)
+                .fillColor(AppColors.MUTED)
+
+              Text(this.keyword.length > 0 ? '无相关搜索结果' : '本地文件库暂无内容')
+                .fontSize(AppTypography.BODY)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.TEXT)
+
+              Text(this.keyword.length > 0 ? '请更换搜索词重新输入' : '您可以点击上方导入按钮导入文件，或者生成模拟测试项。')
+                .fontSize(AppTypography.BODY_SMALL)
+                .fontColor(AppColors.TEXT_SECONDARY)
+                .textAlign(TextAlign.Center)
+                .lineHeight(18)
+            }
+            .width('100%')
+            .alignItems(HorizontalAlign.Center)
+            .padding({ top: AppSpacing.XL, bottom: AppSpacing.XL })
+          } else {
+            ForEach(this.getPagedFiles(), (file: LocalFileEntry) => {
+              CdLocalFileCard({
+                file: file,
+                isEditMode: this.isEditMode,
+                selectedIds: $selectedIds,
+                selectedFile: $selectedFile
+              })
+            }, (file: LocalFileEntry) => file.id)
+          }
+        }
+        .width('100%')
+        .padding({ bottom: this.isEditMode ? 100 : 40 })
+
+        this.PaginationBar();
+      }
+
+      // 悬浮多选批量控制栏
+      if (this.isEditMode && this.selectedIds.length > 0) {
+        CdLocalFileActionBar({
+          isEditMode: this.isEditMode,
+          selectedIds: $selectedIds,
+          isAllSelected: this.isAllSelected(),
+          onShareSelected: () => {
+            const msg = this.viewModel.shareSelected(this.selectedIds);
+            this.bannerText = msg;
+            this.isBannerError = false;
+            this.selectedIds = [];
+            this.isEditMode = false;
+            this.refreshFiles();
+            this.clampPage();
+          },
+          onDeleteSelected: () => {
+            const msg = this.viewModel.deleteSelected(this.selectedIds);
+            this.bannerText = msg;
+            this.isBannerError = false;
+            this.selectedIds = [];
+            this.isEditMode = false;
+            this.refreshFiles();
+            this.clampPage();
+          }
+        })
+      }
+
+      // 详细查看 Sheet 面板
+      if (this.selectedFile !== null) {
+        CdLocalFileDetailDrawer({
+          selectedFile: $selectedFile,
+          onShare: (id) => {
+            const msg = this.viewModel.shareSelected([id]);
+            this.bannerText = msg;
+            this.isBannerError = false;
+            this.refreshFiles();
+            this.clampPage();
+          },
+          onDelete: (id) => {
+            const msg = this.viewModel.deleteSelected([id]);
+            this.bannerText = msg;
+            this.isBannerError = false;
+            this.refreshFiles();
+            this.clampPage();
+          }
+        })
       }
     }
     .width('100%')

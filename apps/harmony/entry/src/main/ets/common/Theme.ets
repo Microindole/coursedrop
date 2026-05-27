@@ -1,21 +1,53 @@
 export class AppColors {
-  static readonly BACKGROUND: string = '#F1F3F5';
+  static readonly BACKGROUND: string = '#F4F6F8';
   static readonly SURFACE: string = '#FFFFFF';
-  static readonly SURFACE_MUTED: string = '#E5E8EA';
+  static readonly SURFACE_MUTED: string = '#F0F2F4';
   static readonly PRIMARY: string = '#007DFF';
   static readonly PRIMARY_SELECTED: string = '#0A59F7';
-  static readonly PRIMARY_SOFT: string = '#EAF3FF';
+  static readonly PRIMARY_SOFT: string = '#F0F6FF';
   static readonly TEXT: string = '#182431';
-  static readonly TEXT_SECONDARY: string = '#99182431';
-  static readonly MUTED: string = '#838D97';
-  static readonly BORDER: string = '#0D000000';
-  static readonly BORDER_STRONG: string = '#33182431';
-  static readonly SUCCESS: string = '#0A7F42';
-  static readonly SUCCESS_SOFT: string = '#EAF8EF';
-  static readonly WARNING: string = '#B76700';
-  static readonly WARNING_SOFT: string = '#FFF3DF';
-  static readonly DANGER: string = '#FA2A2D';
-  static readonly TAB_NORMAL: string = '#66000000';
+  static readonly TEXT_SECONDARY: string = '#7C8894';
+  static readonly MUTED: string = '#A4AEB9';
+  static readonly BORDER: string = '#08000000';
+  static readonly BORDER_STRONG: string = '#1F182431';
+  static readonly SUCCESS: string = '#10B981';
+  static readonly SUCCESS_SOFT: string = '#ECFDF5';
+  static readonly WARNING: string = '#F59E0B';
+  static readonly WARNING_SOFT: string = '#FEF3C7';
+  static readonly DANGER: string = '#EF4444';
+  static readonly TAB_NORMAL: string = '#888D94';
+
+  // 各内容类型的精细配色
+  static readonly TONE_FILE: string = '#007DFF';
+  static readonly TONE_FILE_BG: string = '#EDF5FF';
+  static readonly TONE_IMAGE: string = '#FA2A2D';
+  static readonly TONE_IMAGE_BG: string = '#FFF0F0';
+  static readonly TONE_TEXT: string = '#F59E0B';
+  static readonly TONE_TEXT_BG: string = '#FFFBEB';
+  static readonly TONE_LINK: string = '#10B981';
+  static readonly TONE_LINK_BG: string = '#ECFDF5';
+}
+
+export interface ShadowType {
+  radius: number;
+  color: string;
+  offsetX: number;
+  offsetY: number;
+}
+
+export class AppShadows {
+  static readonly CARD: ShadowType = {
+    radius: 12,
+    color: '#08000000',
+    offsetX: 0,
+    offsetY: 4
+  };
+  static readonly FLOATING: ShadowType = {
+    radius: 20,
+    color: '#12000000',
+    offsetX: 0,
+    offsetY: 8
+  };
 }
 
 export class AppSpacing {
