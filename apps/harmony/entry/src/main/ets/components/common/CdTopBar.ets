@@ -62,5 +62,6 @@ export struct CdTopBar {
     .width('100%')
     .height(AppSize.TAB_BAR_HEIGHT)
     .alignItems(VerticalAlign.Center)
+    .padding({ left: AppSpacing.XS, right: AppSpacing.XS })
   }
 }

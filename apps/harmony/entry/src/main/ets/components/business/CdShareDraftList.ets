@@ -80,14 +80,27 @@ export struct CdShareDraftList {
               .height(40)
               .backgroundColor(this.typeColors(item.type).bg)
               .borderRadius(AppRadius.MD)
+              .border({ width: 0.7, color: this.typeColors(item.type).main })
 
               Column({ space: AppSpacing.XS }) {
-                Text(item.displayName)
-                  .fontSize(AppTypography.BODY_SMALL)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor(AppColors.TEXT)
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                Row({ space: AppSpacing.SM }) {
+                  Text(item.displayName)
+                    .fontSize(AppTypography.BODY_SMALL)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(AppColors.TEXT)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .layoutWeight(1)
+
+                  Text(item.remoteItemId ? 'CLOUD' : 'STAGING')
+                    .fontSize(9)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor(item.remoteItemId ? AppColors.SUCCESS : AppColors.WARNING)
+                    .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                    .backgroundColor(item.remoteItemId ? AppColors.SUCCESS_SOFT : AppColors.WARNING_SOFT)
+                    .borderRadius(AppRadius.SM)
+                }
+                .width('100%')
 
                 Text(`${this.typeText(item.type)} · ${this.formatSize(item.sizeBytes)} · ${item.remoteItemId ? '已托管在云端' : '待上传中转'}`)
                   .fontSize(AppTypography.CAPTION)

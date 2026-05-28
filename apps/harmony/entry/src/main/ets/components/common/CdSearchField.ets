@@ -46,8 +46,8 @@ export struct CdSearchField {
     .width('100%')
     .height(AppSize.INPUT_HEIGHT)
     .padding({ left: AppSpacing.MD, right: AppSpacing.MD })
-    .backgroundColor(AppColors.SURFACE_MUTED)
+    .backgroundColor(AppColors.SURFACE_RAISED)
     .borderRadius(AppRadius.LG)
-    .border({ width: 0.5, color: AppColors.BORDER })
+    .border({ width: 0.7, color: AppColors.BORDER })
   }
 }

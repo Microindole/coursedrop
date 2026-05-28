@@ -98,14 +98,27 @@ export struct CdLocalFileCard {
           .height(44)
           .backgroundColor(this.resolveTone(this.file.type).bg)
           .borderRadius(AppRadius.MD)
+          .border({ width: 0.7, color: this.resolveTone(this.file.type).main })
 
           Column({ space: AppSpacing.XS }) {
-            Text(this.file.displayName)
-              .fontSize(AppTypography.BODY_SMALL)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(AppColors.TEXT)
-              .maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis })
+            Row({ space: AppSpacing.SM }) {
+              Text(this.file.displayName)
+                .fontSize(AppTypography.BODY_SMALL)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(AppColors.TEXT)
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .layoutWeight(1)
+
+              Text(this.file.encrypted ? 'E2EE' : 'LAN')
+                .fontSize(9)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.file.encrypted ? AppColors.SUCCESS : AppColors.PRIMARY)
+                .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                .backgroundColor(this.file.encrypted ? AppColors.SUCCESS_SOFT : AppColors.PRIMARY_SOFT)
+                .borderRadius(AppRadius.SM)
+            }
+            .width('100%')
 
             Text(`${this.typeText(this.file.type)} · ${this.formatSize(this.file.sizeBytes)} · ${this.file.encrypted ? '已端到端加密' : '直传免加密'}`)
               .fontSize(AppTypography.CAPTION)

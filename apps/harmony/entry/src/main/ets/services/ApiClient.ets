@@ -64,7 +64,7 @@ export class ApiClient {
       }), this.requestTimeoutMs, url);
       console.info(`[CourseDrop] HTTP ${response.responseCode} ${url}`);
       if (response.responseCode < 200 || response.responseCode >= 300) {
-        throw new Error(`HTTP ${response.responseCode}`);
+        throw new Error(`HTTP ${response.responseCode}: ${String(response.result)}`);
       }
       return String(response.result);
     } finally {

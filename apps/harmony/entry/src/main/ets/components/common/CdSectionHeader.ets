@@ -25,6 +25,6 @@ export struct CdSectionHeader {
       }
     }
     .width('100%')
-    .padding({ top: AppSpacing.MD, bottom: AppSpacing.SM })
+    .padding({ top: AppSpacing.LG, bottom: AppSpacing.SM })
   }
 }

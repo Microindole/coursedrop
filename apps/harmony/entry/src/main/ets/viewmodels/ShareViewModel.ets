@@ -93,6 +93,8 @@ export class ShareViewModel {
       const result = await shareService.createRelayShare(this.currentSession.id, 24, 'LOGIN_REQUIRED');
       this.currentSession = shareService.getCurrentSession();
       if (result.success) {
+        this.lastActionText = '公网分享已创建，正在上传当前草稿';
+        this.errorMessage = '';
         await this.uploadCurrentItems();
       }
       this.currentSession = shareService.getCurrentSession();
@@ -100,7 +102,7 @@ export class ShareViewModel {
         this.lastActionText = result.message;
         this.errorMessage = result.message;
       } else if (this.errorMessage.length === 0) {
-        this.lastActionText = '公网分享已创建，上传任务已启动';
+        this.lastActionText = '公网分享已创建，当前草稿已上传';
       }
     } catch (error) {
       this.lastActionText = '生成分享失败';
@@ -125,13 +127,34 @@ export class ShareViewModel {
     }
   }
 
-  async extendShare(): Promise<void> {
-    this.loading = true;
-    const result = await shareService.extendShare(this.currentSession.id, 24);
+  returnToDraft(): void {
+    const result = shareService.returnToDraft(this.currentSession.id);
     this.currentSession = shareService.getCurrentSession();
     this.lastActionText = result.message;
     this.errorMessage = result.success ? '' : result.message;
     this.loading = false;
+  }
+
+  refreshStatus(): void {
+    this.currentSession = shareService.getCurrentSession();
+    this.lastActionText = '已刷新当前分享状态';
+    this.errorMessage = '';
+    this.loading = false;
+  }
+
+  async extendShare(): Promise<void> {
+    this.loading = true;
+    try {
+      const result = await shareService.extendShare(this.currentSession.id, 24);
+      this.currentSession = shareService.getCurrentSession();
+      this.lastActionText = result.success ? '分享已续期 24 小时' : result.message;
+      this.errorMessage = result.success ? '' : result.message;
+    } catch (error) {
+      this.lastActionText = '续期失败';
+      this.errorMessage = String(error);
+    } finally {
+      this.loading = false;
+    }
   }
 
   async addLocalItem(type: TransferItemType): Promise<void> {

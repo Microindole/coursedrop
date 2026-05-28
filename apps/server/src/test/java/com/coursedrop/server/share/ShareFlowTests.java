@@ -51,7 +51,8 @@ class ShareFlowTests {
                         """))
                 .andExpect(status().isOk())
                 .andReturn();
-        var fingerprintId = objectMapper.readTree(fingerprintResult.getResponse().getContentAsString()).get("id").asText();
+        var fingerprintId = objectMapper.readTree(fingerprintResult.getResponse().getContentAsString()).get("id")
+                .asText();
 
         var createResult = mockMvc.perform(post("/api/shares")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -176,7 +177,6 @@ class ShareFlowTests {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("登录并下载到电脑")));
     }
 
-
     @Test
     void encryptedUploadRequiresCompleteMetadata() throws Exception {
         var createResult = mockMvc.perform(post("/api/shares")
@@ -200,6 +200,41 @@ class ShareFlowTests {
     }
 
     @Test
+    void encryptedUploadAllowsRawKeyWithoutKdfSalt() throws Exception {
+        var createResult = mockMvc.perform(post("/api/shares")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "expireHours": 1,
+                          "downloadPolicy": "PUBLIC",
+                          "ownerIdentityType": "ANONYMOUS"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andReturn();
+        var share = objectMapper.readTree(createResult.getResponse().getContentAsString());
+        var shareId = share.get("id").asText();
+        var code = share.get("code").asText();
+        var file = new MockMultipartFile("file", "encrypted.bin", "application/octet-stream", "cipher".getBytes());
+
+        mockMvc.perform(multipart("/api/shares/{shareId}/items", shareId)
+                .file(file)
+                .param("encrypted", "true")
+                .param("encryptionAlgorithm", "AES-256-GCM")
+                .param("kdfAlgorithm", "NONE-RAW-KEY")
+                .param("nonce", "00112233445566778899aabb.ccddeeff00112233445566778899aabb")
+                .param("sha256", "0123456789abcdef")
+                .param("plainSizeBytes", "6"))
+                .andExpect(status().isOk());
+
+        var pageResult = mockMvc.perform(get("/api/shares/{code}", code))
+                .andExpect(status().isOk())
+                .andReturn();
+        var page = objectMapper.readTree(pageResult.getResponse().getContentAsString());
+        assertThat(page.get("items")).hasSize(1);
+    }
+
+    @Test
     void webLoginConfirmationIssuesCookie() throws Exception {
         var fingerprintResult = mockMvc.perform(post("/api/identity/fingerprints")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -212,7 +247,8 @@ class ShareFlowTests {
                         """))
                 .andExpect(status().isOk())
                 .andReturn();
-        var fingerprintId = objectMapper.readTree(fingerprintResult.getResponse().getContentAsString()).get("id").asText();
+        var fingerprintId = objectMapper.readTree(fingerprintResult.getResponse().getContentAsString()).get("id")
+                .asText();
 
         var createLogin = mockMvc.perform(post("/api/auth/web-login"))
                 .andExpect(status().isOk())
@@ -247,7 +283,8 @@ class ShareFlowTests {
                         """.formatted(suffix)))
                 .andExpect(status().isOk())
                 .andReturn();
-        var fingerprintId = objectMapper.readTree(fingerprintResult.getResponse().getContentAsString()).get("id").asText();
+        var fingerprintId = objectMapper.readTree(fingerprintResult.getResponse().getContentAsString()).get("id")
+                .asText();
 
         var createLogin = mockMvc.perform(post("/api/auth/web-login"))
                 .andExpect(status().isOk())

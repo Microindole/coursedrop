@@ -62,9 +62,9 @@ export struct CdSelectField {
       }
       .width('100%')
       .height(44)
-      .backgroundColor(AppColors.SURFACE_MUTED)
+      .backgroundColor(AppColors.SURFACE)
       .borderRadius(AppRadius.MD)
-      .border({ width: 0.5, color: AppColors.BORDER })
+      .border({ width: 0.7, color: AppColors.BORDER })
     }
     .width('100%')
     .alignItems(HorizontalAlign.Start)

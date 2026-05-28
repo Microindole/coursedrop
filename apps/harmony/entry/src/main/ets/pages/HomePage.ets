@@ -37,7 +37,7 @@ struct HomePage {
 
   @Builder
   HomeTab() {
-    CdScrollContainer({ showScrollBar: true }) {
+    CdScrollContainer({ showScrollBar: true, backgroundStyle: 'home' }) {
       CdPageTitle({
         title: this.viewModel.appName,
         subtitle: this.viewModel.subtitle
@@ -51,8 +51,8 @@ struct HomePage {
       })
 
       CdBanner({
-        title: '云端中转与局域网直传双引擎',
-        description: '我们不读取并分析您的明文内容。生成提取码后可在网页中扫码秒级拉取。',
+        title: '安全中转与局域网直传双引擎',
+        description: '本地优先整理内容，公网只托管临时密文，局域网下优先走直连通道。',
         tone: 'info',
         actionText: '同步状态',
         onAction: () => {

@@ -1,21 +1,26 @@
 export class AppColors {
-  static readonly BACKGROUND: string = '#F4F6F8';
+  static readonly BACKGROUND: string = '#EEF3FA';
+  static readonly BACKGROUND_DEEP: string = '#E7EEF8';
   static readonly SURFACE: string = '#FFFFFF';
-  static readonly SURFACE_MUTED: string = '#F0F2F4';
-  static readonly PRIMARY: string = '#007DFF';
-  static readonly PRIMARY_SELECTED: string = '#0A59F7';
-  static readonly PRIMARY_SOFT: string = '#F0F6FF';
-  static readonly TEXT: string = '#182431';
-  static readonly TEXT_SECONDARY: string = '#7C8894';
-  static readonly MUTED: string = '#A4AEB9';
-  static readonly BORDER: string = '#08000000';
-  static readonly BORDER_STRONG: string = '#1F182431';
+  static readonly SURFACE_MUTED: string = '#EAF1FA';
+  static readonly SURFACE_RAISED: string = '#F8FBFF';
+  static readonly PRIMARY: string = '#1466FF';
+  static readonly PRIMARY_SELECTED: string = '#0A4BDB';
+  static readonly PRIMARY_SOFT: string = '#E8F1FF';
+  static readonly ACCENT: string = '#00B8D9';
+  static readonly ACCENT_SOFT: string = '#E6FAFF';
+  static readonly TEXT: string = '#132235';
+  static readonly TEXT_SECONDARY: string = '#66778C';
+  static readonly MUTED: string = '#9AA8B8';
+  static readonly BORDER: string = '#140A2A43';
+  static readonly BORDER_STRONG: string = '#2B132235';
   static readonly SUCCESS: string = '#10B981';
-  static readonly SUCCESS_SOFT: string = '#ECFDF5';
+  static readonly SUCCESS_SOFT: string = '#E8FFF6';
   static readonly WARNING: string = '#F59E0B';
-  static readonly WARNING_SOFT: string = '#FEF3C7';
-  static readonly DANGER: string = '#EF4444';
-  static readonly TAB_NORMAL: string = '#888D94';
+  static readonly WARNING_SOFT: string = '#FFF5DA';
+  static readonly DANGER: string = '#F04438';
+  static readonly DANGER_SOFT: string = '#FFF0F0';
+  static readonly TAB_NORMAL: string = '#7C8796';
 
   // 各内容类型的精细配色
   static readonly TONE_FILE: string = '#007DFF';
@@ -37,16 +42,16 @@ export interface ShadowType {
 
 export class AppShadows {
   static readonly CARD: ShadowType = {
-    radius: 12,
-    color: '#08000000',
+    radius: 14,
+    color: '#120B2A4A',
     offsetX: 0,
-    offsetY: 4
+    offsetY: 6
   };
   static readonly FLOATING: ShadowType = {
-    radius: 20,
-    color: '#12000000',
+    radius: 24,
+    color: '#1A0B2A4A',
     offsetX: 0,
-    offsetY: 8
+    offsetY: 10
   };
 }
 
@@ -57,19 +62,19 @@ export class AppSpacing {
   static readonly LG: number = 16;
   static readonly XL: number = 24;
   static readonly XXL: number = 32;
-  static readonly PAGE_HORIZONTAL: number = 12;
-  static readonly PAGE_TOP: number = 48;
+  static readonly PAGE_HORIZONTAL: number = 16;
+  static readonly PAGE_TOP: number = 42;
 }
 
 export class AppRadius {
   static readonly SM: number = 8;
   static readonly MD: number = 12;
-  static readonly LG: number = 16;
-  static readonly XL: number = 24;
+  static readonly LG: number = 18;
+  static readonly XL: number = 26;
 }
 
 export class AppTypography {
-  static readonly DISPLAY: number = 26;
+  static readonly DISPLAY: number = 28;
   static readonly TITLE: number = 18;
   static readonly SUBTITLE: number = 16;
   static readonly BODY: number = 16;
@@ -79,8 +84,8 @@ export class AppTypography {
 }
 
 export class AppSize {
-  static readonly BUTTON_HEIGHT: number = 40;
-  static readonly INPUT_HEIGHT: number = 45;
+  static readonly BUTTON_HEIGHT: number = 42;
+  static readonly INPUT_HEIGHT: number = 46;
   static readonly LIST_ROW_HEIGHT: number = 48;
   static readonly TAB_BAR_HEIGHT: number = 56;
   static readonly ICON_MD: number = 24;

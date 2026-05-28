@@ -22,7 +22,7 @@ export struct CdBottomTabs {
       Image(icon)
         .width(22)
         .height(22)
-        .fillColor(this.currentIndex === index ? AppColors.PRIMARY_SELECTED : AppColors.TAB_NORMAL)
+        .fillColor(this.currentIndex === index ? AppColors.PRIMARY : AppColors.TAB_NORMAL)
         .scale({
           x: this.currentIndex === index ? 1.1 : 1.0,
           y: this.currentIndex === index ? 1.1 : 1.0
@@ -32,14 +32,14 @@ export struct CdBottomTabs {
       Text(label)
         .fontSize(AppTypography.TAB)
         .fontWeight(this.currentIndex === index ? FontWeight.Bold : FontWeight.Medium)
-        .fontColor(this.currentIndex === index ? AppColors.PRIMARY_SELECTED : AppColors.TAB_NORMAL)
+        .fontColor(this.currentIndex === index ? AppColors.PRIMARY : AppColors.TAB_NORMAL)
 
       // 底部呼吸小圆点
       Row()
         .width(4)
         .height(4)
         .borderRadius(2)
-        .backgroundColor(AppColors.PRIMARY_SELECTED)
+        .backgroundColor(AppColors.ACCENT)
         .opacity(this.currentIndex === index ? 1 : 0)
         .scale({
           x: this.currentIndex === index ? 1 : 0,
@@ -120,8 +120,8 @@ export struct CdBottomTabs {
         this.tabItem(4, $r('app.media.cd_icon_settings'), '设置')
       }
       .width('100%')
-      .height(64)
-      .backgroundColor(AppColors.SURFACE)
+      .height(66)
+      .backgroundColor(AppColors.SURFACE_RAISED)
       .border({
         width: { top: 0.5 },
         color: AppColors.BORDER

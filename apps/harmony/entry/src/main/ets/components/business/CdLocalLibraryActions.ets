@@ -1,4 +1,4 @@
-import { AppColors, AppSpacing, AppTypography } from '../../common/Theme';
+import { AppColors, AppRadius, AppSpacing, AppTypography } from '../../common/Theme';
 import { CdButton } from '../common/CdButton';
 import { CdPanel } from '../common/CdPanel';
 
@@ -18,6 +18,15 @@ export struct CdLocalLibraryActions {
             .fontWeight(FontWeight.Medium)
             .fontColor(AppColors.TEXT_SECONDARY)
             .layoutWeight(1)
+
+          Text('PRIVATE CACHE')
+            .fontSize(10)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.ACCENT)
+            .padding({ left: AppSpacing.SM, right: AppSpacing.SM, top: 3, bottom: 3 })
+            .backgroundColor(AppColors.ACCENT_SOFT)
+            .borderRadius(AppRadius.SM)
+            .margin({ right: AppSpacing.SM })
           
           if (!this.isEditMode) {
             Text('生成测试项')

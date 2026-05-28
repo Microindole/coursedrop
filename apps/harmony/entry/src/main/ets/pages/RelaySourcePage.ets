@@ -9,7 +9,7 @@ import {
   CdTextField,
   CdTopBar
 } from '../components/index';
-import { AppColors, AppSpacing, AppTypography } from '../common/Theme';
+import { AppColors, AppRadius, AppSpacing, AppTypography } from '../common/Theme';
 import { RelayServerConfig } from '../models/RelayServerConfig';
 import { SettingsViewModel } from '../viewmodels/SettingsViewModel';
 
@@ -157,12 +157,24 @@ struct RelaySourcePage {
           .margin({ right: AppSpacing.SM })
 
         Column({ space: AppSpacing.XS }) {
-          Text(server.name)
-            .fontSize(AppTypography.BODY)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(AppColors.TEXT)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
+          Row({ space: AppSpacing.SM }) {
+            Text(server.name)
+              .fontSize(AppTypography.BODY)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(AppColors.TEXT)
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .layoutWeight(1)
+
+            Text(server.enabled ? 'ONLINE' : 'DISABLED')
+              .fontSize(9)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(server.enabled ? AppColors.SUCCESS : AppColors.MUTED)
+              .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+              .backgroundColor(server.enabled ? AppColors.SUCCESS_SOFT : AppColors.SURFACE_MUTED)
+              .borderRadius(AppRadius.SM)
+          }
+          .width('100%')
 
           Text(server.url)
             .fontSize(AppTypography.CAPTION)
@@ -233,7 +245,7 @@ struct RelaySourcePage {
 
           CdTopBar({
             title: '中转源',
-            subtitle: '管理公网中转服务器',
+            subtitle: '管理公网安全托管节点',
             leadingText: '返回',
             onLeadingTap: () => {
               router.back();
@@ -242,6 +254,23 @@ struct RelaySourcePage {
 
           CdPanel() {
             Column({ space: AppSpacing.MD }) {
+              Row() {
+                Text(this.editingId.length === 0 ? '新增安全中转节点' : '编辑安全中转节点')
+                  .fontSize(AppTypography.BODY_SMALL)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(AppColors.TEXT)
+                  .layoutWeight(1)
+
+                Text('HEALTH CHECK')
+                  .fontSize(10)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(AppColors.ACCENT)
+                  .padding({ left: AppSpacing.SM, right: AppSpacing.SM, top: 3, bottom: 3 })
+                  .backgroundColor(AppColors.ACCENT_SOFT)
+                  .borderRadius(AppRadius.SM)
+              }
+              .width('100%')
+
               CdTextField({
                 label: this.editingId.length === 0 ? '新增中转源' : '编辑中转源',
                 placeholder: 'https://你的中转域名',

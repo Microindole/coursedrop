@@ -9,7 +9,8 @@ export struct CdShareControlCenter {
   @Prop loading: boolean = false;
   @Prop expireText: string = '';
   @Prop qrImageUrl: string = '';
-  onRevoke: () => void = () => {};
+  @Prop errorMessage: string = '';
+  onReturn: () => void = () => {};
   onExtend: () => void = () => {};
   onCopy: () => void = () => {};
   onCopyCode: () => void = () => {};
@@ -22,12 +23,16 @@ export struct CdShareControlCenter {
           // 状态灯
           Stack() {
             Circle()
-              .width(12)
-              .height(12)
+              .width(20)
+              .height(20)
+              .fill(this.currentSession.shareUrl.length > 0 ? AppColors.SUCCESS_SOFT : AppColors.SURFACE_MUTED)
+            Circle()
+              .width(10)
+              .height(10)
               .fill(this.currentSession.shareUrl.length > 0 ? AppColors.SUCCESS : AppColors.MUTED)
           }
-          .width(20)
-          .height(20)
+          .width(24)
+          .height(24)
           .align(Alignment.Center)
 
           Column({ space: 2 }) {
@@ -42,6 +47,14 @@ export struct CdShareControlCenter {
           }
           .layoutWeight(1)
           .alignItems(HorizontalAlign.Start)
+
+          Text(this.currentSession.encrypted ? 'E2EE' : 'RELAY')
+            .fontSize(10)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.currentSession.encrypted ? AppColors.SUCCESS : AppColors.PRIMARY_SELECTED)
+            .padding({ left: AppSpacing.SM, right: AppSpacing.SM, top: 3, bottom: 3 })
+            .backgroundColor(this.currentSession.encrypted ? AppColors.SUCCESS_SOFT : AppColors.PRIMARY_SOFT)
+            .borderRadius(AppRadius.SM)
 
         }
         .width('100%')
@@ -71,8 +84,9 @@ export struct CdShareControlCenter {
           }
           .width('100%')
           .padding({ top: AppSpacing.MD, bottom: AppSpacing.MD })
-          .backgroundColor(AppColors.PRIMARY_SOFT)
-          .borderRadius(AppRadius.MD)
+          .backgroundColor(AppColors.SURFACE)
+          .borderRadius(AppRadius.LG)
+          .border({ width: 0.7, color: AppColors.PRIMARY })
           .alignItems(HorizontalAlign.Center)
         }
 
@@ -99,9 +113,9 @@ export struct CdShareControlCenter {
           }
           .width('100%')
           .padding(AppSpacing.MD)
-          .backgroundColor(AppColors.SURFACE)
+          .backgroundColor(AppColors.SURFACE_RAISED)
           .border({ width: 1, color: AppColors.BORDER })
-          .borderRadius(AppRadius.MD)
+          .borderRadius(AppRadius.LG)
 
           Row({ space: AppSpacing.SM }) {
             Text(this.currentSession.shareUrl)
@@ -121,7 +135,7 @@ export struct CdShareControlCenter {
           }
           .width('100%')
           .padding(AppSpacing.MD)
-          .backgroundColor(AppColors.BACKGROUND)
+          .backgroundColor(AppColors.PRIMARY_SOFT)
           .borderRadius(AppRadius.MD)
 
           Row({ space: AppSpacing.SM }) {
@@ -140,7 +154,7 @@ export struct CdShareControlCenter {
               variant: 'danger',
               interactive: !this.loading,
               onTap: () => {
-                this.onRevoke();
+                this.onReturn();
               }
             })
             .layoutWeight(1)
@@ -155,13 +169,20 @@ export struct CdShareControlCenter {
 
         if (this.currentSession.shareUrl.length === 0) {
           CdButton({
-            label: this.loading ? '正在生成链接并上传...' : '生成公网提取链接',
+            label: this.loading ? '正在生成链接并上传当前草稿...' : '生成公网提取链接',
             interactive: !this.loading && this.currentSession.items.length > 0,
             onTap: () => {
               this.onCreate();
             }
           })
           .width('100%')
+        }
+
+        if (this.errorMessage.length > 0) {
+          Text(this.errorMessage)
+            .fontSize(AppTypography.BODY_SMALL)
+            .fontColor(AppColors.DANGER)
+            .lineHeight(18)
         }
       }
       .width('100%')

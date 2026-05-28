@@ -68,7 +68,13 @@ export class LocalShareService implements ShareService {
   }
 
   async createRelayShare(sessionId: string, expireHours: number, downloadPolicy: string): Promise<ShareOperationResult> {
-    const session = this.findSession(sessionId);
+    const draft = this.findSession(sessionId);
+    if (draft.items.length === 0) {
+      return {
+        success: false,
+        message: '请先添加本地内容'
+      };
+    }
     try {
       const identity = identityService.getLocalIdentity();
       const ownerIdentityId = identity === undefined ? '' : identity.fingerprintId;
@@ -79,17 +85,24 @@ export class LocalShareService implements ShareService {
         ownerIdentityId,
         ownerIdentityType
       );
-      session.id = response.id;
-      session.code = response.code;
-      session.shareUrl = response.downloadUrl;
-      session.status = 'ACTIVE';
-      session.networkMode = 'RELAY';
-      session.expireStatus = 'ACTIVE';
-      session.createdAt = response.createdAt;
-      session.expiresAt = response.expiresAt;
-      session.downloadPolicy = response.downloadPolicy === 'OWNER_ONLY' ? 'OWNER_ONLY' :
-        response.downloadPolicy === 'PUBLIC' ? 'PUBLIC' : 'LOGIN_REQUIRED';
-      this.sessionRepository.save(session);
+      const activeSession: ShareSession = {
+        id: response.id,
+        title: draft.title,
+        code: response.code,
+        shareUrl: response.downloadUrl,
+        status: 'ACTIVE',
+        networkMode: 'RELAY',
+        expireStatus: 'ACTIVE',
+        createdAt: response.createdAt,
+        expiresAt: response.expiresAt,
+        itemCount: draft.itemCount,
+        totalSizeBytes: draft.totalSizeBytes,
+        encrypted: draft.encrypted,
+        downloadPolicy: response.downloadPolicy === 'OWNER_ONLY' ? 'OWNER_ONLY' :
+        response.downloadPolicy === 'PUBLIC' ? 'PUBLIC' : 'LOGIN_REQUIRED',
+        items: this.cloneItemsForSession(draft.items, response.id)
+      };
+      this.sessionRepository.setCurrent(activeSession);
       return {
         success: true,
         message: '公网分享已创建'
@@ -131,6 +144,14 @@ export class LocalShareService implements ShareService {
     return {
       success: true,
       message: '已返回草稿状态，可重新生成链接'
+    };
+  }
+
+  returnToDraft(_sessionId: string): ShareOperationResult {
+    this.sessionRepository.startNewDraft();
+    return {
+      success: true,
+      message: '已返回新的分享草稿，已生成链接仍可访问'
     };
   }
 
@@ -231,7 +252,7 @@ export class LocalShareService implements ShareService {
     if (session.status === 'ACTIVE') {
       return {
         success: false,
-        message: '已创建的公网分享不能直接清空草稿，请先撤回'
+        message: '已创建的公网分享不能直接清空草稿，请先返回新草稿'
       };
     }
     session.items = [];
@@ -303,6 +324,28 @@ export class LocalShareService implements ShareService {
       expiresAt: '',
       encrypted: file.encrypted
     };
+  }
+
+  private cloneItemsForSession(items: TransferItem[], sessionId: string): TransferItem[] {
+    const clonedItems: TransferItem[] = [];
+    for (let index = 0; index < items.length; index += 1) {
+      const item = items[index];
+      clonedItems.push({
+        id: item.id,
+        sessionId: sessionId,
+        type: item.type,
+        displayName: item.displayName,
+        contentType: item.contentType,
+        sizeBytes: item.sizeBytes,
+        localUri: item.localUri,
+        remoteItemId: '',
+        remoteUrl: '',
+        createdAt: item.createdAt,
+        expiresAt: '',
+        encrypted: item.encrypted
+      });
+    }
+    return clonedItems;
   }
 
   private sumItemSize(items: TransferItem[]): number {

@@ -17,10 +17,11 @@ export struct CdHomeGuideStep {
               .height(AppSize.ICON_MD)
               .fillColor(AppColors.PRIMARY)
           }
-          .width(44)
-          .height(44)
-          .backgroundColor(AppColors.PRIMARY_SOFT)
-          .borderRadius(AppRadius.MD)
+          .width(48)
+          .height(48)
+          .backgroundColor(AppColors.ACCENT_SOFT)
+          .borderRadius(AppRadius.LG)
+          .border({ width: 0.7, color: AppColors.ACCENT })
 
           Column({ space: AppSpacing.XS }) {
             Text('开始第一步：整理本地库')
@@ -35,6 +36,25 @@ export struct CdHomeGuideStep {
           }
           .layoutWeight(1)
           .alignItems(HorizontalAlign.Start)
+        }
+        .width('100%')
+
+        Row({ space: AppSpacing.SM }) {
+          Text('LOCAL-FIRST')
+            .fontSize(10)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.PRIMARY_SELECTED)
+            .padding({ left: AppSpacing.SM, right: AppSpacing.SM, top: 3, bottom: 3 })
+            .backgroundColor(AppColors.PRIMARY_SOFT)
+            .borderRadius(AppRadius.SM)
+
+          Text('E2EE READY')
+            .fontSize(10)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.SUCCESS)
+            .padding({ left: AppSpacing.SM, right: AppSpacing.SM, top: 3, bottom: 3 })
+            .backgroundColor(AppColors.SUCCESS_SOFT)
+            .borderRadius(AppRadius.SM)
         }
         .width('100%')
 

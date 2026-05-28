@@ -61,7 +61,8 @@ public class ShareService {
 
     public ShareSessionResponse create(CreateShareRequest request) {
         var now = Instant.now();
-        var identityType = request.ownerIdentityType() == null ? OwnerIdentityType.ANONYMOUS : request.ownerIdentityType();
+        var identityType = request.ownerIdentityType() == null ? OwnerIdentityType.ANONYMOUS
+                : request.ownerIdentityType();
         var session = new ShareSessionRecord(
                 UUID.randomUUID().toString(),
                 nextUniqueCode(),
@@ -104,7 +105,8 @@ public class ShareService {
         if (file.getSize() > maxBytes) {
             throw new ApiException(HttpStatus.PAYLOAD_TOO_LARGE, "File is too large");
         }
-        validateEncryptionMetadata(encrypted, encryptionAlgorithm, kdfAlgorithm, kdfSalt, nonce, sha256, plainSizeBytes);
+        validateEncryptionMetadata(encrypted, encryptionAlgorithm, kdfAlgorithm, kdfSalt, nonce, sha256,
+                plainSizeBytes);
 
         var storedObject = storageService.store(file);
         var now = Instant.now();
@@ -134,7 +136,8 @@ public class ShareService {
         return download(code, itemId);
     }
 
-    public DownloadFile downloadBrowser(String code, String itemId, WebLoginIdentity identity, boolean developmentAuthorized) {
+    public DownloadFile downloadBrowser(String code, String itemId, WebLoginIdentity identity,
+            boolean developmentAuthorized) {
         var session = requireDownloadableSession(code);
         ensureBrowserDownloadAuthorized(session, identity, developmentAuthorized);
         return download(code, itemId);
@@ -144,7 +147,8 @@ public class ShareService {
         var session = sessionRepository.findById(shareId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Share not found"));
         sessionRepository.updateStatus(session.id(), ShareSessionStatus.REVOKED);
-        deleteShareFiles(session.id(), ShareAuditReason.REVOKED, ShareAuditActorType.FINGERPRINT, session.ownerIdentityId());
+        deleteShareFiles(session.id(), ShareAuditReason.REVOKED, ShareAuditActorType.FINGERPRINT,
+                session.ownerIdentityId());
     }
 
     public List<ShareSessionResponse> listMine(String ownerIdentityId, OwnerIdentityType ownerIdentityType) {
@@ -183,7 +187,8 @@ public class ShareService {
                 .filter(value -> value.shareId().equals(shareId))
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Share item not found"));
         if (!storageService.deleteIfExistsWithResult(item.storageKey())) {
-            auditService.record(shareId, item.id(), ShareAuditReason.CLEANUP_FAILED, actorType, actorId, item.sizeBytes());
+            auditService.record(shareId, item.id(), ShareAuditReason.CLEANUP_FAILED, actorType, actorId,
+                    item.sizeBytes());
         }
         auditService.record(shareId, item.id(), ShareAuditReason.REVOKED, actorType, actorId, item.sizeBytes());
         itemRepository.deleteById(item.id());
@@ -266,7 +271,8 @@ public class ShareService {
             String actorId) {
         itemRepository.findByShareId(shareId).forEach(item -> {
             if (!storageService.deleteIfExistsWithResult(item.storageKey())) {
-                auditService.record(shareId, item.id(), ShareAuditReason.CLEANUP_FAILED, actorType, actorId, item.sizeBytes());
+                auditService.record(shareId, item.id(), ShareAuditReason.CLEANUP_FAILED, actorType, actorId,
+                        item.sizeBytes());
             }
             auditService.record(shareId, item.id(), reason, actorType, actorId, item.sizeBytes());
         });
@@ -355,7 +361,8 @@ public class ShareService {
         if (!encrypted) {
             return;
         }
-        if (isBlank(encryptionAlgorithm) || isBlank(kdfAlgorithm) || isBlank(kdfSalt)
+        var saltRequired = !"NONE-RAW-KEY".equalsIgnoreCase(kdfAlgorithm);
+        if (isBlank(encryptionAlgorithm) || isBlank(kdfAlgorithm) || (saltRequired && isBlank(kdfSalt))
                 || isBlank(nonce) || isBlank(sha256) || plainSizeBytes == null || plainSizeBytes < 0) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Encrypted item metadata is incomplete");
         }

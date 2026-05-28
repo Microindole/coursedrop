@@ -33,7 +33,7 @@ export default struct DevicePage {
 
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
-      CdScrollContainer({ showScrollBar: true }) {
+      CdScrollContainer({ showScrollBar: true, backgroundStyle: 'device' }) {
         CdTopBar({
           title: '局域网直传设备',
           subtitle: `已连接 ${this.devices.filter(d => d.status !== 'OFFLINE').length} 台设备`,
@@ -49,7 +49,7 @@ export default struct DevicePage {
 
         CdBanner({
           title: this.lastActionText,
-          description: this.errorMessage.length > 0 ? this.errorMessage : '同局域网下优先使用 Socket 直传，免公网流量且传输速度更加高速安全。',
+          description: this.errorMessage.length > 0 ? this.errorMessage : '同局域网下优先使用 Socket 直传，减少公网暴露面并提升传输速度。',
           tone: this.errorMessage.length > 0 ? 'danger' : 'info'
         })
 

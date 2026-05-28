@@ -10,7 +10,7 @@ export struct CdTransferStats {
 
   @Builder
   statCell(icon: Resource, value: number, label: string, color: string, bgColor: string) {
-    Column({ space: 4 }) {
+    Column({ space: 6 }) {
       // 状态图标容器
       Row() {
         Image(icon)
@@ -18,10 +18,11 @@ export struct CdTransferStats {
           .height(18)
           .fillColor(color)
       }
-      .width(36)
-      .height(36)
-      .borderRadius(18)
+      .width(40)
+      .height(40)
+      .borderRadius(20)
       .backgroundColor(bgColor)
+      .border({ width: 0.7, color: color })
       .justifyContent(FlexAlign.Center)
       
       // 数值
@@ -33,26 +34,47 @@ export struct CdTransferStats {
 
       // 状态文本说明
       Text(label)
-        .fontSize(10)
+        .fontSize(AppTypography.CAPTION)
         .fontWeight(FontWeight.Medium)
         .fontColor(AppColors.TEXT_SECONDARY)
     }
     .layoutWeight(1)
     .alignItems(HorizontalAlign.Center)
-    .padding({ top: AppSpacing.SM, bottom: AppSpacing.SM })
+    .padding({ top: AppSpacing.MD, bottom: AppSpacing.MD })
   }
 
   build() {
     CdPanel({ hasShadow: true }) {
-      Row() {
-        this.statCell($r('app.media.cd_icon_running'), this.statsActiveCount, '运行中', AppColors.PRIMARY, AppColors.PRIMARY_SOFT)
-        this.statCell($r('app.media.cd_icon_done'), this.statsCompletedCount, '已完成', AppColors.SUCCESS, AppColors.SUCCESS_SOFT)
-        this.statCell($r('app.media.cd_icon_failed'), this.statsFailedCount, '传输失败', AppColors.DANGER, '#FFF0F0')
-        this.statCell($r('app.media.cd_icon_expire'), this.statsExpiringCount, '即将过期', AppColors.WARNING, AppColors.WARNING_SOFT)
+      Column({ space: AppSpacing.MD }) {
+        Row() {
+          Text('传输安全态势')
+            .fontSize(AppTypography.BODY_SMALL)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.TEXT)
+            .layoutWeight(1)
+
+          Text('实时')
+            .fontSize(AppTypography.CAPTION)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.ACCENT)
+            .padding({ left: AppSpacing.SM, right: AppSpacing.SM, top: 3, bottom: 3 })
+            .backgroundColor(AppColors.ACCENT_SOFT)
+            .borderRadius(AppRadius.SM)
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
+
+        Row() {
+          this.statCell($r('app.media.cd_icon_running'), this.statsActiveCount, '运行中', AppColors.PRIMARY, AppColors.PRIMARY_SOFT)
+          this.statCell($r('app.media.cd_icon_done'), this.statsCompletedCount, '已完成', AppColors.SUCCESS, AppColors.SUCCESS_SOFT)
+          this.statCell($r('app.media.cd_icon_failed'), this.statsFailedCount, '传输失败', AppColors.DANGER, AppColors.DANGER_SOFT)
+          this.statCell($r('app.media.cd_icon_expire'), this.statsExpiringCount, '即将过期', AppColors.WARNING, AppColors.WARNING_SOFT)
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.SpaceAround)
+        .alignItems(VerticalAlign.Center)
       }
       .width('100%')
-      .justifyContent(FlexAlign.SpaceAround)
-      .alignItems(VerticalAlign.Center)
     }
   }
 }

@@ -129,7 +129,7 @@ export default struct LocalLibraryPage {
 
   build() {
     Stack({ alignContent: Alignment.BottomStart }) {
-      CdScrollContainer({ showScrollBar: true }) {
+      CdScrollContainer({ showScrollBar: true, backgroundStyle: 'library' }) {
         CdTopBar({
           title: '本地文件库',
           subtitle: `管理本机已索引的 ${this.getFilteredFiles().length} 项内容`,
@@ -150,7 +150,7 @@ export default struct LocalLibraryPage {
 
         CdBanner({
           title: this.bannerText,
-          description: '本地文件由应用专属目录管理，仅在您发起分享时才占用公网传输带宽。',
+          description: '本地文件由应用专属目录管理，只有生成分享或直连传输时才进入发送流程。',
           tone: this.isBannerError ? 'danger' : 'info'
         })
 

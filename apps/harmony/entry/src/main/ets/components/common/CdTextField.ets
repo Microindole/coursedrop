@@ -21,9 +21,9 @@ export struct CdTextField {
         .fontSize(AppTypography.BODY_SMALL)
         .fontColor(AppColors.TEXT)
         .placeholderColor(AppColors.MUTED)
-        .backgroundColor(AppColors.SURFACE_MUTED)
+        .backgroundColor(AppColors.SURFACE)
         .borderRadius(AppRadius.MD)
-        .border({ width: 0.5, color: AppColors.BORDER })
+        .border({ width: 0.7, color: AppColors.BORDER })
         .padding({ left: AppSpacing.MD, right: AppSpacing.MD })
         .onChange((val: string) => {
           this.value = val;

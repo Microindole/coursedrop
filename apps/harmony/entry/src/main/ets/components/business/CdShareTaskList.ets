@@ -65,7 +65,7 @@ export struct CdShareTaskList {
 
               Progress({ value: task.progress, total: 100, type: ProgressType.Linear })
                 .width('100%')
-                .color(AppColors.PRIMARY)
+                .color(task.status === 'FAILED' ? AppColors.DANGER : AppColors.ACCENT)
                 .backgroundColor(AppColors.SURFACE_MUTED)
                 .height(6)
 

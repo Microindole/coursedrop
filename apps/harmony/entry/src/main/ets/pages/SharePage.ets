@@ -1,5 +1,5 @@
 import router from '@ohos.router';
-import { AppColors, AppRadius, AppSpacing, AppTypography } from '../common/Theme';
+import { AppColors, AppSpacing, AppTypography } from '../common/Theme';
 import {
   CdBanner,
   CdButton,
@@ -27,6 +27,7 @@ export default struct SharePage {
   @State lastActionText: string = '分享内容由 CourseDrop 中转源托管';
   @State errorMessage: string = '';
   @State loading: boolean = false;
+  @State refreshing: boolean = false;
 
   aboutToAppear() {
     this.syncState();
@@ -59,23 +60,30 @@ export default struct SharePage {
 
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
-      CdScrollContainer({ showScrollBar: true }) {
+      CdScrollContainer({ showScrollBar: true, backgroundStyle: 'share' }) {
         CdTopBar({
           title: '创建临时分享',
-          subtitle: '支持在多端通过提取码和二维码下载文件',
+          subtitle: '生成安全提取码，多端临时下载',
           leadingText: this.showBack ? '返回' : '',
-          trailingText: '刷新',
+          trailingText: this.refreshing ? '刷新中' : '刷新',
           onLeadingTap: () => {
             router.back();
           },
           onTrailingTap: () => {
-            this.syncState();
+            this.refreshing = true;
+            this.lastActionText = '正在刷新当前分享状态...';
+            this.errorMessage = '';
+            setTimeout(() => {
+              this.viewModel.refreshStatus();
+              this.syncState();
+              this.refreshing = false;
+            }, 300);
           }
         })
 
         CdBanner({
           title: this.lastActionText,
-          description: this.errorMessage.length > 0 ? this.errorMessage : '上传中转的文件按安全时效保存，安全期满后由自动机制审计清理并销毁。',
+          description: this.errorMessage.length > 0 ? this.errorMessage : '中转源仅按时效托管临时内容；启用加密时服务器不持有明文密钥。',
           tone: this.errorMessage.length > 0 ? 'danger' : 'info'
         })
 
@@ -85,14 +93,18 @@ export default struct SharePage {
           loading: this.loading,
           expireText: this.viewModel.getExpireText(),
           qrImageUrl: this.viewModel.getShareQrImageUrl(),
-          onRevoke: () => {
+          errorMessage: this.errorMessage,
+          onReturn: () => {
             this.loading = true;
-            this.viewModel.revokeShare().then(() => {
-              this.syncState();
-            });
+            this.lastActionText = '正在返回新的分享草稿...';
+            this.errorMessage = '';
+            this.viewModel.returnToDraft();
+            this.syncState();
           },
           onExtend: () => {
             this.loading = true;
+            this.lastActionText = '正在续期 24 小时...';
+            this.errorMessage = '';
             this.viewModel.extendShare().then(() => {
               this.syncState();
             });
@@ -109,6 +121,8 @@ export default struct SharePage {
           },
           onCreate: () => {
             this.loading = true;
+            this.lastActionText = '正在生成链接并上传...';
+            this.errorMessage = '';
             this.viewModel.refreshShareCode().then(() => {
               this.syncState();
             }).catch((error: Error) => {
@@ -141,30 +155,37 @@ export default struct SharePage {
             }
             .width('100%')
 
-            Row({ space: AppSpacing.MD }) {
-              CdButton({
-                label: '添加本地文件',
-                variant: 'tonal',
-                onTap: () => {
-                  this.viewModel.addLocalItem('FILE').then(() => {
-                    this.syncState();
-                  });
-                }
-              })
-              .layoutWeight(1)
+            if (this.currentSession.shareUrl.length === 0) {
+              Row({ space: AppSpacing.MD }) {
+                CdButton({
+                  label: '添加本地文件',
+                  variant: 'tonal',
+                  onTap: () => {
+                    this.viewModel.addLocalItem('FILE').then(() => {
+                      this.syncState();
+                    });
+                  }
+                })
+                .layoutWeight(1)
 
-              CdButton({
-                label: '添加图片/照片',
-                variant: 'tonal',
-                onTap: () => {
-                  this.viewModel.addLocalItem('IMAGE').then(() => {
-                    this.syncState();
-                  });
-                }
-              })
-              .layoutWeight(1)
+                CdButton({
+                  label: '添加图片/照片',
+                  variant: 'tonal',
+                  onTap: () => {
+                    this.viewModel.addLocalItem('IMAGE').then(() => {
+                      this.syncState();
+                    });
+                  }
+                })
+                .layoutWeight(1)
+              }
+              .width('100%')
+            } else {
+              Text('当前链接已生成。若要分享新文件，请点击上方“返回”创建新的分享草稿。')
+                .fontSize(AppTypography.BODY_SMALL)
+                .fontColor(AppColors.TEXT_SECONDARY)
+                .lineHeight(18)
             }
-            .width('100%')
           }
           .width('100%')
           .alignItems(HorizontalAlign.Start)

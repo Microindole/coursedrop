@@ -11,7 +11,7 @@ export struct CdBanner {
   private resolveBg(): string {
     if (this.tone === 'success') return AppColors.SUCCESS_SOFT;
     if (this.tone === 'warning') return AppColors.WARNING_SOFT;
-    if (this.tone === 'danger') return '#FFF0F0';
+    if (this.tone === 'danger') return AppColors.DANGER_SOFT;
     return AppColors.PRIMARY_SOFT;
   }
 
@@ -24,6 +24,12 @@ export struct CdBanner {
 
   build() {
     Row({ space: AppSpacing.MD }) {
+      Row()
+        .width(4)
+        .height(44)
+        .borderRadius(2)
+        .backgroundColor(this.resolveBorderColor())
+
       Column({ space: AppSpacing.XS }) {
         Text(this.title)
           .fontSize(AppTypography.BODY_SMALL)
@@ -53,9 +59,9 @@ export struct CdBanner {
       }
     }
     .width('100%')
-    .padding(AppSpacing.MD)
+    .padding(AppSpacing.LG)
     .backgroundColor(this.resolveBg())
-    .borderRadius(AppRadius.MD)
-    .border({ width: 0.5, color: this.resolveBorderColor() })
+    .borderRadius(AppRadius.LG)
+    .border({ width: 0.7, color: this.resolveBorderColor() })
   }
 }

@@ -11,7 +11,7 @@ export struct CdButton {
 
   private resolveBgColor(): string {
     if (!this.interactive) return AppColors.SURFACE_MUTED;
-    if (this.variant === 'tonal') return AppColors.PRIMARY_SOFT;
+    if (this.variant === 'tonal') return AppColors.ACCENT_SOFT;
     if (this.variant === 'text') return '#00000000';
     if (this.variant === 'danger') return AppColors.DANGER;
     return AppColors.PRIMARY;
@@ -19,7 +19,7 @@ export struct CdButton {
 
   private resolveTextColor(): string {
     if (!this.interactive) return AppColors.MUTED;
-    if (this.variant === 'tonal') return AppColors.PRIMARY;
+    if (this.variant === 'tonal') return AppColors.PRIMARY_SELECTED;
     if (this.variant === 'text') return AppColors.PRIMARY_SELECTED;
     if (this.variant === 'danger' || this.variant === 'contained') return AppColors.SURFACE;
     return AppColors.SURFACE;
@@ -38,6 +38,7 @@ export struct CdButton {
     .justifyContent(FlexAlign.Center)
     .backgroundColor(this.resolveBgColor())
     .borderRadius(AppRadius.XL)
+    .border({ width: this.variant === 'tonal' ? 0.7 : 0, color: AppColors.ACCENT })
     .scale({
       x: this.interactive && this.isPressed ? 0.96 : 1,
       y: this.interactive && this.isPressed ? 0.96 : 1

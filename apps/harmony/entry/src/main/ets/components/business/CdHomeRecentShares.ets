@@ -46,6 +46,7 @@ export struct CdHomeRecentShares {
             .height(40)
             .backgroundColor(AppColors.PRIMARY_SOFT)
             .borderRadius(AppRadius.MD)
+            .border({ width: 0.7, color: AppColors.PRIMARY })
 
             Column({ space: AppSpacing.XS }) {
               Row() {
@@ -61,10 +62,10 @@ export struct CdHomeRecentShares {
                   Text(share.code)
                     .fontSize(10)
                     .fontWeight(FontWeight.Bold)
-                    .fontColor(AppColors.PRIMARY)
-                    .backgroundColor(AppColors.PRIMARY_SOFT)
+                    .fontColor(AppColors.ACCENT)
+                    .backgroundColor(AppColors.ACCENT_SOFT)
                     .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                    .borderRadius(4)
+                    .borderRadius(AppRadius.SM)
                 }
               }
               .width('100%')

@@ -22,6 +22,7 @@ export interface ShareService {
   refreshShareCode(sessionId: string): ShareOperationResult;
   createRelayShare(sessionId: string, expireHours: number, downloadPolicy: string): Promise<ShareOperationResult>;
   revokeShare(sessionId: string): Promise<ShareOperationResult>;
+  returnToDraft(sessionId: string): ShareOperationResult;
   extendShare(sessionId: string, expireHours: number): Promise<ShareOperationResult>;
   addLocalItem(sessionId: string, type: TransferItemType): ShareOperationResult;
   attachLocalFile(sessionId: string, localFileId: string): ShareOperationResult;

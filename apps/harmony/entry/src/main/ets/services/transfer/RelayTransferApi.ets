@@ -39,7 +39,7 @@ export class HttpRelayTransferApi implements RelayTransferApi {
         readTimeout: 60000
       });
       if (response.responseCode < 200 || response.responseCode >= 300) {
-        throw new Error(`HTTP ${response.responseCode}`);
+        throw new Error(`HTTP ${response.responseCode}: ${String(response.result)}`);
       }
       return JSON.parse(String(response.result)) as RelayUploadResponse;
     } finally {
@@ -115,9 +115,10 @@ export class HttpRelayTransferApi implements RelayTransferApi {
   private buildMultipartBody(request: RelayUploadRequest, boundary: string): ArrayBuffer {
     const fileData = this.fileSystemService.readAll(request.localUri);
     const fields = this.buildFieldParts(request, boundary);
+    const filename = this.escapeMultipartValue(request.displayName);
     const fileHeader = this.toUtf8(
       `--${boundary}\r\n` +
-      `Content-Disposition: form-data; name="file"; filename="${request.displayName}"\r\n` +
+      `Content-Disposition: form-data; name="file"; filename="${filename}"\r\n` +
       `Content-Type: ${request.contentType}\r\n\r\n`
     );
     const lineBreak = this.toUtf8('\r\n');
@@ -153,12 +154,26 @@ export class HttpRelayTransferApi implements RelayTransferApi {
     return `--${boundary}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`;
   }
 
+  private escapeMultipartValue(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\r/g, '').replace(/\n/g, '');
+  }
+
   private toUtf8(text: string): ArrayBuffer {
-    const encoded = new Uint8Array(text.length);
+    const bytes: number[] = [];
     for (let index = 0; index < text.length; index += 1) {
-      encoded[index] = text.charCodeAt(index);
+      const code = text.charCodeAt(index);
+      if (code < 0x80) {
+        bytes.push(code);
+      } else if (code < 0x800) {
+        bytes.push(0xc0 | (code >> 6));
+        bytes.push(0x80 | (code & 0x3f));
+      } else {
+        bytes.push(0xe0 | (code >> 12));
+        bytes.push(0x80 | ((code >> 6) & 0x3f));
+        bytes.push(0x80 | (code & 0x3f));
+      }
     }
-    return encoded.buffer;
+    return new Uint8Array(bytes).buffer;
   }
 
   private concatBuffers(

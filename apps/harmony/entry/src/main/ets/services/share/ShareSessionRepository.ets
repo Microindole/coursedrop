@@ -4,6 +4,8 @@ export interface ShareSessionRepository {
   list(): ShareSession[];
   current(): ShareSession;
   save(session: ShareSession): void;
+  setCurrent(session: ShareSession): void;
+  startNewDraft(): ShareSession;
 }
 
 export class LocalShareSessionRepository implements ShareSessionRepository {
@@ -30,10 +32,22 @@ export class LocalShareSessionRepository implements ShareSessionRepository {
     }
   }
 
+  setCurrent(session: ShareSession): void {
+    this.save(session);
+    this.currentSession = session;
+  }
+
+  startNewDraft(): ShareSession {
+    const draft = this.createDraftSession();
+    this.currentSession = draft;
+    this.sessions.push(draft);
+    return draft;
+  }
+
   private createDraftSession(): ShareSession {
     const createdAt = new Date().toISOString();
     return {
-      id: `draft-${Date.now()}`,
+      id: `draft-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
       title: '',
       code: '',
       shareUrl: '',

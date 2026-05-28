@@ -17,10 +17,10 @@ export struct CdPanel {
       this.content()
     }
     .width('100%')
-    .padding(AppSpacing.MD)
-    .backgroundColor(AppColors.SURFACE)
+    .padding(AppSpacing.LG)
+    .backgroundColor(AppColors.SURFACE_RAISED)
     .borderRadius(AppRadius.LG)
-    .border({ width: 0.5, color: AppColors.BORDER })
+    .border({ width: 0.7, color: AppColors.BORDER })
     .shadow(this.hasShadow ? AppShadows.CARD : null)
     .scale({
       x: this.clickable && this.isPressed ? 0.98 : 1,

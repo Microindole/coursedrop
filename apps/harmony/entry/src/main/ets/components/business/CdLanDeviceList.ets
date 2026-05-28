@@ -71,14 +71,27 @@ export struct CdLanDeviceList {
             .height(44)
             .backgroundColor(device.status !== 'OFFLINE' ? AppColors.PRIMARY_SOFT : AppColors.BACKGROUND)
             .borderRadius(AppRadius.MD)
+            .border({ width: 0.7, color: device.status !== 'OFFLINE' ? AppColors.PRIMARY : AppColors.BORDER })
 
             Column({ space: AppSpacing.XS }) {
-              Text(device.name)
-                .fontSize(AppTypography.BODY_SMALL)
-                .fontWeight(FontWeight.Bold)
-                .fontColor(device.status !== 'OFFLINE' ? AppColors.TEXT : AppColors.MUTED)
-                .maxLines(1)
-                .textOverflow({ overflow: TextOverflow.Ellipsis })
+              Row({ space: AppSpacing.SM }) {
+                Text(device.name)
+                  .fontSize(AppTypography.BODY_SMALL)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(device.status !== 'OFFLINE' ? AppColors.TEXT : AppColors.MUTED)
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .layoutWeight(1)
+
+                Text(this.statusText(device))
+                  .fontSize(9)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(device.status !== 'OFFLINE' ? AppColors.SUCCESS : AppColors.MUTED)
+                  .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                  .backgroundColor(device.status !== 'OFFLINE' ? AppColors.SUCCESS_SOFT : AppColors.SURFACE_MUTED)
+                  .borderRadius(AppRadius.SM)
+              }
+              .width('100%')
 
               Row({ space: AppSpacing.SM }) {
                 Text(this.platformText(device))

@@ -1,4 +1,4 @@
-import { AppColors, AppSpacing, AppTypography } from '../../common/Theme';
+import { AppColors, AppRadius, AppSpacing, AppTypography } from '../../common/Theme';
 import { CdButton } from '../common/CdButton';
 import { CdPanel } from '../common/CdPanel';
 
@@ -50,32 +50,52 @@ export struct CdLanRadarScanner {
           .layoutWeight(1)
           .alignItems(HorizontalAlign.Start)
 
-          // 雷达动效
           Stack() {
             if (this.scanning) {
               Circle()
-                .width(44)
-                .height(44)
-                .fill(AppColors.PRIMARY_SOFT)
+                .width(50)
+                .height(50)
+                .fill(AppColors.ACCENT_SOFT)
                 .scale({ x: this.radarScale, y: this.radarScale })
                 .opacity(this.radarOpacity)
             }
 
             Circle()
-              .width(44)
-              .height(44)
+              .width(50)
+              .height(50)
               .fill(AppColors.PRIMARY_SOFT)
+              .stroke(AppColors.ACCENT)
+              .strokeWidth(1)
 
             Image($r('app.media.cd_icon_lan'))
               .width(20)
               .height(20)
               .fillColor(AppColors.PRIMARY)
           }
-          .width(60)
-          .height(60)
+          .width(64)
+          .height(64)
         }
         .width('100%')
         .alignItems(VerticalAlign.Center)
+
+        Row({ space: AppSpacing.SM }) {
+          Text('UDP DISCOVERY')
+            .fontSize(10)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.PRIMARY_SELECTED)
+            .padding({ left: AppSpacing.SM, right: AppSpacing.SM, top: 3, bottom: 3 })
+            .backgroundColor(AppColors.PRIMARY_SOFT)
+            .borderRadius(AppRadius.SM)
+
+          Text('SOCKET DIRECT')
+            .fontSize(10)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(AppColors.SUCCESS)
+            .padding({ left: AppSpacing.SM, right: AppSpacing.SM, top: 3, bottom: 3 })
+            .backgroundColor(AppColors.SUCCESS_SOFT)
+            .borderRadius(AppRadius.SM)
+        }
+        .width('100%')
 
         CdButton({
           label: this.scanning ? '正在扫描局域网设备...' : '开始雷达扫描',
