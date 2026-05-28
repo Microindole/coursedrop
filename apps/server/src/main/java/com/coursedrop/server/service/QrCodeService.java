@@ -1,6 +1,11 @@
 package com.coursedrop.server.service;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import org.springframework.stereotype.Service;
 
@@ -16,6 +21,25 @@ import com.coursedrop.server.common.ApiException;
 
 @Service
 public class QrCodeService {
+    public byte[] renderPng(String value) {
+        try {
+            BitMatrix matrix = new QRCodeWriter().encode(
+                    value, BarcodeFormat.QR_CODE, 256, 256,
+                    Map.of(EncodeHintType.MARGIN, 2));
+            BufferedImage image = new BufferedImage(matrix.getWidth(), matrix.getHeight(), BufferedImage.TYPE_INT_RGB);
+            for (int y = 0; y < matrix.getHeight(); y++) {
+                for (int x = 0; x < matrix.getWidth(); x++) {
+                    image.setRGB(x, y, matrix.get(x, y) ? 0x111111 : 0xFFFFFF);
+                }
+            }
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", bos);
+            return bos.toByteArray();
+        } catch (WriterException | IOException exception) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "QR code unavailable");
+        }
+    }
+
     public String renderSvg(String value) {
         try {
             return toSvg(new QRCodeWriter().encode(
@@ -44,7 +68,8 @@ public class QrCodeService {
         for (int y = 0; y < matrix.getHeight(); y++) {
             for (int x = 0; x < matrix.getWidth(); x++) {
                 if (matrix.get(x, y)) {
-                    html.append("<rect x=\"").append(x).append("\" y=\"").append(y).append("\" width=\"1\" height=\"1\" fill=\"#111\"/>");
+                    html.append("<rect x=\"").append(x).append("\" y=\"").append(y)
+                            .append("\" width=\"1\" height=\"1\" fill=\"#111\"/>");
                 }
             }
         }

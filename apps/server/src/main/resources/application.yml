@@ -9,6 +9,9 @@ spring:
     driver-class-name: org.sqlite.JDBC
 
 coursedrop:
+  admin:
+    username: admin
+    password: admin123
   server:
     public-base-url: http://localhost:8080
     secure-cookie: false

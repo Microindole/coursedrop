@@ -1,6 +1,8 @@
 package com.coursedrop.server.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,5 +29,18 @@ public class QrController {
             throw new ApiException(HttpStatus.BAD_REQUEST, "QR text is too long");
         }
         return qrCodeService.renderSvg(text);
+    }
+
+    @GetMapping(path = ".png", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> renderPng(@RequestParam String text) {
+        if (text == null || text.isBlank()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "QR text is required");
+        }
+        if (text.length() > 1024) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "QR text is too long");
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(qrCodeService.renderPng(text));
     }
 }

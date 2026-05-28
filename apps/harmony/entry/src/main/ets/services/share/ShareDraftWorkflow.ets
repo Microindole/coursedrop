@@ -57,6 +57,9 @@ export class DefaultShareDraftWorkflow implements ShareDraftWorkflow {
     if (typeHint === undefined) {
       return true;
     }
+    if (typeHint === 'FILE') {
+      return true;
+    }
     return file.type === typeHint;
   }
 }

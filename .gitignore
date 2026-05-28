@@ -4,6 +4,7 @@
 *.iml
 .antigravitycli/
 .claude/
+gxy_temp/
 
 target/
 build/

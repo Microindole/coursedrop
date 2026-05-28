@@ -58,10 +58,10 @@ export class DefaultTransferService implements TransferService {
   }
 
   async uploadLocalFile(command: UploadLocalFileCommand): Promise<TransferTask> {
-    const file = this.requireLocalFile(command.localFileId);
-    const task = this.taskService.createTask(file.id, 'UPLOAD', 'RELAY', command.shareId);
+    const task = this.taskService.createTask(command.localFileId, 'UPLOAD', 'RELAY', command.shareId);
     this.taskService.start(task.id);
     try {
+      const file = this.requireLocalFile(command.localFileId);
       let localUri = file.localUri;
       let encrypted = false;
       let encryptionAlgorithm = '';

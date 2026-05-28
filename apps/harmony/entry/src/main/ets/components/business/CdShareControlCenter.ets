@@ -12,6 +12,7 @@ export struct CdShareControlCenter {
   onRevoke: () => void = () => {};
   onExtend: () => void = () => {};
   onCopy: () => void = () => {};
+  onCopyCode: () => void = () => {};
   onCreate: () => void = () => {};
 
   build() {
@@ -53,12 +54,20 @@ export struct CdShareControlCenter {
               .fontSize(11)
               .fontWeight(FontWeight.Medium)
               .fontColor(AppColors.TEXT_SECONDARY)
-            
+
             Text(this.currentSession.code)
               .fontSize(AppTypography.DISPLAY)
               .fontWeight(FontWeight.Bold)
               .fontColor(AppColors.PRIMARY)
               .letterSpacing(3)
+
+            Text('点击复制提取码')
+              .fontSize(AppTypography.CAPTION)
+              .fontColor(AppColors.PRIMARY_SELECTED)
+              .fontWeight(FontWeight.Bold)
+              .onClick(() => {
+                this.onCopyCode();
+              })
           }
           .width('100%')
           .padding({ top: AppSpacing.MD, bottom: AppSpacing.MD })
@@ -127,7 +136,7 @@ export struct CdShareControlCenter {
             .layoutWeight(1)
 
             CdButton({
-              label: '撤回',
+              label: '返回',
               variant: 'danger',
               interactive: !this.loading,
               onTap: () => {

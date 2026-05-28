@@ -45,6 +45,21 @@ export class ShareViewModel {
     return `有效至 ${this.currentSession.expiresAt}`;
   }
 
+  async copyShareCode(): Promise<void> {
+    if (this.currentSession.code.length === 0) {
+      this.lastActionText = '暂无可复制的提取码';
+      return;
+    }
+    try {
+      await clipboardService.copyText(this.currentSession.code);
+      this.lastActionText = '提取码已复制到剪贴板';
+      this.errorMessage = '';
+    } catch (error) {
+      this.lastActionText = '复制失败';
+      this.errorMessage = String(error);
+    }
+  }
+
   async copyShareLink(): Promise<string> {
     if (this.currentSession.shareUrl.length === 0) {
       this.lastActionText = '暂无可复制的公网链接';
@@ -69,29 +84,45 @@ export class ShareViewModel {
     if (this.currentSession.shareUrl.length === 0 || !apiClient.hasBaseUrl()) {
       return '';
     }
-    return `${apiClient.getBaseUrl()}/api/qr?text=${encodeURIComponent(this.currentSession.shareUrl)}`;
+    return `${apiClient.getBaseUrl()}/api/qr.png?text=${encodeURIComponent(this.currentSession.shareUrl)}`;
   }
 
   async refreshShareCode(): Promise<void> {
     this.loading = true;
-    const result = await shareService.createRelayShare(this.currentSession.id, 24, 'LOGIN_REQUIRED');
-    this.currentSession = shareService.getCurrentSession();
-    if (result.success) {
-      await this.uploadCurrentItems();
+    try {
+      const result = await shareService.createRelayShare(this.currentSession.id, 24, 'LOGIN_REQUIRED');
+      this.currentSession = shareService.getCurrentSession();
+      if (result.success) {
+        await this.uploadCurrentItems();
+      }
+      this.currentSession = shareService.getCurrentSession();
+      if (!result.success) {
+        this.lastActionText = result.message;
+        this.errorMessage = result.message;
+      } else if (this.errorMessage.length === 0) {
+        this.lastActionText = '公网分享已创建，上传任务已启动';
+      }
+    } catch (error) {
+      this.lastActionText = '生成分享失败';
+      this.errorMessage = String(error);
+    } finally {
+      this.loading = false;
     }
-    this.currentSession = shareService.getCurrentSession();
-    this.lastActionText = result.success ? '公网分享已创建，上传任务已启动' : result.message;
-    this.errorMessage = result.success ? '' : result.message;
-    this.loading = false;
   }
 
   async revokeShare(): Promise<void> {
     this.loading = true;
-    const result = await shareService.revokeShare(this.currentSession.id);
-    this.currentSession = shareService.getCurrentSession();
-    this.lastActionText = result.message;
-    this.errorMessage = result.success ? '' : result.message;
-    this.loading = false;
+    try {
+      const result = await shareService.revokeShare(this.currentSession.id);
+      this.currentSession = shareService.getCurrentSession();
+      this.lastActionText = result.message;
+      this.errorMessage = result.success ? '' : result.message;
+    } catch (error) {
+      this.lastActionText = '撤回失败';
+      this.errorMessage = String(error);
+    } finally {
+      this.loading = false;
+    }
   }
 
   async extendShare(): Promise<void> {
@@ -154,10 +185,12 @@ export class ShareViewModel {
   }
 
   private async uploadCurrentItems(): Promise<void> {
+    let failedCount = 0;
+    let lastError = '';
     for (let index = 0; index < this.currentSession.items.length; index += 1) {
       const item = this.currentSession.items[index];
       if (item.remoteItemId === undefined || item.remoteItemId.length === 0) {
-        await transferService.uploadLocalFile({
+        const task = await transferService.uploadLocalFile({
           shareId: this.currentSession.id,
           localFileId: item.id,
           encrypted: settingsService.getSettings().e2eeEnabled,
@@ -173,7 +206,15 @@ export class ShareViewModel {
             this.rememberE2eeKey(remoteItemId, e2eeKeyMaterial, e2eeNonce, e2eeAuthTag);
           }
         });
+        if (task.status === 'FAILED') {
+          failedCount += 1;
+          lastError = task.errorMessage !== undefined ? task.errorMessage : '上传失败';
+        }
       }
+    }
+    if (failedCount > 0) {
+      this.lastActionText = `分享已创建，但 ${failedCount} 个文件上传失败`;
+      this.errorMessage = lastError;
     }
   }
 

@@ -114,12 +114,23 @@ export class LocalShareService implements ShareService {
         };
       }
     }
-    session.status = 'REVOKED';
-    session.expireStatus = 'EXPIRED';
+    session.code = '';
+    session.shareUrl = '';
+    session.status = 'DRAFT';
+    session.networkMode = 'LAN';
+    session.expireStatus = 'ACTIVE';
+    session.createdAt = new Date().toISOString();
+    session.expiresAt = '';
+    for (let index = 0; index < session.items.length; index += 1) {
+      const item = session.items[index];
+      item.remoteItemId = '';
+      item.remoteUrl = '';
+      item.expiresAt = '';
+    }
     this.sessionRepository.save(session);
     return {
       success: true,
-      message: '分享已撤回'
+      message: '已返回草稿状态，可重新生成链接'
     };
   }
 

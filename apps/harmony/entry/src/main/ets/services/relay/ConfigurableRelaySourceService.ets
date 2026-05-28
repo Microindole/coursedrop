@@ -128,6 +128,10 @@ export class ConfigurableRelaySourceService implements RelaySourceService {
     });
   }
 
+  applyActiveServer(): void {
+    this.syncApiBaseUrl();
+  }
+
   private syncApiBaseUrl(): void {
     const activeRelayServer = this.getActiveRelayServer();
     if (activeRelayServer === undefined) {

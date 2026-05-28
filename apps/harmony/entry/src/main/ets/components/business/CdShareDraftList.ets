@@ -11,7 +11,7 @@ export interface ShareDraftFileTypeColors {
 
 @Component
 export struct CdShareDraftList {
-  items: TransferItem[] = [];
+  @Prop items: TransferItem[] = [];
   onRemoveItem: (itemId: string) => void = () => {};
 
   private formatSize(sizeBytes: number): string {
@@ -42,7 +42,7 @@ export struct CdShareDraftList {
   }
 
   build() {
-    if (this.items.length === 0) {
+    if (this.items === undefined || this.items.length === 0) {
       CdPanel() {
         Column({ space: AppSpacing.MD }) {
           Image($r('app.media.cd_icon_share'))

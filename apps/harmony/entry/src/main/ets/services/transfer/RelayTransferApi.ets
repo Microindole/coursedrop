@@ -26,10 +26,14 @@ export class HttpRelayTransferApi implements RelayTransferApi {
     const body = this.buildMultipartBody(request, boundary);
     const httpRequest = http.createHttp();
     const url = `${this.apiClient.getBaseUrl()}/api/shares/${request.shareId}/items`;
+    const multipartHeader: MultipartHeader = {
+      'Content-Type': `multipart/form-data; boundary=${boundary}`,
+      'Content-Length': `${body.byteLength}`
+    };
     try {
       const response = await httpRequest.request(url, {
         method: http.RequestMethod.POST,
-        header: new MultipartHeader(boundary),
+        header: multipartHeader,
         extraData: body,
         connectTimeout: 15000,
         readTimeout: 60000
@@ -181,12 +185,9 @@ export class HttpRelayTransferApi implements RelayTransferApi {
   }
 }
 
-class MultipartHeader {
-  contentType: string;
-
-  constructor(boundary: string) {
-    this.contentType = `multipart/form-data; boundary=${boundary}`;
-  }
+interface MultipartHeader {
+  'Content-Type': string;
+  'Content-Length': string;
 }
 
 interface FingerprintDownloadHeader {

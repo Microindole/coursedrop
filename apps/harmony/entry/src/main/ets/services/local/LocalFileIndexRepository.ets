@@ -161,10 +161,13 @@ export class RdbLocalFileIndexRepository implements LocalFileIndexRepository {
     }
     try {
       const resultSet = store.querySqlSync('select * from local_files order by rowid desc');
-      const files: LocalFileEntry[] = [];
       while (resultSet.goToNextRow()) {
-        files.push({
-          id: resultSet.getValue(resultSet.getColumnIndex('id')) as string,
+        const id = resultSet.getValue(resultSet.getColumnIndex('id')) as string;
+        if (this.files.some((f) => f.id === id)) {
+          continue;
+        }
+        this.files.push({
+          id: id,
           displayName: resultSet.getValue(resultSet.getColumnIndex('display_name')) as string,
           type: resultSet.getValue(resultSet.getColumnIndex('type')) as TransferItemType,
           contentType: resultSet.getValue(resultSet.getColumnIndex('content_type')) as string,
@@ -177,7 +180,6 @@ export class RdbLocalFileIndexRepository implements LocalFileIndexRepository {
         });
       }
       resultSet.close();
-      this.files = files;
     } catch (error) {
       console.error(`[CourseDrop] load local file index failed: ${String(error)}`);
     }

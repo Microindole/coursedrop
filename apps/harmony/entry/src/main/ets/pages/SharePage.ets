@@ -11,6 +11,7 @@ import {
   CdShareDraftList,
   CdShareTaskList
 } from '../components/index';
+import { TransferItem } from '../models/TransferItem';
 import { TransferTask } from '../models/TransferTask';
 import { ShareSession } from '../models/ShareSession';
 import { ShareViewModel } from '../viewmodels/ShareViewModel';
@@ -21,6 +22,7 @@ export default struct SharePage {
   private viewModel: ShareViewModel = new ShareViewModel();
 
   @State currentSession: ShareSession = this.viewModel.currentSession;
+  @State draftItems: TransferItem[] = [];
   @State tasks: TransferTask[] = [];
   @State lastActionText: string = '分享内容由 CourseDrop 中转源托管';
   @State errorMessage: string = '';
@@ -31,7 +33,24 @@ export default struct SharePage {
   }
 
   private syncState() {
-    this.currentSession = this.viewModel.currentSession;
+    const session = this.viewModel.currentSession;
+    this.currentSession = {
+      id: session.id,
+      title: session.title,
+      code: session.code,
+      shareUrl: session.shareUrl,
+      status: session.status,
+      networkMode: session.networkMode,
+      expireStatus: session.expireStatus,
+      createdAt: session.createdAt,
+      expiresAt: session.expiresAt,
+      itemCount: session.itemCount,
+      totalSizeBytes: session.totalSizeBytes,
+      encrypted: session.encrypted,
+      downloadPolicy: session.downloadPolicy,
+      items: session.items.slice()
+    };
+    this.draftItems = session.items.slice();
     this.tasks = this.viewModel.getTasks();
     this.lastActionText = this.viewModel.lastActionText.length > 0 ? this.viewModel.lastActionText : '分享内容由 CourseDrop 中转源托管';
     this.errorMessage = this.viewModel.errorMessage;
@@ -83,10 +102,18 @@ export default struct SharePage {
               this.syncState();
             });
           },
+          onCopyCode: () => {
+            this.viewModel.copyShareCode().then(() => {
+              this.syncState();
+            });
+          },
           onCreate: () => {
             this.loading = true;
             this.viewModel.refreshShareCode().then(() => {
               this.syncState();
+            }).catch((error: Error) => {
+              this.loading = false;
+              this.errorMessage = String(error);
             });
           }
         })
@@ -101,7 +128,7 @@ export default struct SharePage {
                 .fontColor(AppColors.TEXT)
                 .layoutWeight(1)
 
-              if (this.currentSession.items.length > 0 && this.currentSession.shareUrl.length === 0) {
+              if (this.draftItems.length > 0 && this.currentSession.shareUrl.length === 0) {
                 Text('清空')
                   .fontSize(AppTypography.BODY_SMALL)
                   .fontWeight(FontWeight.Bold)
@@ -147,7 +174,7 @@ export default struct SharePage {
 
         // 分享草稿列表
         CdShareDraftList({
-          items: this.currentSession.items,
+          items: this.draftItems,
           onRemoveItem: (itemId: string) => {
             this.viewModel.removeDraftItem(itemId);
             this.syncState();

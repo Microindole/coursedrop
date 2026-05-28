@@ -20,6 +20,7 @@ import com.coursedrop.server.dto.ConfirmWebLoginRequest;
 import com.coursedrop.server.dto.PasswordLoginRequest;
 import com.coursedrop.server.dto.WebLoginResponse;
 import com.coursedrop.server.dto.WebLoginSessionResponse;
+import com.coursedrop.server.mapper.IdentityRepository;
 import com.coursedrop.server.service.QrCodeService;
 import com.coursedrop.server.service.WebLoginService;
 
@@ -34,14 +35,17 @@ public class WebLoginController {
     private final WebLoginService webLoginService;
     private final QrCodeService qrCodeService;
     private final ServerProperties serverProperties;
+    private final IdentityRepository identityRepository;
 
     public WebLoginController(
             WebLoginService webLoginService,
             QrCodeService qrCodeService,
-            ServerProperties serverProperties) {
+            ServerProperties serverProperties,
+            IdentityRepository identityRepository) {
         this.webLoginService = webLoginService;
         this.qrCodeService = qrCodeService;
         this.serverProperties = serverProperties;
+        this.identityRepository = identityRepository;
     }
 
     @PostMapping
@@ -90,7 +94,17 @@ public class WebLoginController {
 
     @GetMapping("/current")
     public Map<String, Object> current(@CookieValue(name = "CD_SESSION", required = false) String cookieToken) {
-        return Map.of("authorized", webLoginService.isCookieAuthorized(cookieToken));
+        var identity = webLoginService.findCookieIdentity(cookieToken);
+        if (identity.isEmpty()) {
+            return Map.of("authorized", false);
+        }
+        var username = "";
+        if (identity.get().accountId() != null && !identity.get().accountId().isBlank()) {
+            username = identityRepository.findAccountById(identity.get().accountId())
+                    .map(a -> a.getUsername())
+                    .orElse("");
+        }
+        return Map.of("authorized", true, "username", username);
     }
 
     @DeleteMapping("/{loginCode}")

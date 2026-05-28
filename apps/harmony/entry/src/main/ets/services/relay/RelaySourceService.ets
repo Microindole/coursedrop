@@ -8,4 +8,5 @@ export interface RelaySourceService {
   removeRelayServer(id: string): string;
   toggleRelayServer(id: string): string;
   promoteRelayServer(id: string): string;
+  applyActiveServer(): void;
 }

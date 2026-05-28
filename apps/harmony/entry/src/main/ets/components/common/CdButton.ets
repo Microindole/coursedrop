@@ -2,9 +2,9 @@ import { AppColors, AppRadius, AppSize, AppSpacing, AppTypography } from '../../
 
 @Component
 export struct CdButton {
-  label: string = '';
+  @Prop label: string = '';
   variant: 'contained' | 'tonal' | 'text' | 'danger' = 'contained';
-  interactive: boolean = true;
+  @Prop interactive: boolean = true;
   onTap: () => void = () => {};
 
   @State private isPressed: boolean = false;
